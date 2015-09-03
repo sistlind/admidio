@@ -19,23 +19,23 @@
                     $moduleMenu = new Menu('modules', $gL10n->get('SYS_MODULES'));
 
                     $moduleMenu->addItem('overview', '/adm_program/index.php',
-                                         $gL10n->get('SYS_OVERVIEW'), '/icons/home.png');
+                                         $gL10n->get('SYS_OVERVIEW'), 'home');
 
                     if($gPreferences['enable_announcements_module'] == 1
                     || ($gPreferences['enable_announcements_module'] == 2 && $gValidLogin))
                     {
                         $moduleMenu->addItem('announcements', '/adm_program/modules/announcements/announcements.php',
-                                             $gL10n->get('ANN_ANNOUNCEMENTS'), '/icons/announcements.png');
+                                             $gL10n->get('ANN_ANNOUNCEMENTS'), 'newspaper-o');
                     }
                     if($gPreferences['enable_download_module'] == 1)
                     {
                         $moduleMenu->addItem('download', '/adm_program/modules/downloads/downloads.php',
-                                             $gL10n->get('DOW_DOWNLOADS'), '/icons/download.png');
+                                             $gL10n->get('DOW_DOWNLOADS'), 'download');
                     }
                     if($gPreferences['enable_mail_module'] == 1 && !$gValidLogin)
                     {
                         $moduleMenu->addItem('email', '/adm_program/modules/messages/messages_write.php',
-                                             $gL10n->get('SYS_EMAIL'), '/icons/email.png');
+                                             $gL10n->get('SYS_EMAIL'), 'envelope');
                     }
                     if(($gPreferences['enable_pm_module'] == 1 || $gPreferences['enable_mail_module'] == 1) && $gValidLogin)
                     {
@@ -51,42 +51,42 @@
                         }
 
                         $moduleMenu->addItem('private_message', '/adm_program/modules/messages/messages.php',
-                                             $gL10n->get('SYS_MESSAGES') . $unreadBadge, '/icons/messages.png');
+                                             $gL10n->get('SYS_MESSAGES') . $unreadBadge, 'comments');
                     }
                     if($gPreferences['enable_photo_module'] == 1
                     || ($gPreferences['enable_photo_module'] == 2 && $gValidLogin))
                     {
                         $moduleMenu->addItem('photo', '/adm_program/modules/photos/photos.php',
-                                             $gL10n->get('PHO_PHOTOS'), '/icons/photo.png');
+                                             $gL10n->get('PHO_PHOTOS'), 'photo');
                     }
                     if($gPreferences['enable_guestbook_module'] == 1
                     || ($gPreferences['enable_guestbook_module'] == 2 && $gValidLogin))
                     {
                         $moduleMenu->addItem('guestbk', '/adm_program/modules/guestbook/guestbook.php',
-                                             $gL10n->get('GBO_GUESTBOOK'), '/icons/guestbook.png');
+                                             $gL10n->get('GBO_GUESTBOOK'), 'book');
                     }
 
                     $moduleMenu->addItem('lists', '/adm_program/modules/lists/lists.php',
-                                         $gL10n->get('LST_LISTS'), '/icons/lists.png');
+                                         $gL10n->get('LST_LISTS'), 'list-alt');
 
                     if($gValidLogin)
                     {
                         $moduleMenu->addItem('mylist', '/adm_program/modules/lists/mylist.php',
-                                             $gL10n->get('LST_MY_LIST'), '/icons/mylist.png');
+                                             $gL10n->get('LST_MY_LIST'), 'list');
                     }
 
                     if($gPreferences['enable_dates_module'] == 1
                     || ($gPreferences['enable_dates_module'] == 2 && $gValidLogin))
                     {
                         $moduleMenu->addItem('dates', '/adm_program/modules/dates/dates.php',
-                                             $gL10n->get('DAT_DATES'), '/icons/dates.png');
+                                             $gL10n->get('DAT_DATES'), 'calendar');
                     }
 
                     if($gPreferences['enable_weblinks_module'] == 1
                     || ($gPreferences['enable_weblinks_module'] == 2 && $gValidLogin))
                     {
                         $moduleMenu->addItem('links', '/adm_program/modules/links/links.php',
-                                             $gL10n->get('LNK_WEBLINKS'), '/icons/weblinks.png');
+                                             $gL10n->get('LNK_WEBLINKS'), 'globe');
                     }
 
                     echo $moduleMenu->show();
@@ -100,24 +100,25 @@
                         if($gCurrentUser->approveUsers() && $gPreferences['registration_mode'] > 0)
                         {
                             $adminMenu->addItem('newreg', '/adm_program/modules/registration/registration.php',
-                                                $gL10n->get('NWU_NEW_REGISTRATIONS'), '/icons/new_registrations.png');
+                                                $gL10n->get('NWU_NEW_REGISTRATIONS'), 'user-plus');
                         }
                         if($gCurrentUser->editUsers())
                         {
                             $adminMenu->addItem('usrmgt', '/adm_program/modules/members/members.php',
-                                                $gL10n->get('MEM_USER_MANAGEMENT'), '/icons/user_administration.png');
+                                                $gL10n->get('MEM_USER_MANAGEMENT'), 'users');
                         }
                         if($gCurrentUser->manageRoles())
                         {
                             $adminMenu->addItem('roladm', '/adm_program/modules/roles/roles.php',
-                                                $gL10n->get('ROL_ROLE_ADMINISTRATION'), '/icons/roles.png');
+                                                $gL10n->get('ROL_ROLE_ADMINISTRATION'), 'sitemap');
                         }
                         if($gCurrentUser->isWebmaster())
                         {
                             $adminMenu->addItem('dbback', '/adm_program/modules/backup/backup.php',
-                                                $gL10n->get('BAC_DATABASE_BACKUP'), '/icons/backup.png');
+                                                $gL10n->get('BAC_DATABASE_BACKUP'), 'cloud-download');
+
                             $adminMenu->addItem('orgprop', '/adm_program/modules/preferences/preferences.php',
-                                                $gL10n->get('SYS_SETTINGS'), '/icons/options.png');
+                                                $gL10n->get('SYS_SETTINGS'), 'cog');
                         }
 
                         echo $adminMenu->show();
