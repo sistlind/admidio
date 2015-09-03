@@ -32,23 +32,23 @@ if($gValidLogin)
 {
     // show link to own profile
     $mainMenu->addItem('adm_menu_item_my_profile', $g_root_path.'/adm_program/modules/profile/profile.php',
-                       $gL10n->get('PRO_MY_PROFILE'), 'profile.png');
+                       $gL10n->get('PRO_MY_PROFILE'), 'user');
     // show logout link
     $mainMenu->addItem('adm_menu_item_logout', $g_root_path.'/adm_program/system/logout.php',
-                       $gL10n->get('SYS_LOGOUT'), 'door_in.png');
+                       $gL10n->get('SYS_LOGOUT'), 'sign-out');
 }
 else
 {
     // show login link
     $mainMenu->addItem('adm_menu_item_login', $g_root_path.'/adm_program/system/login.php',
-                       $gL10n->get('SYS_LOGIN'), 'key.png');
+                       $gL10n->get('SYS_LOGIN'), 'sign-in');
 
     if($gPreferences['registration_mode'] > 0)
     {
         // show registration link
         $mainMenu->addItem('adm_menu_item_registration',
                            $g_root_path.'/adm_program/modules/registration/registration.php',
-                           $gL10n->get('SYS_REGISTRATION'), 'new_registrations.png');
+                           $gL10n->get('SYS_REGISTRATION'), 'user-plus');
     }
 }
 
