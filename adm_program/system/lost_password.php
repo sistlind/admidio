@@ -107,14 +107,12 @@ if(!empty($_POST['recipient_email']) && !empty($_POST['captcha']))
 }
 else
 {
-    /*********************HTML_PART*******************************/
-
     // create html page object
     $page = new HtmlPage($headline);
 
     // add back link to module menu
     $lostPasswordMenu = $page->getMenu();
-    $lostPasswordMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $lostPasswordMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
     $page->addHtml('<p class="lead">'.$gL10n->get('SYS_PASSWORD_FORGOTTEN_DESCRIPTION').'</p>');
 
@@ -128,7 +126,7 @@ else
         $form->addCaptcha('captcha', $gPreferences['captcha_type']);
     }
 
-    $form->addSubmitButton('btn_send', $gL10n->get('SYS_SEND'), array('icon' => THEME_PATH.'/icons/email.png'));
+    $form->addSubmitButton('btn_send', $gL10n->get('SYS_SEND'), array('icon' => 'send'));
 
     // add form to html page and show page
     $page->addHtml($form->show(false));

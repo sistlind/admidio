@@ -33,7 +33,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $loginMenu = $page->getMenu();
-$loginMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$loginMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
 $form = new HtmlForm('login_form', $g_root_path.'/adm_program/system/login_check.php', $page, array('showRequiredFields' => false));
@@ -56,7 +56,7 @@ if($gPreferences['enable_auto_login'] == 1)
 {
     $form->addCheckbox('auto_login', $gL10n->get('SYS_REMEMBER_ME'), '0');
 }
-$form->addSubmitButton('btn_login', $gL10n->get('SYS_LOGIN'), array('icon' => THEME_PATH.'/icons/key.png'));
+$form->addSubmitButton('btn_login', $gL10n->get('SYS_LOGIN'), array('icon' => 'sign-in'));
 $page->addHtml($form->show(false));
 
 if($gPreferences['registration_mode'] > 0)
