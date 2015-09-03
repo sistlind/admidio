@@ -160,8 +160,10 @@ if($gValidLogin == 1)
     // show link for logout
     if($plg_show_icons)
     {
-        echo '<a id="adm_logout_link" class="btn" href="'.$g_root_path.'/adm_program/system/logout.php"><img
-            src="'. THEME_PATH. '/icons/door_in.png" alt="'.$gL10n->get('SYS_LOGOUT').'" />'.$gL10n->get('SYS_LOGOUT').'</a>';
+        echo '
+            <a id="adm_logout_link" class="btn" href="'.$g_root_path.'/adm_program/system/logout.php">
+                <span class="fa fa-sign-out fa-fw fa-gap-right" aria-hidden="true"></span>'.$gL10n->get('SYS_LOGOUT').
+            '</a>';
     }
     else
     {
@@ -174,7 +176,7 @@ else
     // create and show the login form
     if($plg_show_icons == 1)
     {
-        $iconCode  = THEME_PATH. '/icons/key.png';
+        $iconCode = 'sign-in';
     }
 
     $form = new HtmlForm('plugin-login-form', $g_root_path.'/adm_program/system/login_check.php', null,
@@ -207,12 +209,13 @@ else
         if($plg_show_icons)
         {
             echo '
-            <a class="btn" href="'. $g_root_path. '/adm_program/modules/registration/registration.php"><img
-                src="'. THEME_PATH. '/icons/new_registrations.png" alt="'.$gL10n->get('SYS_REGISTRATION').'" />'.$gL10n->get('SYS_REGISTRATION').'</a>';
+                <a class="btn" href="'.$g_root_path.'/adm_program/modules/registration/registration.php">
+                    <span class="fa fa-user-plus fa-fw fa-gap-right" aria-hidden="true"></span>'.$gL10n->get('SYS_REGISTRATION').
+                '</a>';
         }
         else
         {
-            echo '<a href="'. $g_root_path. '/adm_program/modules/registration/registration.php" '. $plg_link_target. '>'.$gL10n->get('SYS_REGISTRATION').'</a>';
+            echo '<a href="'.$g_root_path.'/adm_program/modules/registration/registration.php" '.$plg_link_target.'>'.$gL10n->get('SYS_REGISTRATION').'</a>';
         }
     }
 
@@ -256,8 +259,9 @@ else
         if($plg_show_icons)
         {
             echo '
-            <a class="btn" href="'. $linkUrl. '"><img
-                src="'. THEME_PATH. '/icons/email_key.png" alt="'.$linkText.'" />'.$linkText.'</a>';
+                <a class="btn" href="'.$linkUrl.'">
+                    <span class="fa fa-key fa-fw fa-gap-right" aria-hidden="true"></span>'.$linkText.
+                '</a>';
         }
         else
         {
