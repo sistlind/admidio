@@ -54,11 +54,6 @@ class Menu
         {
             $link = $this->root_path . $link;
         }
-        // add THEME_PATH to images unless the full URL is given
-        if (preg_match('/^http(s?):\/\//', $icon) === 0)
-        {
-            $icon = THEME_PATH . $icon;
-        }
 
         return array('id'=>$id, 'link'=>$link, 'text'=>$text, 'icon'=>$icon, 'desc'=>$desc, 'subitems'=>array());
     }
@@ -163,7 +158,7 @@ class Menu
                     <li class="media">
                         <div class="media-left">
                             <a id="menu_'.$this->id.'_'.$item['id'].'" href="'.$item['link'].'">
-                                <img class="media-object" src="'.$item['icon'].'" alt="'.strip_tags($item['text']).'" />
+                                <span class="fa fa-'.$item['icon'].' fa-large" aria-hidden="true"></span>
                             </a>
                         </div>
                         <div class="media-body">
@@ -192,7 +187,7 @@ class Menu
                 $html .= '
                     <li>
                         <a id="lmenu_'.$this->id.'_'.$item['id'].'" class="btn" href="'.$item['link'].'">
-                            <img src="'.$item['icon'].'" alt="'.strip_tags($item['text']).'" />'.$item['text'].'
+                            <span class="fa fa-'.$item['icon'].' fa-fw fa-gap-right" aria-hidden="true"></span>'.$item['text'].'
                         </a>
                     </li>';
             }
