@@ -31,7 +31,7 @@ define('FIELD_READONLY', 3);
  * $form->addSelectBox('type', $gL10n->get('SYS_TYPE'), array('simple' => 'SYS_SIMPLE', 'very-simple' => 'SYS_VERY_SIMPLE'),
  *                     array('defaultValue' => 'simple', 'showContextDependentFirstEntry' => true));
  * $form->closeGroupBox();
- * $form->addSubmitButton('next-page', $gL10n->get('SYS_NEXT'), array('icon' => 'layout/forward.png'));
+ * $form->addSubmitButton('next-page', $gL10n->get('SYS_NEXT'), array('icon' => 'arrow-circle-right'));
  * $form->show(); @endcode
  */
 class HtmlForm extends HtmlFormBasic
@@ -172,7 +172,7 @@ class HtmlForm extends HtmlFormBasic
 
         if($optionsAll['icon'] !== '')
         {
-            $value = '<img src="'.$optionsAll['icon'].'" alt="'.$text.'" />'.$value;
+            $value = '<span class="fa fa-'.$optionsAll['icon'].' fa-fw fa-gap-right" aria-hidden="true"></span>'.$value;
         }
         $this->addElement('button');
         $this->addAttribute('class', 'btn btn-default');
@@ -635,9 +635,9 @@ class HtmlForm extends HtmlFormBasic
             // show button to add new upload field to form
             $this->addHtml('
                 <button type="button" id="btn_add_attachment_'.$id.'" class="btn btn-default">
-                    <img src="'.THEME_PATH.'/icons/add.png" alt="'.$optionsAll['multiUploadLabel'].'" />'
-                    .$optionsAll['multiUploadLabel'].
-                '</button>');
+                    <span class="fa fa-plus-circle fa-fw fa-gap-right" aria-hidden="true"></span>
+                    '.$optionsAll['multiUploadLabel'].'
+                </button>');
         }
         $this->closeControlStructure($optionsAll['helpTextIdInline']);
     }
@@ -1800,8 +1800,8 @@ class HtmlForm extends HtmlFormBasic
         if($parameters !== null)
         {
             return '<a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
-                        href="'. $g_root_path. '/adm_program/system/msg_window.php?'.$parameters.'&amp;inline=true"><img
-                        src="'. THEME_PATH. '/icons/help.png" alt="Help" />
+                        href="'. $g_root_path. '/adm_program/system/msg_window.php?'.$parameters.'&amp;inline=true">
+                        <span class="fa fa-question-circle"></span>
                     </a>';
         }
     }
