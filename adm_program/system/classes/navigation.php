@@ -140,9 +140,9 @@ class Navigation
         if($url !== '')
         {
             $html = '
-            <a class="btn" href="'.$url.'"><img src="'. THEME_PATH. '/icons/back.png"
-                alt="'.$gL10n->get('SYS_BACK').'" />'.$gL10n->get('SYS_BACK').'</a>';
-
+                <a class="btn" href="'.$url.'">
+                    <span class="fa fa-arrow-circle-left fa-gap-right" aria-hidden="true"></span>'.$gL10n->get('SYS_BACK').
+                '</a>';
         }
 
         // if entries where found then add div element
