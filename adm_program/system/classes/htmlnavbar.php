@@ -85,7 +85,7 @@ class HtmlNavbar
 
         if($data['icon'] !== '')
         {
-            $icon = '<img src="'.$data['icon'].'" alt="'.strip_tags($data['text']).'" />';
+            $icon = '<span class="fa fa-'.$data['icon'].' fa-fw fa-gap-right" aria-hidden="true"></span>';
         }
 
         $html = '
@@ -135,12 +135,6 @@ class HtmlNavbar
         if($url !== '' && preg_match('/^http(s?):\/\//', $url) === 0)
         {
             $url = $g_root_path.$url;
-        }
-
-        // add THEME_PATH to images unless the full URL is given
-        if($icon !== '' && preg_match('/^http(s?):\/\//', $icon) === 0)
-        {
-            $icon = THEME_PATH.'/icons/'.$icon;
         }
 
         $item = array('id' => $id, 'text' => $text, 'icon' => $icon, 'url' => $url, 'class' => $class);
@@ -239,7 +233,7 @@ class HtmlNavbar
                         $html .= '
                             <li class="dropdown '.$menuEntry['class'].'">
                                 <a id="'.$menuEntry['id'].'" href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <span class="glyphicon glyphicon-menu-hamburger"></span>'.$menuEntry['text'].'<span class="caret"></span>
+                                    <span class="fa fa-navbar" aria-hidden="true"></span>'.$menuEntry['text'].'<span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu" role="menu">';
 
@@ -288,7 +282,7 @@ class HtmlNavbar
                         $html .= '
                             <li class="dropdown '.$menuEntry['class'].'">
                                 <a id="'.$menuEntry['id'].'" href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <span class="glyphicon glyphicon-menu-hamburger"></span>'.$menuEntry['text'].'<span class="caret"></span>
+                                    <span class="fa fa-navbar" aria-hidden="true"></span>'.$menuEntry['text'].'<span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu" role="menu">';
 
