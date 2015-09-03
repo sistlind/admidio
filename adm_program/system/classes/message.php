@@ -171,21 +171,21 @@ class Message
                 {
                     $htmlButtons .= '
                         <button id="admButtonYes" class="btn" type="button" onclick="self.location.href=\''.$this->forwardUrl.'\'">
-                            <span class="fa fa-check-circle fa-fw fa-gap-right" aria-hidden="true">
-                            '.$gL10n->get('SYS_YES').'
-                        </button>
+                            <span class="fa fa-check-circle fa-fw fa-gap-right" aria-hidden="true">'
+                            .$gL10n->get('SYS_YES').
+                        '</button>
                         <button id="admButtonNo" class="btn" type="button" onclick="history.back()">
-                            <span class="fa fa-times-circle fa-fw fa-gap-right" aria-hidden="true">
-                            '.$gL10n->get('SYS_NO').'
-                        </button>';
+                            <span class="fa fa-times-circle fa-fw fa-gap-right" aria-hidden="true">'
+                            .$gL10n->get('SYS_NO').
+                        '</button>';
                 }
                 else
                 {
                     // Wenn weitergeleitet wird, dann auch immer einen Weiter-Button anzeigen
                     $htmlButtons .= '
-                        <a class="btn" href="'.$this->forwardUrl.'">
-                            '.$gL10n->get('SYS_NEXT').'
-                            <span class="fa fa-arrow-circle-left fa-fw fa-gap-left" aria-hidden="true">
+                        <a class="btn" href="'.$this->forwardUrl.'">'
+                            .$gL10n->get('SYS_NEXT').
+                            '<span class="fa fa-arrow-circle-right fa-fw fa-gap-left" aria-hidden="true">
                         </a>';
                 }
             }
@@ -197,9 +197,9 @@ class Message
                 {
                     $htmlButtons .= '
                         <a class="btn" href="javascript:history.back()">
-                            <span class="fa fa-arrow-circle-left fa-fw fa-gap-right" aria-hidden="true"></span>
-                            '.$gL10n->get('SYS_BACK').'
-                        </a>';
+                            <span class="fa fa-arrow-circle-left fa-fw fa-gap-right" aria-hidden="true"></span>'
+                            .$gL10n->get('SYS_BACK').
+                        '</a>';
                 }
             }
         }
