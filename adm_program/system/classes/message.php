@@ -170,22 +170,22 @@ class Message
                 if($this->showYesNoButtons)
                 {
                     $htmlButtons .= '
-                        <button id="admButtonYes" class="btn" type="button" onclick="self.location.href=\''. $this->forwardUrl. '\'">
-                            <img src="'. THEME_PATH. '/icons/ok.png" alt="'.$gL10n->get('SYS_YES').'" />
-                            &nbsp;&nbsp;'.$gL10n->get('SYS_YES').'&nbsp;&nbsp;&nbsp;
+                        <button id="admButtonYes" class="btn" type="button" onclick="self.location.href=\''.$this->forwardUrl.'\'">
+                            <span class="fa fa-check-circle fa-fw fa-gap-right" aria-hidden="true">
+                            '.$gL10n->get('SYS_YES').'
                         </button>
                         <button id="admButtonNo" class="btn" type="button" onclick="history.back()">
-                            <img src="'. THEME_PATH. '/icons/error.png" alt="'.$gL10n->get('SYS_NO').'" />
-                            &nbsp;'.$gL10n->get('SYS_NO').'
+                            <span class="fa fa-times-circle fa-fw fa-gap-right" aria-hidden="true">
+                            '.$gL10n->get('SYS_NO').'
                         </button>';
                 }
                 else
                 {
                     // Wenn weitergeleitet wird, dann auch immer einen Weiter-Button anzeigen
                     $htmlButtons .= '
-                        <a class="btn" href="'. $this->forwardUrl. '">'.$gL10n->get('SYS_NEXT').'
-                            <img src="'. THEME_PATH. '/icons/forward.png" alt="'.$gL10n->get('SYS_NEXT').'"
-                                title="'.$gL10n->get('SYS_NEXT').'" />
+                        <a class="btn" href="'.$this->forwardUrl.'">
+                            '.$gL10n->get('SYS_NEXT').'
+                            <span class="fa fa-arrow-circle-left fa-fw fa-gap-left" aria-hidden="true">
                         </a>';
                 }
             }
@@ -197,10 +197,9 @@ class Message
                 {
                     $htmlButtons .= '
                         <a class="btn" href="javascript:history.back()">
-                            <img src="'.THEME_PATH.'/icons/back.png" alt="'.$gL10n->get('SYS_BACK').'"
-                                title="'.$gL10n->get('SYS_BACK').'" />'.
-                            $gL10n->get('SYS_BACK').
-                        '</a>';
+                            <span class="fa fa-arrow-circle-left fa-fw fa-gap-right" aria-hidden="true"></span>
+                            '.$gL10n->get('SYS_BACK').'
+                        </a>';
                 }
             }
         }
