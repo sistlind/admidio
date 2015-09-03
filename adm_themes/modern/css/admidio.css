@@ -308,6 +308,18 @@ a.btn {
     margin-right: 5px;
 }
 
+.fa-large {
+    width: 32px;
+    text-align: center;
+    font-size: 32px;
+}
+.fa-gap-right {
+    margin-right: 0.3em;
+}
+.fa-gap-left {
+    margin-left: 0.3em;
+}
+
 .admidio-icon-info {
     cursor: help;
     margin-right: 2px;
@@ -398,9 +410,6 @@ a.btn {
 
 .admidio-menu {
     margin: 0;
-}
-.admidio-menu img {
-    vertical-align: bottom;
 }
 
 .admidio-media-menu p {
