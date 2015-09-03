@@ -65,7 +65,8 @@ class HtmlPage
 
         if($gDebug)
         {
-            $this->cssFiles = array($g_root_path.'/adm_program/libs/bootstrap/css/bootstrap.css');
+            $this->cssFiles = array($g_root_path.'/adm_program/libs/bootstrap/css/bootstrap.css',
+                                    $g_root_path.'/adm_program/libs/font-awesome/css/font-awesome.css');
             $this->jsFiles  = array($g_root_path.'/adm_program/libs/jquery/jquery.js',
                                     $g_root_path.'/adm_program/system/js/common_functions.js',
                                     $g_root_path.'/adm_program/libs/bootstrap/js/bootstrap.js');
@@ -73,7 +74,8 @@ class HtmlPage
         else
         {
             // if not in debug mode only load the minified files
-            $this->cssFiles = array($g_root_path.'/adm_program/libs/bootstrap/css/bootstrap.min.css');
+            $this->cssFiles = array($g_root_path.'/adm_program/libs/bootstrap/css/bootstrap.min.css',
+                                    $g_root_path.'/adm_program/libs/font-awesome/css/font-awesome.min.css');
             $this->jsFiles  = array($g_root_path.'/adm_program/libs/jquery/jquery.min.js',
                                     $g_root_path.'/adm_program/system/js/common_functions.js',
                                     $g_root_path.'/adm_program/libs/bootstrap/js/bootstrap.min.js');
