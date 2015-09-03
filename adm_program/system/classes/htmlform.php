@@ -1799,10 +1799,11 @@ class HtmlForm extends HtmlFormBasic
 
         if($parameters !== null)
         {
-            return '<a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
-                        href="'. $g_root_path. '/adm_program/system/msg_window.php?'.$parameters.'&amp;inline=true">
-                        <span class="fa fa-question-circle"></span>
-                    </a>';
+            return '
+                <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
+                    href="'. $g_root_path. '/adm_program/system/msg_window.php?'.$parameters.'&amp;inline=true">'
+                    .'<span class="fa fa-question-circle fa-gap-left"></span>'.
+                '</a>';
         }
     }
 
