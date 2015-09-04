@@ -135,12 +135,12 @@ else
     {
         // Falls gefordert, nur Aufruf von aktiven Mitgliedern der Organisation
         $roleCondition = '';
-        
+
         if($getFilterRoleId > 0)
         {
             $roleCondition = ' AND mem_rol_id = '.$getFilterRoleId.' ';
         }
-        
+
         $memberCondition = ' EXISTS
             (SELECT 1
                FROM '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
@@ -223,7 +223,7 @@ else
         $("#filter_rol_id").change(function(){
             window.location.replace("'.$g_root_path.'/adm_program/modules/lists/members_assignment.php?rol_id='.$getRoleId.'&filter_rol_id=" + $("#filter_rol_id").val() + "&mem_show_all=0");
         });
-        
+
         // change mode of users that should be shown
         $("#mem_show_all").click(function(){
             if($("#mem_show_all").is(":checked")) {
@@ -250,7 +250,7 @@ else
                 $("input[type=checkbox]#member_"+userid).prop("checked", true);
                 member_checked = true;
             }
-            
+
             //Bei entfernen der Mitgliedschaft endet auch das Leiterdasein
             if(checkbox.hasClass("memlist_member") && member_checked==false){
                 $("input[type=checkbox]#leader_"+userid).prop("checked", false);
@@ -286,7 +286,7 @@ else
 
     // get module menu
     $membersAssignmentMenu = $page->getMenu();
-    $membersAssignmentMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $membersAssignmentMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
     $membersAssignmentMenu->addItem('menu_item_create_user', $g_root_path.'/adm_program/modules/members/members_new.php', $gL10n->get('MEM_CREATE_USER'), 'add.png');
     $navbarForm = new HtmlForm('navbar_show_all_users_form', '', $page, array('type' => 'navbar', 'setFocus' => false));
     $sql = 'SELECT rol_id, rol_name, cat_name FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. '
@@ -306,7 +306,7 @@ else
 
     // create column header to assign role leaders
     $htmlLeaderColumn = $gL10n->get('SYS_LEADER');
-    
+
     // show icon that leaders have no additional rights
     if($role->getValue('rol_leader_rights') == ROLE_LEADER_NO_RIGHTS)
     {
@@ -330,7 +330,7 @@ else
             alt="'.$gL10n->get('ROL_LEADER_ASSIGN_MEMBERS').'" title="'.$gL10n->get('ROL_LEADER_ASSIGN_MEMBERS').'" />';
     }
 
-    
+
     // create array with all column heading values
     $columnHeading = array(
         '<img class="admidio-icon-info"
@@ -345,7 +345,7 @@ else
         $gL10n->get('SYS_ADDRESS'),
         $gL10n->get('SYS_BIRTHDAY'),
         $htmlLeaderColumn);
-        
+
     $table->setColumnAlignByArray(array('left', 'left', 'center', 'left', 'left', 'left', 'left', 'left', 'center'));
     $table->setDatatablesOrderColumns(array(4, 5));
     $table->addRowHeadingByArray($columnHeading);
@@ -363,7 +363,7 @@ else
         $addressText  = ' ';
         $htmlAddress  = '&nbsp;';
         $htmlBirthday = '&nbsp;';
-        
+
         if($user['member_this_orga'] > 0)
         {
             $memberOfThisOrganization = '1';
@@ -372,7 +372,7 @@ else
         {
             $memberOfThisOrganization = '0';
         }
-    
+
         // create string with user address
         if(strlen($user['country']) > 0)
         {
@@ -413,7 +413,7 @@ else
         {
             $htmlAddress = '<img class="admidio-icon-info" src="'. THEME_PATH.'/icons/map.png" alt="'.$addressText.'" title="'.$addressText.'" />';
         }
-        
+
         //Haekchen setzen ob jemand Leiter ist oder nicht
         if($user['leader_this_role'])
         {
@@ -424,7 +424,7 @@ else
             $htmlRoleLeader = '<input type="checkbox" id="leader_'.$user['usr_id'].'" name="leader_'.$user['usr_id'].'" class="memlist_checkbox memlist_leader" />';
         }
 
-        
+
         //Geburtstag nur ausgeben wenn bekannt
         if(strlen($user['birthday']) > 0)
         {
@@ -432,7 +432,7 @@ else
             $htmlBirthday = $birthdayDate->format($gPreferences['system_date']);
         }
 
-        
+
         // create array with all column values
         $columnValues = array(
             '<img class="admidio-icon-info" src="'. THEME_PATH.'/icons/'.$icon.'" alt="'.$iconText.'" title="'.$iconText.'" />',
@@ -444,7 +444,7 @@ else
             $addressText,
             $htmlBirthday,
             $htmlRoleLeader.'<b id="loadindicator_leader_'.$user['usr_id'].'"></b>');
-            
+
         $table->addRowByArray($columnValues, 'userid_'.$user['usr_id']);
     }//End While
 

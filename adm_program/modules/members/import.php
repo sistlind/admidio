@@ -47,7 +47,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $importMenu = $page->getMenu();
-$importMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$importMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
 $form = new HtmlForm('import_users_form', $g_root_path.'/adm_program/modules/members/import_function.php', $page, array('enableFileUpload' => true));

@@ -131,7 +131,7 @@ elseif($getMode == 2)  // Welcome to installation
     if(!isset($_POST['system_language']) || trim($_POST['system_language']) === '')
     {
         showNotice($gL10n->get('INS_LANGUAGE_NOT_CHOOSEN'), 'installation.php?mode=1',
-                   $gL10n->get('SYS_BACK'), 'layout/back.png');
+                   $gL10n->get('SYS_BACK'), 'arrow-circle-left');
     }
     else
     {
@@ -163,7 +163,7 @@ elseif($getMode == 2)  // Welcome to installation
     // create a page with the notice that the installation must be configured on the next pages
     $form = new HtmlFormInstallation('installation-form', 'installation.php?mode=3');
     $form->setFormDescription($message, $gL10n->get('INS_WELCOME_TO_INSTALLATION'));
-    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'layout/back.png', 'link' => 'installation.php?mode=1'));
+    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'arrow-circle-left', 'link' => 'installation.php?mode=1'));
     $form->addSubmitButton('next_page', $gL10n->get('INS_DATABASE_LOGIN'), array('icon' => 'layout/forward.png'));
     $form->show();
 }
@@ -199,7 +199,7 @@ elseif($getMode == 3)  // Enter database access information
     $form->addInput('db_database', $gL10n->get('SYS_DATABASE'), $database, array('maxLength' => 50, 'property' => FIELD_REQUIRED));
     $form->addInput('db_prefix', $gL10n->get('INS_TABLE_PREFIX'), $prefix, array('maxLength' => 10, 'property' => FIELD_REQUIRED, 'class' => 'form-control-small'));
     $form->closeGroupBox();
-    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'layout/back.png', 'link' => 'installation.php?mode=2'));
+    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'arrow-circle-left', 'link' => 'installation.php?mode=2'));
     $form->addSubmitButton('next_page', $gL10n->get('INS_SET_ORGANIZATION'), array('icon' => 'layout/forward.png'));
     $form->show();
 }
@@ -225,7 +225,7 @@ elseif($getMode == 4)  // Creating organization
             if($anz !== strlen($_POST['db_prefix']))
             {
                 showNotice($gL10n->get('INS_TABLE_PREFIX_INVALID'), 'installation.php?mode=3',
-                           $gL10n->get('SYS_BACK'), 'layout/back.png');
+                           $gL10n->get('SYS_BACK'), 'arrow-circle-left');
             }
         }
 
@@ -243,7 +243,7 @@ elseif($getMode == 4)  // Creating organization
         || $_SESSION['db_database'] === '')
         {
             showNotice($gL10n->get('INS_MYSQL_LOGIN_NOT_COMPLETELY'), 'installation.php?mode=3',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
         // for security reasons only check database connection if no config file exists
@@ -254,14 +254,14 @@ elseif($getMode == 4)  // Creating organization
             if($db->connect($_SESSION['db_server'], $_SESSION['db_user'], $_SESSION['db_password'], $_SESSION['db_database']) == false)
             {
                 showNotice($gL10n->get('INS_DATABASE_NO_LOGIN'), 'installation.php?mode=3',
-                           $gL10n->get('SYS_BACK'), 'layout/back.png');
+                           $gL10n->get('SYS_BACK'), 'arrow-circle-left');
             }
 
             // check database version
             $message = checkDatabaseVersion($db);
             if($message !== '')
             {
-                showNotice($message, 'installation.php?mode=3', $gL10n->get('SYS_BACK'), 'layout/back.png');
+                showNotice($message, 'installation.php?mode=3', $gL10n->get('SYS_BACK'), 'arrow-circle-left');
             }
 
             // now check if a valid installation exists.
@@ -299,7 +299,7 @@ elseif($getMode == 4)  // Creating organization
     $form->addInput('orga_longname', $gL10n->get('SYS_NAME'), $orgaLongName, array('maxLength' => 50, 'property' => FIELD_REQUIRED));
     $form->addInput('orga_email', $gL10n->get('ORG_SYSTEM_MAIL_ADDRESS'), $orgaEmail, array('type' => 'email', 'maxLength' => 50, 'property' => FIELD_REQUIRED));
     $form->closeGroupBox();
-    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'layout/back.png', 'link' => 'installation.php?mode=3'));
+    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'arrow-circle-left', 'link' => 'installation.php?mode=3'));
     $form->addSubmitButton('next_page', $gL10n->get('INS_CREATE_ADMINISTRATOR'), array('icon' => 'layout/forward.png'));
     $form->show();
 }
@@ -317,7 +317,7 @@ elseif($getMode == 5)  // Creating addministrator
         || $_SESSION['orga_email']     === '')
         {
             showNotice($gL10n->get('INS_ORGANIZATION_NAME_NOT_COMPLETELY'), 'installation.php?mode=4',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
     }
 
@@ -348,7 +348,7 @@ elseif($getMode == 5)  // Creating addministrator
     $form->addInput('user_password', $gL10n->get('SYS_PASSWORD'), null, array('type' => 'password', 'property' => FIELD_REQUIRED, 'minLength' => 8));
     $form->addInput('user_password_confirm', $gL10n->get('SYS_CONFIRM_PASSWORD'), null, array('type' => 'password', 'property' => FIELD_REQUIRED, 'minLength' => 8));
     $form->closeGroupBox();
-    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'layout/back.png', 'link' => 'installation.php?mode=4'));
+    $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'arrow-circle-left', 'link' => 'installation.php?mode=4'));
     $form->addSubmitButton('next_page', $gL10n->get('INS_CONTINUE_INSTALLATION'), array('icon' => 'layout/forward.png'));
     $form->show();
 }
@@ -371,7 +371,7 @@ elseif($getMode == 6)  // Creating configuration file
         || $_SESSION['user_password']   === '')
         {
             showNotice($gL10n->get('INS_ADMINISTRATOR_DATA_NOT_COMPLETELY'), 'installation.php?mode=5',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
         $_SESSION['user_email'] = admStrToLower($_SESSION['user_email']);
@@ -379,19 +379,19 @@ elseif($getMode == 6)  // Creating configuration file
         if(!strValidCharacters($_SESSION['user_email'], 'email'))
         {
             showNotice($gL10n->get('SYS_EMAIL_INVALID', $gL10n->get('SYS_EMAIL')), 'installation.php?mode=5',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
         if($_SESSION['user_password'] !== $_SESSION['user_password_confirm'])
         {
             showNotice($gL10n->get('INS_PASSWORDS_NOT_EQUAL'), 'installation.php?mode=5',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
         if(strlen($_SESSION['user_password']) < 8 || strlen($_SESSION['user_password_confirm']) < 8)
         {
             showNotice($gL10n->get('PRO_PASSWORD_LENGTH'), 'installation.php?mode=5',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
     }
 
@@ -448,7 +448,7 @@ elseif($getMode == 6)  // Creating configuration file
         // if user doesn't has write access then create a page with a download link for the config file
         $form = new HtmlFormInstallation('installation-form', 'installation.php?mode=8');
         $form->setFormDescription($gL10n->get('INS_DOWNLOAD_CONFIGURATION_FILE_DESC', 'config.php', $rootPath.'/adm_my_files', 'adm_my_files'), $gL10n->get('INS_CREATE_CONFIGURATION_FILE'));
-        $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'layout/back.png', 'link' => 'installation.php?mode=5'));
+        $form->addButton('previous_page', $gL10n->get('SYS_BACK'), array('icon' => 'arrow-circle-left', 'link' => 'installation.php?mode=5'));
         $form->addButton('download_config', $gL10n->get('INS_DOWNLOAD_CONFIGURATION_FILE'), array('icon' => 'layout/page_white_download.png', 'link' => 'installation.php?mode=7'));
         $form->addSubmitButton('next_page', $gL10n->get('INS_INSTALL_ADMIDIO'), array('icon' => 'layout/database_in.png', 'onClickText' => $gL10n->get('INS_DATABASE_WILL_BE_ESTABLISHED')));
         $form->show();
@@ -471,7 +471,7 @@ elseif($getMode == 8) // Start installation
     if(!file_exists('../../adm_my_files/config.php'))
     {
         showNotice($gL10n->get('INS_CONFIGURATION_FILE_NOT_FOUND', 'config.php'), 'installation.php?mode=6',
-                   $gL10n->get('SYS_BACK'), 'layout/back.png');
+                   $gL10n->get('SYS_BACK'), 'arrow-circle-left');
     }
 
     // set execution time to 6 minutes because we have a lot to do :)
@@ -491,7 +491,7 @@ elseif($getMode == 8) // Start installation
         || $g_organization!= $_SESSION['orga_shortname'])
         {
             showNotice($gL10n->get('INS_DATA_DO_NOT_MATCH', 'config.php'), 'installation.php?mode=6',
-                       $gL10n->get('SYS_BACK'), 'layout/back.png');
+                       $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
     }
 
@@ -499,7 +499,7 @@ elseif($getMode == 8) // Start installation
     $filename = 'db_scripts/db.sql';
     $file     = fopen($filename, 'r')
                 or showNotice($gL10n->get('INS_DATABASE_FILE_NOT_FOUND', 'db.sql', 'adm_program/installation/db_scripts'),
-                              'installation.php?mode=6', $gL10n->get('SYS_BACK'), 'layout/back.png');
+                              'installation.php?mode=6', $gL10n->get('SYS_BACK'), 'arrow-circle-left');
     $content  = fread($file, filesize($filename));
     $sql_arr  = explode(';', $content);
     fclose($file);

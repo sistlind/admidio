@@ -83,7 +83,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $downloadUploadMenu = $page->getMenu();
-$downloadUploadMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$downloadUploadMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 $page->addHtml('<p class="lead">'.$gL10n->get('DOW_UPLOAD_TO_FOLDER', $parentFolderName).'</p>');
 

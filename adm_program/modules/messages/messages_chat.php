@@ -40,17 +40,17 @@ $page->addCssFile(THEME_PATH.'/css/chat.css');
 $page->addJavascript('
     // kick off chat
     var chat =  new Chat();
-    
+
     chat.getState();
-    
+
     $(function() {
         // watch textarea for release of key press [enter]
-        $("#sendie").keyup(function(e) {    
+        $("#sendie").keyup(function(e) {
             if (e.keyCode == 13) {
                 var text = $(this).val().trim();
                 if (text.length > 0)
                 {
-                    chat.send(text);    
+                    chat.send(text);
                 }
                 $(this).val("");
             }
@@ -66,7 +66,7 @@ $page->addJavascript('
 
 // add back link to module menu
 $messagesChatMenu = $page->getMenu();
-$messagesChatMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$messagesChatMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 $page->addHtml('<div id="chat-wrap"><div id="chat-area"></div></div>');
 

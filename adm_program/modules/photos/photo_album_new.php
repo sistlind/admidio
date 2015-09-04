@@ -74,7 +74,7 @@ if(isset($_SESSION['photo_album_request']))
 function subfolder($parent_id, $vorschub, $photoAlbum, $pho_id)
 {
     global $gDb, $gCurrentOrganization, $photoAlbumsArray;
-    
+
     $vorschub = $vorschub.'&nbsp;&nbsp;&nbsp;';
     $sqlConditionParentId = '';
     $parentPhotoAlbum = new TablePhotos($gDb);
@@ -100,7 +100,7 @@ function subfolder($parent_id, $vorschub, $photoAlbum, $pho_id)
     {
         $parentPhotoAlbum->clear();
         $parentPhotoAlbum->setArray($adm_photo_child);
-        
+
         // add entry to array of all photo albums
         $photoAlbumsArray[$parentPhotoAlbum->getValue('pho_id')] =
             $vorschub.'&#151; '.$parentPhotoAlbum->getValue('pho_name').'&nbsp('.$parentPhotoAlbum->getValue('pho_begin', 'Y').')';
@@ -114,7 +114,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $photoAlbumMenu = $page->getMenu();
-$photoAlbumMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$photoAlbumMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 if($getMode == 'new')
 {
@@ -137,7 +137,7 @@ $form->addInput('pho_end', $gL10n->get('SYS_END'), $photoAlbum->getValue('pho_en
 $form->addInput('pho_photographers', $gL10n->get('PHO_PHOTOGRAPHER'), $photoAlbum->getValue('pho_photographers'), array('maxLength' => 100));
 $form->addCheckbox('pho_locked', $gL10n->get('PHO_ALBUM_LOCK'), $photoAlbum->getValue('pho_locked'), array('helpTextIdLabel' => 'PHO_ALBUM_LOCK_DESC'));
 
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 $form->addHtml(admFuncShowCreateChangeInfoById($photoAlbum->getValue('pho_usr_id_create'), $photoAlbum->getValue('pho_timestamp_create'), $photoAlbum->getValue('pho_usr_id_change'), $photoAlbum->getValue('pho_timestamp_change')));
 
 // add form to html page and show page

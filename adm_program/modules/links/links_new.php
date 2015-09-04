@@ -57,13 +57,13 @@ else
 
 // add current url to navigation stack
 $gNavigation->addUrl(CURRENT_URL, $headline);
-    
+
 // create html page object
 $page = new HtmlPage($headline);
 
 // add back link to module menu
 $linksCreateMenu = $page->getMenu();
-$linksCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$linksCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // Html des Modules ausgeben
 if($getLinkId > 0)
@@ -83,7 +83,7 @@ $form->addSelectBoxForCategories('lnk_cat_id', $gL10n->get('SYS_CATEGORY'), $gDb
                                  array('property' => FIELD_REQUIRED, 'defaultValue' => $link->getValue('lnk_cat_id')));
 $form->addEditor('lnk_description', $gL10n->get('SYS_DESCRIPTION'), $link->getValue('lnk_description'), array('height' => '150px'));
 
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 $form->addHtml(admFuncShowCreateChangeInfoById($link->getValue('lnk_usr_id_create'), $link->getValue('lnk_timestamp_create'), $link->getValue('lnk_usr_id_change'), $link->getValue('lnk_timestamp_change')));
 
 // add form to html page and show page

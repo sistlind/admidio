@@ -106,7 +106,7 @@ $page->addJavascript('
 
 // add back link to module menu
 $profileFieldsEditMenu = $page->getMenu();
-$profileFieldsEditMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$profileFieldsEditMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
 $form = new HtmlForm('profile_fields_edit_form',
@@ -197,7 +197,7 @@ $form->openGroupBox('gb_description', $gL10n->get('SYS_DESCRIPTION'), 'admidio-p
 $form->addEditor('usf_description', null, $userField->getValue('usf_description'), array('height' => '200px'));
 $form->closeGroupBox();
 
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 $form->addHtml(admFuncShowCreateChangeInfoById($userField->getValue('usf_usr_id_create'),
                $userField->getValue('usf_timestamp_create'), $userField->getValue('usf_usr_id_change'),
                $userField->getValue('usf_timestamp_change')));

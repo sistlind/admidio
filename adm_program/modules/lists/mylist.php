@@ -505,7 +505,7 @@ if($gNavigation->count() > 1)
 {
     // add back link to module menu
     $myListMenu = $page->getMenu();
-    $myListMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $myListMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 }
 
 $page->addHtml('

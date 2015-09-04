@@ -118,7 +118,7 @@ $starttime = getmicrotime();
             } else {
                 fwrite($fp, $fileheaderline, strlen($fileheaderline));
             }
-            
+
             // Begin original backupDB (removed table optimize and repair part because some user database had problems with this)
 
             OutputInformation('', '<br><span id="topprogress" style="font-weight: bold;">Overall Progress:</span><br>');
@@ -290,10 +290,10 @@ $starttime = getmicrotime();
             } else {
                 fwrite($fp, $alltablesstructure.LINE_TERMINATOR, strlen($alltablesstructure) + strlen(LINE_TERMINATOR));
             }
-            
+
             $datastarttime = getmicrotime();
             OutputInformation('statusinfo', '');
-            
+
             if ($_REQUEST['StartBackup'] != 'structure') {
                 $processedrows    = 0;
                 foreach ($SelectedTables as $dbname => $value) {
@@ -436,9 +436,9 @@ $starttime = getmicrotime();
                     }
                 }
             }
-            
+
             $activateForeignKeys = 'SET FOREIGN_KEY_CHECKS=1;'.LINE_TERMINATOR.LINE_TERMINATOR;
-            
+
             if (OUTPUT_COMPRESSION_TYPE == 'bzip2') {
                 bzwrite($bp, $activateForeignKeys, strlen($activateForeignKeys));
             } elseif (OUTPUT_COMPRESSION_TYPE == 'gzip') {
@@ -446,7 +446,7 @@ $starttime = getmicrotime();
             } else {
                 fwrite($fp, $activateForeignKeys, strlen($activateForeignKeys));
             }
-            
+
             if (OUTPUT_COMPRESSION_TYPE == 'bzip2') {
                 bzclose($bp);
             } elseif (OUTPUT_COMPRESSION_TYPE == 'gzip') {
@@ -459,7 +459,7 @@ $starttime = getmicrotime();
                 unlink($newfullfilename); // Windows won't allow overwriting via rename
             }
             rename($backupabsolutepath.$tempbackupfilename, $newfullfilename);
-            
+
         } else {
 
             echo '<b>Warning:</b> failed to open '.$backupabsolutepath.$tempbackupfilename.' for writing!<br><br>';
@@ -474,11 +474,17 @@ $starttime = getmicrotime();
         // End original backupDB
 
 
-echo '<div class="alert alert-success form-alert"><span class="glyphicon glyphicon-ok"></span><strong>'.
-        $gL10n->get('BAC_BACKUP_COMPLETED', FormattedTimeRemaining(getmicrotime() - $starttime, 2)).'.</strong><br /><br />
-
-'.$gL10n->get('BAC_BACKUP_FILE').' <a href="'.$g_root_path.'/adm_program/modules/backup/backup_file_function.php?job=get_file&amp;filename='.basename($newfullfilename).'">'.basename($newfullfilename).'</a>
-('.FileSizeNiceDisplay(filesize($newfullfilename), 2).')</div>';
+echo '
+    <div class="alert alert-success form-alert">
+        <strong>
+            <span class="fa fa-check-circle fa-gap-right" aria-hidden="true"></span>'.
+            $gL10n->get('BAC_BACKUP_COMPLETED', FormattedTimeRemaining(getmicrotime() - $starttime, 2)).'.
+        </strong>
+        <br /><br />
+        '.$gL10n->get('BAC_BACKUP_FILE').
+        ' <a href="'.$g_root_path.'/adm_program/modules/backup/backup_file_function.php?job=get_file&amp;filename='.basename($newfullfilename).'">'.basename($newfullfilename).'</a>
+        ('.FileSizeNiceDisplay(filesize($newfullfilename), 2).')
+    </div>';
 
 OutputInformation('cancel_link', '');
 OutputInformation('topprogress', '');

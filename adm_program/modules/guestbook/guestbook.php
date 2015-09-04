@@ -171,7 +171,7 @@ if($getGboId > 0 || $getModeration == 1)
 {
     // show link to navigate back to guestbook
     $guestbookMenu->addItem('admMenuItemNavigateBack', $g_root_path.'/adm_program/modules/guestbook/guestbook.php?headline='. $getHeadline,
-                            $gL10n->get('GBO_BACK_TO_GUESTBOOK'), 'back.png');
+                            $gL10n->get('GBO_BACK_TO_GUESTBOOK'), 'arrow-circle-left');
 }
 
 if($getModeration == 0 && $gCurrentUser->editGuestbookRight() && $gPreferences['enable_guestbook_moderation'] > 0)

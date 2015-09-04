@@ -270,7 +270,7 @@ if($getMode != 'csv')
         // get module menu
         $listsMenu = $page->getMenu();
 
-        $listsMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+        $listsMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
         if($getFullScreen == true)
         {

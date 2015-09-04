@@ -109,7 +109,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $guestbookCreateMenu = $page->getMenu();
-$guestbookCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$guestbookCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // Html des Modules ausgeben
 if ($getGboId > 0)
@@ -145,7 +145,7 @@ if (!$gValidLogin && $gPreferences['enable_mail_captcha'] == 1)
 }
 
 // show informations about user who creates the recordset and changed it
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 $form->addHtml(admFuncShowCreateChangeInfoById($guestbook->getValue('gbo_usr_id_create'), $guestbook->getValue('gbo_timestamp_create'), $guestbook->getValue('gbo_usr_id_change'), $guestbook->getValue('gbo_timestamp_change')));
 
 // add form to html page and show page

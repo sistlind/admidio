@@ -107,7 +107,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $registrationAssignMenu = $page->getMenu();
-$registrationAssignMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$registrationAssignMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 $page->addHtml('<p class="lead">'.$gL10n->get('SYS_SIMILAR_USERS_FOUND', $new_user->getValue('FIRST_NAME'). ' '. $new_user->getValue('LAST_NAME')).'</p>
 
@@ -126,7 +126,7 @@ $page->addHtml('<p class="lead">'.$gL10n->get('SYS_SIMILAR_USERS_FOUND', $new_us
             $page->addHtml('<p>
                 <a class="btn" href="'. $g_root_path. '/adm_program/modules/profile/profile.php?user_id='.$row->usr_id.'"><img
                      src="'.THEME_PATH.'/icons/profile.png" alt="'.$gL10n->get('SYS_SHOW_PROFILE').'" />'.$row->first_name.' '.$row->last_name.'</a><br />');
-                     
+
                 if(strlen($row->address) > 0)
                 {
                     $page->addHtml($row->address.'<br />');
@@ -147,7 +147,7 @@ $page->addHtml('<p class="lead">'.$gL10n->get('SYS_SIMILAR_USERS_FOUND', $new_us
                     }
                 }
             $page->addHtml('</p>');
-            
+
             if(isMember($row->usr_id))
             {
                 // gefundene User ist bereits Mitglied dieser Organisation
@@ -189,7 +189,7 @@ $page->addHtml('<p class="lead">'.$gL10n->get('SYS_SIMILAR_USERS_FOUND', $new_us
                 {
                     // KEINE Logindaten vorhanden
                     $page->addHtml('<p>'.$gL10n->get('NWU_NO_MEMBERSHIP_NO_LOGIN', $gCurrentOrganization->getValue('org_shortname')).'</p>
-                    
+
                     <button class="btn btn-default btn-primary" onclick="window.location.href=\''.$link.'\'"><img src="'. THEME_PATH. '/icons/new_registrations.png"
                         alt="'.$gL10n->get('NWU_ASSIGN_MEMBERSHIP').'" />'.$gL10n->get('NWU_ASSIGN_MEMBERSHIP').'</button>');
                 }
@@ -202,7 +202,7 @@ $page->addHtml('<p class="lead">'.$gL10n->get('SYS_SIMILAR_USERS_FOUND', $new_us
     <div class="panel-heading">'.$gL10n->get('SYS_CREATE_NEW_USER').'</div>
     <div class="panel-body">
         <p>'. $gL10n->get('SYS_CREATE_NOT_FOUND_USER'). '</p>
-            
+
         <button class="btn btn-default btn-primary" onclick="window.location.href=\''.$urlCreateNewUser.'\'"><img
             src="'. THEME_PATH. '/icons/add.png" alt="'.$gL10n->get('SYS_CREATE_NEW_USER').'" />'.$gL10n->get('SYS_CREATE_NEW_USER').'</button>
     </div>

@@ -148,7 +148,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $profileFieldHistoryMenu = $page->getMenu();
-$profileFieldHistoryMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$profileFieldHistoryMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // create filter menu with input elements for Startdate and Enddate
 $FilterNavbar = new HtmlNavbar('menu_profile_field_history_filter', null, null, 'filter');

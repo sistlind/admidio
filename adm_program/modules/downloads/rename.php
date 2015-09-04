@@ -78,33 +78,33 @@ try
         // get recordset of current file from databse
         $file = new TableFile($gDb);
         $file->getFileForDownload($getFileId);
-        
+
         $originalName = $file->getValue('fil_name');
-    
+
         if ($form_values['new_name'] == null)
         {
             $form_values['new_name'] = admFuncGetFilenameWithoutExtension($originalName);
         }
-    
+
         if ($form_values['new_description'] == null)
         {
             $form_values['new_description'] = $file->getValue('fil_description');
         }
-    
+
     }
     else
     {
         // get recordset of current folder from databses
         $folder = new TableFolder($gDb);
         $folder->getFolderForDownload($getFolderId);
-        
+
         $originalName = $folder->getValue('fol_name');
-    
+
         if ($form_values['new_name'] == null)
         {
             $form_values['new_name'] = $originalName;
         }
-    
+
         if ($form_values['new_description'] == null)
         {
             $form_values['new_description'] = $folder->getValue('fol_description');
@@ -121,14 +121,14 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $downloadRenameMenu = $page->getMenu();
-$downloadRenameMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$downloadRenameMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // create html form
 $form = new HtmlForm('edit_download_form', $g_root_path.'/adm_program/modules/downloads/download_function.php?mode=4&amp;folder_id='.$getFolderId.'&amp;file_id='.$getFileId, $page);
 $form->addInput('previous_name', $gL10n->get('DOW_PREVIOUS_NAME'), $originalName, array('property' => FIELD_DISABLED));
 $form->addInput('new_name', $gL10n->get('DOW_NEW_NAME'), $form_values['new_name'], array('maxLength' => 255, 'property' => FIELD_REQUIRED, 'helpTextIdLabel' => 'DOW_FILE_NAME_RULES'));
 $form->addMultilineTextInput('new_description', $gL10n->get('SYS_DESCRIPTION'), $form_values['new_description'], 4, array('maxLength' => 255));
-$form->addSubmitButton('btn_rename', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png', 'class' => ' col-sm-offset-3'));
+$form->addSubmitButton('btn_rename', $gL10n->get('SYS_SAVE'), array('icon' => 'save', 'class' => ' col-sm-offset-3'));
 
 $page->addHtml($form->show(false));
 $page->show();

@@ -179,7 +179,7 @@ if($getViewMode === 'html' || $getViewMode === 'compact')
     {
         // add back link to module menu
         $datesMenu = $page->getMenu();
-        $datesMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+        $datesMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
     }
 
     //Check if box must be shown, when more dates available

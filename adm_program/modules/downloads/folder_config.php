@@ -149,7 +149,7 @@ $page->addJavascript('
 
 // add back link to module menu
 $folderConfigMenu = $page->getMenu();
-$folderConfigMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$folderConfigMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
 $form = new HtmlForm('adm_form_folder_rights', $g_root_path.'/adm_program/modules/downloads/download_function.php?mode=7&amp;folder_id='.$getFolderId, $page, array('type' => 'vertical'));
@@ -211,7 +211,7 @@ $form->openGroupBox('adm_roles_box', $gL10n->get('DOW_ROLE_ACCESS_PERMISSIONS'))
 $form->addDescription($gL10n->get('DOW_ROLE_ACCESS_PERMISSIONS_DESC'));
 $form->addCustomContent(null, $htmlRoleSelection);
 $form->closeGroupBox();
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 
 // add form to html page and show page
 $page->addHtml($form->show(false));

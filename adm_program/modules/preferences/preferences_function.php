@@ -275,7 +275,7 @@ case 2:
 
     // add back link to module menu
     $organizationNewMenu = $page->getMenu();
-    $organizationNewMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $organizationNewMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
     $page->addHtml('<p class="lead">'.$gL10n->get('ORG_NEW_ORGANIZATION_DESC').'</p>');
 
@@ -356,7 +356,7 @@ case 3:
 
     // show form
     $form = new HtmlForm('add_new_organization_form', $g_root_path.'/adm_program/modules/preferences/preferences.php', $page);
-    $form->addSubmitButton('btn_foward', $gL10n->get('SYS_NEXT'), array('icon' => THEME_PATH.'/icons/forward.png'));
+    $form->addSubmitButton('btn_foward', $gL10n->get('SYS_NEXT'), array('icon' => 'arrow-circle-right'));
 
     // add form to html page and show page
     $page->addHtml($form->show(false));

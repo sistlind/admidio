@@ -89,7 +89,7 @@ if($gPreferences['photo_show_mode'] == 2)
     if($previousImage > 0)
     {
         $photoPresenterMenu->addItem('menu_item_previous_photo', $urlPreviousImage,
-                                     $gL10n->get('PHO_PREVIOUS_PHOTO'), 'back.png');
+                                     $gL10n->get('PHO_PREVIOUS_PHOTO'), 'arrow-circle-left');
     }
 
     if($nextImage <= $photoAlbum->getValue('pho_quantity'))

@@ -119,7 +119,7 @@ $page = new HtmlPage($headline);
 
 // add back link to module menu
 $categoryCreateMenu = $page->getMenu();
-$categoryCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$categoryCreateMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
 $form = new HtmlForm('categories_edit_form', $g_root_path.'/adm_program/modules/categories/categories_function.php?cat_id='.$getCatId.'&amp;type='. $getType. '&amp;mode=1', $page);
@@ -142,13 +142,13 @@ if($getType == 'USF')
         // show all organizations where this organization is mother or child organization
         $organizations = '- '.$gCurrentOrganization->getValue('org_longname').',<br />- ';
         $organizations .= implode(',<br />- ', $gCurrentOrganization->getOrganizationsInRelationship(true, true, true));
-        
+
         $value = 0;
         if($category->getValue('cat_org_id') == 0)
         {
             $value = 1;
         }
-        
+
         $form->addCheckbox('show_in_several_organizations', $gL10n->get('SYS_ENTRY_MULTI_ORGA'), $value, array('helpTextIdLabel' => array('SYS_DATA_GLOBAL', $organizations)));
     }
 }
@@ -157,7 +157,7 @@ else
     $form->addCheckbox('cat_hidden', $gL10n->get('SYS_VISIBLE_TO_USERS', $getTitle), $category->getValue('cat_hidden'), array('icon' => 'user_key.png'));
 }
 $form->addCheckbox('cat_default', $gL10n->get('CAT_DEFAULT_VAR', $getTitle), $category->getValue('cat_default'), array('icon' => 'star.png'));
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => 'save'));
 $form->addHtml(admFuncShowCreateChangeInfoById($category->getValue('cat_usr_id_create'), $category->getValue('cat_timestamp_create'), $category->getValue('cat_usr_id_change'), $category->getValue('cat_timestamp_change')));
 
 // add form to html page and show page

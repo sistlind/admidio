@@ -149,7 +149,7 @@ $profileMenu = $page->getMenu();
 // show back link
 if($gNavigation->count() > 1)
 {
-    $profileMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $profileMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 }
 
 // show link to edit profile

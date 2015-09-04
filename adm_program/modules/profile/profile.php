@@ -150,14 +150,14 @@ $page->addJavascript('
             $(id).hide("fast");
         }
     }
-    
+
     function callbackProfilePhoto() {
         var img_src = $("#profile_photo").attr("src");
         var timestamp = new Date().getTime();
         $("#btn_delete_photo").hide();
         $("#profile_photo").attr("src",img_src+"&"+timestamp);
     }
-    
+
     function callbackRoles() {
         if(profileJS) {
             profileJS.formerRoleCount++;
@@ -238,7 +238,7 @@ $profileMenu = $page->getMenu();
 // show back link
 if($gNavigation->count() > 1)
 {
-    $profileMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+    $profileMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 }
 
 // if user has right then show link to edit profile
@@ -334,7 +334,7 @@ $page->addHtml('
                 if ($user->getValue('usr_id') != $gCurrentUser->getValue('usr_id') && $gPreferences['enable_pm_module'] == 1)
                 {
                     $form->addStaticControl('username', $gL10n->get('SYS_USERNAME'),
-                        '<img src="'.THEME_PATH.'/icons/pm.png" alt="'.$gL10n->get('PMS_SEND_PM').'" /> 
+                        '<img src="'.THEME_PATH.'/icons/pm.png" alt="'.$gL10n->get('PMS_SEND_PM').'" />
                         <a href='.$g_root_path.'/adm_program/modules/messages/messages_write.php?msg_type=PM&usr_id='.$user->getValue('usr_id').'>'.$user->getValue('usr_login_name').'</a>');
                 }
                 else

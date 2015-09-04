@@ -292,7 +292,7 @@ elseif($getMode == 2)
                         <span class="glyphicon glyphicon-exclamation-sign"></span>
                         <strong>'.$gL10n->get('INS_WEBMASTER_LOGIN_FAILED').'</strong>
                     </div>';
-                showNotice($message, 'update.php', $gL10n->get('SYS_BACK'), 'layout/back.png', true);
+                showNotice($message, 'update.php', $gL10n->get('SYS_BACK'), 'arrow-circle-left', true);
             }
         }
         catch(AdmException $e)
@@ -302,7 +302,7 @@ elseif($getMode == 2)
                     <span class="glyphicon glyphicon-exclamation-sign"></span>
                     <strong>'.$e->getText().'</strong>
                 </div>';
-            showNotice($message, 'update.php', $gL10n->get('SYS_BACK'), 'layout/back.png', true);
+            showNotice($message, 'update.php', $gL10n->get('SYS_BACK'), 'arrow-circle-left', true);
         }
     }
 
@@ -373,7 +373,7 @@ elseif($getMode == 2)
                         // SQL-Script abarbeiten
                         $file    = fopen($sqlUpdateFile, 'r')
                                    or showNotice($gL10n->get('INS_ERROR_OPEN_FILE', $sqlUpdateFile), 'update.php',
-                                                 $gL10n->get('SYS_BACK'), 'layout/back.png', true);
+                                                 $gL10n->get('SYS_BACK'), 'arrow-circle-left', true);
                         $content = fread($file, filesize($sqlUpdateFile));
                         $sql_arr = explode(';', $content);
                         fclose($file);

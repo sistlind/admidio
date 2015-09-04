@@ -86,7 +86,7 @@ $page->addJavascript('
 $fieldsMenu = $page->getMenu();
 
 // show back link
-$fieldsMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
+$fieldsMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // define link to create new profile field
 $fieldsMenu->addItem('menu_item_new_field', $g_root_path.'/adm_program/modules/preferences/fields_new.php',
