@@ -255,7 +255,7 @@ elseif($getMode == 2)
             // check name and password
             // user must have membership of one role of the organization
             $loginName    = admFuncVariableIsValid($_POST, 'login_name', 'string', array('requireValue' => true, 'directOutput' => true));
-            $password     = admFuncVariableIsValid($_POST, 'password', 'string', array('requireValue' => true, 'directOutput' => true));
+            $password     = admFuncVariableIsValid($_POST, 'password'  , 'string', array('requireValue' => true, 'directOutput' => true));
             $sqlWebmaster = '';
 
             // only check for webmaster role if version > 2.3 because before we don't have that flag
@@ -264,22 +264,24 @@ elseif($getMode == 2)
                 $sqlWebmaster = ' AND rol_webmaster = 1 ';
             }
 
-            $sql    = 'SELECT DISTINCT usr_id
-                         FROM '. TBL_USERS. ', '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                        WHERE UPPER(usr_login_name) LIKE UPPER(\''.$loginName.'\')
-                          AND usr_valid      = 1
-                          AND mem_usr_id     = usr_id
-                          AND mem_rol_id     = rol_id
-                          AND mem_begin     <= \''.DATE_NOW.'\'
-                          AND mem_end        > \''.DATE_NOW.'\'
-                          AND rol_valid      = 1
-                              '.$sqlWebmaster.'
-                          AND rol_cat_id     = cat_id
-                          AND cat_org_id     = '.$gCurrentOrganization->getValue('org_id');
-            $result = $gDb->query($sql);
+            $sql = 'SELECT DISTINCT usr_id
+                      FROM '.TBL_MEMBERS.'
+                INNER JOIN '.TBL_USERS.'
+                        ON usr_id = mem_usr_id
+                INNER JOIN '.TBL_ROLES.'
+                        ON rol_id = mem_rol_id
+                INNER JOIN '.TBL_CATEGORIES.'
+                        ON cat_id = rol_cat_id
+                     WHERE UPPER(usr_login_name) = UPPER(\''.$loginname.'\')
+                       AND usr_valid   = 1
+                       AND mem_begin  <= \''.DATE_NOW.'\'
+                       AND mem_end     > \''.DATE_NOW.'\'
+                       AND rol_valid   = 1
+                       AND cat_org_id  = '.$organizationId;
+            $usrIdStatement = $gDb->query($sql);
 
-            $userFound = $gDb->num_rows($result);
-            $userRow   = $gDb->fetch_array($result);
+            $userFound = $usrIdStatement->rowCount();
+            $userRow   = $usrIdStatement->fetch();
 
             if ($userFound === 1)
             {

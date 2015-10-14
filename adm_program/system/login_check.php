@@ -73,20 +73,23 @@ if($password === '')
 // user must have membership of one role of the organization
 
 $sql = 'SELECT DISTINCT usr_id
-          FROM '. TBL_USERS. ', '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-         WHERE UPPER(usr_login_name) LIKE UPPER(\''.$loginname.'\')
-           AND usr_valid      = 1
-           AND mem_usr_id     = usr_id
-           AND mem_rol_id     = rol_id
-           AND mem_begin     <= \''.DATE_NOW.'\'
-           AND mem_end        > \''.DATE_NOW.'\'
-           AND rol_valid      = 1
-           AND rol_cat_id     = cat_id
-           AND cat_org_id     = '.$organizationId;
-$result = $gDb->query($sql);
+          FROM '.TBL_MEMBERS.'
+    INNER JOIN '.TBL_USERS.'
+            ON usr_id = mem_usr_id
+    INNER JOIN '.TBL_ROLES.'
+            ON rol_id = mem_rol_id
+    INNER JOIN '.TBL_CATEGORIES.'
+            ON cat_id = rol_cat_id
+         WHERE UPPER(usr_login_name) = UPPER(\''.$loginname.'\')
+           AND usr_valid   = 1
+           AND mem_begin  <= \''.DATE_NOW.'\'
+           AND mem_end     > \''.DATE_NOW.'\'
+           AND rol_valid   = 1
+           AND cat_org_id  = '.$organizationId;
+$usrIdStatement = $gDb->query($sql);
 
-$userFound = $gDb->num_rows($result);
-$userRow   = $gDb->fetch_array($result);
+$userFound = $usrIdStatement->rowCount();
+$userRow   = $usrIdStatement->fetch();
 
 if ($userFound === 1)
 {
@@ -143,14 +146,15 @@ else
 {
     // now check if login is not released or doesn't exists
     $sql = 'SELECT usr_id
-              FROM '. TBL_USERS. ', '.TBL_REGISTRATIONS.'
-             WHERE usr_login_name LIKE \''. $loginname. '\'
+              FROM '.TBL_USERS.'
+        INNER JOIN '.TBL_REGISTRATIONS.'
+                ON usr_id = reg_usr_id
+             WHERE UPPER(usr_login_name) = UPPER(\''. $loginname. '\')
                AND usr_valid  = 0
-               AND reg_usr_id = usr_id
                AND reg_org_id = '.$gCurrentOrganization->getValue('org_id');
-    $result = $gDb->query($sql);
+    $usrIdStatement = $gDb->query($sql);
 
-    if($gDb->num_rows($result) === 1)
+    if($usrIdStatement->rowCount() === 1)
     {
         $gMessage->show($gL10n->get('SYS_LOGIN_NOT_ACTIVATED'));
     }
