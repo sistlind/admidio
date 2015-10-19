@@ -19,38 +19,36 @@ $organizationId = $gCurrentOrganization->getValue('org_id');
 
 // Filter parameters
 // parameters could be from login dialog or login plugin !!!
-if(array_key_exists('usr_login_name', $_POST) && $_POST['usr_login_name'] !== '')
+/**
+ * @param string $prefix
+ */
+function initLoginParams($prefix = '')
 {
-    $loginname = $_POST['usr_login_name'];
-    $password  = $_POST['usr_password'];
+    global $bAutoLogin, $loginname, $password, $organizationId, $gPreferences;
 
-    if($gPreferences['enable_auto_login'] == 1 && array_key_exists('auto_login', $_POST) && $_POST['auto_login'] == 1)
+    $loginname = $_POST[$prefix.'usr_login_name'];
+    $password  = $_POST[$prefix.'usr_password'];
+
+    if($gPreferences['enable_auto_login'] == 1 && array_key_exists($prefix.'auto_login', $_POST) && $_POST[$prefix.'auto_login'] == 1)
     {
         $bAutoLogin = true;
     }
 
     // if user can choose organization then save the selection
-    if(array_key_exists('org_id', $_POST) && is_numeric($_POST['org_id']) && $_POST['org_id'] > 0)
+    if(array_key_exists($prefix.'org_id', $_POST) && is_numeric($_POST[$prefix.'org_id']) && $_POST[$prefix.'org_id'] > 0)
     {
-        $organizationId = $_POST['org_id'];
+        $organizationId = $_POST[$prefix.'org_id'];
     }
+}
+
+if(array_key_exists('usr_login_name', $_POST) && $_POST['usr_login_name'] !== '')
+{
+    initLoginParams('');
 }
 
 if(array_key_exists('plg_usr_login_name', $_POST) && $_POST['plg_usr_login_name'] !== '')
 {
-    $loginname = $_POST['plg_usr_login_name'];
-    $password  = $_POST['plg_usr_password'];
-
-    if($gPreferences['enable_auto_login'] == 1 && array_key_exists('plg_auto_login', $_POST) && $_POST['plg_auto_login'] == 1)
-    {
-        $bAutoLogin = true;
-    }
-
-    // if user can choose organization then save the selection
-    if(array_key_exists('plg_org_id', $_POST) && is_numeric($_POST['plg_org_id']) && $_POST['plg_org_id'] > 0)
-    {
-        $organizationId = $_POST['plg_org_id'];
-    }
+    initLoginParams('plg_');
 }
 
 if($loginname === '')
