@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -46,7 +46,7 @@ if($getMode != 'new' && $getPhotoId > 0)
     $photo_album->readDataById($getPhotoId);
 
     // Pruefung, ob das Fotoalbum zur aktuellen Organisation gehoert
-    if($photo_album->getValue('pho_org_shortname') != $gCurrentOrganization->getValue('org_shortname'))
+    if($photo_album->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
     {
         $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
     }
@@ -202,5 +202,3 @@ elseif($getMode == 'delete')
     }
     exit();
 }
-
-?>

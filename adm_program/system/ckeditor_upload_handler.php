@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -35,7 +35,8 @@ try
     }
 
     // if necessary create the module folders in adm_my_files
-    switch ($getCKEditor) {
+    switch ($getCKEditor)
+    {
         case 'ann_description':
             $folderName = 'announcements';
             break;
@@ -45,7 +46,7 @@ try
         case 'lnk_description':
             $folderName = 'weblinks';
             break;
-        case 'mail_body':
+        case 'msg_body':
             $folderName = 'mail';
             break;
         case 'plugin_CKEditor':
@@ -101,5 +102,3 @@ catch(AdmException $e)
 {
     $e->showHtml();
 }
-
-?>

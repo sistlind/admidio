@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * message_id    - ID of language text, that should be shown
  * message_title - (optional) title of window (Default: Note)
@@ -156,34 +156,6 @@ switch ($getMessageId)
             </table>';
         break;
 
-    case 'mylist_config_webmaster':
-        echo '<h3>'.$gL10n->get('LST_PRESET_CONFIGURATION').'</h3>
-            '.$gL10n->get('LST_PRESET_CONFIGURATION_DESC', '<img src="'. THEME_PATH. '/icons/list_global.png" alt="list_global" />').'
-            <h3>'.$gL10n->get('LST_DEFAULT_CONFIGURATION').'</h3>
-            '.$gL10n->get('LST_DEFAULT_CONFIGURATION_DESC', '<img src="'. THEME_PATH. '/icons/star.png" alt="star" />');
-        break;
-
-    //Fotomodulhifen
-
-    case 'photo_up_help':
-        echo '
-            <ul>
-                <li>'.$gL10n->get('PHO_UPLOAD_HELP_1', $gL10n->get('SYS_BROWSE')).'</li>
-                <li>'.$gL10n->get('PHO_UPLOAD_HELP_2').'</li>
-                <li>'.$gL10n->get('PHO_UPLOAD_HELP_3', $gL10n->get('PHO_UPLOAD_PHOTOS')).'</li>
-            </ul>
-            <h3>'.$gL10n->get('SYS_RESTRICTIONS').'</h3>
-            <ul>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_1').'</li>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_2', round(admFuncProcessableImageSize()/1000000, 2)).'</li>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_3', round(admFuncMaxUploadSize()/pow(1024, 2), 2)).'</li>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_4', $gPreferences['photo_save_scale']).'</li>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_5').'</li>
-                <li>'.$gL10n->get('PHO_RESTRICTIONS_HELP_6', $gPreferences['photo_save_scale']).'</li>
-            </ul>
-            ';
-        break;
-
     //Profil
 
     case 'profile_photo_up_help':
@@ -220,4 +192,3 @@ if($getInlineView)
 {
     echo '</div></div>';
 }
-?>

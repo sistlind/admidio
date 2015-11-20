@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -253,7 +253,8 @@ foreach($gProfileFields->mProfileFields as $field)
         $fieldProperty = FIELD_DEFAULT;
         $helpId        = '';
 
-        if($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_disabled') == 1 && $gCurrentUser->editUsers() == false && $getNewUser == 0)
+        if($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_disabled') == 1
+        && $gCurrentUser->hasRightEditProfile($user, false) == false && $getNewUser == 0)
         {
             // disable field if this is configured in profile field configuration
             $fieldProperty = FIELD_DISABLED;
@@ -277,10 +278,10 @@ foreach($gProfileFields->mProfileFields as $field)
                 $user->getValue($field->getValue('usf_name_intern')), array('property' => $fieldProperty, 'helpTextIdLabel' => $helpId, 'icon' => $gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_icon', 'database')));
         }
         elseif($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_type') == 'DROPDOWN'
-            || $gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_name_intern') == 'COUNTRY')
+            || $field->getValue('usf_name_intern') === 'COUNTRY')
         {
             // set array with values and set default value
-            if($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_name_intern') == 'COUNTRY')
+            if($field->getValue('usf_name_intern') === 'COUNTRY')
             {
                 $arrListValues = $gL10n->getCountries();
                 $defaultValue  = null;
@@ -329,7 +330,14 @@ foreach($gProfileFields->mProfileFields as $field)
 
             if($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_type') == 'DATE')
             {
-                $fieldType = 'date';
+                if($field->getValue('usf_name_intern') === 'BIRTHDAY')
+                {
+                    $fieldType = 'birthday';
+                }
+                else
+                {
+                    $fieldType = 'date';
+                }
                 $maxlength = '10';
             }
             elseif($gProfileFields->getProperty($field->getValue('usf_name_intern'), 'usf_type') == 'EMAIL')
@@ -397,5 +405,3 @@ if($getNewUser == 0)
 
 $page->addHtml($form->show(false));
 $page->show();
-
-?>

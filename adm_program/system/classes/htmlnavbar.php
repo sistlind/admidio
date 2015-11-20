@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -132,7 +132,7 @@ class HtmlNavbar
         global $g_root_path;
 
         // add root path to link unless the full URL is given
-        if($url !== '' && preg_match('/^http(s?):\/\//', $url) === 0)
+        if($url !== '' && $url !== '#' && preg_match('/^http(s?):\/\//', $url) === 0)
         {
             $url = $g_root_path.$url;
         }
@@ -330,4 +330,3 @@ class HtmlNavbar
         }
     }
 }
-?>

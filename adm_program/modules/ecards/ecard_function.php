@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *****************************************************************************/
 
 class FunctionClass
@@ -153,7 +153,7 @@ class FunctionClass
     {
         global $gPreferences;
         $img_photo_path = '';
-        $returnCode = TRUE;
+        $returnCode = true;
 
         $email = new Email();
         $email->setSender($senderEmail, $senderName);
@@ -216,7 +216,7 @@ class FunctionClass
         $email->setText($ecardHtmlData);
         $email->sendDataAsHtml();
 
-        if($returnCode==TRUE)
+        if($returnCode==true)
         {
             $returnCode = $email->sendEmail();
         }
@@ -226,4 +226,3 @@ class FunctionClass
         return $returnCode;
     }
 }
-?>

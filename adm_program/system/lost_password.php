@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -65,8 +65,8 @@ if(!empty($_POST['recipient_email']) && !empty($_POST['captcha']))
                    AND usr_valid  = 1
                    AND LENGTH(usr_login_name) > 0
                  GROUP BY usr_id';
-        $result = $gDb->query($sql);
-        $count  = $gDb->num_rows();
+        $pdoStatement = $gDb->query($sql);
+        $count = $pdoStatement->rowCount();
 
         // show error if no user found or more than one user found
         if($count === 0)
@@ -78,7 +78,7 @@ if(!empty($_POST['recipient_email']) && !empty($_POST['captcha']))
             $gMessage->show($gL10n->get('SYS_LOSTPW_SEVERAL_EMAIL', $_POST['recipient_email']));
         }
 
-        $row  = $gDb->fetch_array($result);
+        $row  = $pdoStatement->fetch();
         $user = new User($gDb, $gProfileFields, $row['usr_id']);
 
         // create and save new password and activation id
@@ -89,7 +89,7 @@ if(!empty($_POST['recipient_email']) && !empty($_POST['captcha']))
         $user->setValue('usr_activation_code', $activationId);
 
         $sysmail = new SystemMail($gDb);
-        $sysmail->addRecipient($user->getValue('EMAIL'), $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME'));
+        $sysmail->addRecipient($user->getValue('EMAIL'), $user->getValue('FIRST_NAME', 'database').' '.$user->getValue('LAST_NAME', 'database'));
         $sysmail->setVariable(1, $newPassword);
         $sysmail->setVariable(2, $g_root_path.'/adm_program/system/password_activation.php?usr_id='.$user->getValue('usr_id').'&aid='.$activationId);
         $sysmail->sendSystemMail('SYSMAIL_ACTIVATION_LINK', $user);
@@ -132,4 +132,3 @@ else
     $page->addHtml($form->show(false));
     $page->show();
 }
-?>

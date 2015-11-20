@@ -13,7 +13,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -78,10 +78,6 @@ if(isset($page) && is_object($page))
 {
     $page->addCssFile($g_root_path.'/adm_plugins/login_form/login_form.css');
 }
-
-// set database to admidio, sometimes the user has other database connections at the same time
-global $gDb;
-$gDb->setCurrentDB();
 
 echo '<div id="plugin_'. $plugin_folder. '" class="admidio-plugin-content">';
     if($gValidLogin)
@@ -228,8 +224,8 @@ else
                    AND rol_cat_id = cat_id
                    AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
                        OR cat_org_id IS NULL ) ';
-        $gDb->query($sql);
-        $row = $gDb->fetch_array();
+        $webmasterStatement = $gDb->query($sql);
+        $row = $webmasterStatement->fetch();
 
         // create role object for webmaster
         $roleWebmaster = new TableRoles($gDb, $row['rol_id']);
@@ -272,5 +268,3 @@ else
 }
 
 echo '</div>';
-
-?>

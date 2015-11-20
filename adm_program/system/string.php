@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -198,26 +198,26 @@ function strValidCharacters($string, $checkType)
         switch ($checkType)
         {
             case 'email':
-                $validChars = 'abcdefghijklmnopqrstuvwxyz0123456789áàâåäæcccçéèeênnñóòôöõøœúùûüß.-_@';
+                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.@+-]+$/';
                 break;
             case 'file':
-                $validChars = 'abcdefghijklmnopqrstuvwxyz0123456789áàâåäæcccçéèeênnñóòôöõøœúùûüß$&!?.-_+ ';
+                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.@$&!?() +-]+$/';
                 break;
             case 'noSpecialChar': // eine einfache E-Mail-Adresse sollte dennoch moeglich sein (Benutzername)
-                $validChars = 'abcdefghijklmnopqrstuvwxyz0123456789.-_+@';
+                $validRegex = '/^[\w\.@+-]+$/';
                 break;
             case 'phone':
-                $validChars = '0123456789+-/ ()';
+                $validRegex = '/^[\d\/() +-]+$/';
                 break;
             case 'url':
-                $validChars = 'abcdefghijklmnopqrstuvwxyz0123456789áàâåäæcccçéèeênnñóòôöõøœúùûüß.-_:/#?=%&!';
+                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.\/@$&!?%=#:() +-]+$/';
                 break;
             default:
                 return false;
         }
 
         // check if string contains only valid characters
-        if(strspn(admStrToLower($string), $validChars) === strlen($string))
+        if(preg_match($validRegex, admStrToLower($string)))
         {
             switch ($checkType)
             {
@@ -277,5 +277,3 @@ function admStrIsValidFileName($filename, $checkExtension = false)
         throw new AdmException('SYS_FILENAME_EMPTY');
     }
 }
-
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Folderobjekt zu erstellen.
  * Ein Ordner kann ueber diese Klasse in der Datenbank verwaltet werden
@@ -27,12 +27,12 @@ class TableFolder extends TableAccess
 
     /** Constructor that will create an object of a recordset of the table adm_folders.
      *  If the id is set than the specific folder will be loaded.
-     *  @param $db Object of the class database. This should be the default object $gDb.
-     *  @param $folderId The recordset of the folder with this id will be loaded. If id isn't set than an empty object of the table is created.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $folderId The recordset of the folder with this id will be loaded. If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $folderId = 0)
+    public function __construct(&$database, $folderId = 0)
     {
-        parent::__construct($db, TBL_FOLDERS, 'fol', $folderId);
+        parent::__construct($database, TBL_FOLDERS, 'fol', $folderId);
 
         $this->folderPath = new Folder();
     }
@@ -80,9 +80,9 @@ class TableFolder extends TableAccess
         $sql_subfolders = 'SELECT *
                               FROM '. TBL_FOLDERS. '
                             WHERE fol_fol_id_parent = '.$folderId;
-        $result_subfolders = $this->db->query($sql_subfolders);
+        $subfoldersStatement = $this->db->query($sql_subfolders);
 
-        while($row_subfolders = $this->db->fetch_object($result_subfolders))
+        while($row_subfolders = $subfoldersStatement->fetchObject())
         {
             //rekursiver Aufruf mit jedem einzelnen Unterordner
             $this->delete($row_subfolders->fol_id);
@@ -137,9 +137,9 @@ class TableFolder extends TableAccess
         $sql_subfolders = 'SELECT *
                               FROM '. TBL_FOLDERS. '
                             WHERE fol_fol_id_parent = '.$folderId;
-        $result_subfolders = $this->db->query($sql_subfolders);
+        $subfoldersStatement = $this->db->query($sql_subfolders);
 
-        while($row_subfolders = $this->db->fetch_object($result_subfolders))
+        while($row_subfolders = $subfoldersStatement->fetchObject())
         {
             //rekursiver Aufruf mit jedem einzelnen Unterordner
             $this->editLockedFlagOnFolder($locked_flag, $row_subfolders->fol_id);
@@ -160,8 +160,11 @@ class TableFolder extends TableAccess
         $this->db->endTransaction();
     }
 
-    // Setzt das Publicflag (0 oder 1) auf einer vorhandenen Ordnerinstanz
-    // und all seinen Unterordnern rekursiv
+    /**
+     * Set the public flag to a folder and all subfolders.
+     * @param bool $public   If set to @b 1 then all users could see this folder.
+     * @param int  $folderId The id of the folder where the public flag should be set.
+     */
     public function editPublicFlagOnFolder($public_flag, $folderId = 0)
     {
         if ($folderId == 0)
@@ -174,9 +177,9 @@ class TableFolder extends TableAccess
         $sql_subfolders = 'SELECT *
                               FROM '. TBL_FOLDERS. '
                             WHERE fol_fol_id_parent = '.$folderId;
-        $result_subfolders = $this->db->query($sql_subfolders);
+        $subfoldersStatement = $this->db->query($sql_subfolders);
 
-        while($row_subfolders = $this->db->fetch_object($result_subfolders))
+        while($row_subfolders = $subfoldersStatement->fetchObject())
         {
             //rekursiver Aufruf mit jedem einzelnen Unterordner
             $this->editPublicFlagOnFolder($public_flag, $row_subfolders->fol_id);
@@ -242,8 +245,8 @@ class TableFolder extends TableAccess
                           AND mem_usr_id = '. $gCurrentUser->getValue('usr_id'). '
                           AND mem_begin <= \''.DATE_NOW.'\'
                           AND mem_end    > \''.DATE_NOW.'\'';
-                $result_rights = $this->db->query($sql_rights);
-                $row_rights = $this->db->fetch_array($result_rights);
+                $rightsStatement = $this->db->query($sql_rights);
+                $row_rights = $rightsStatement->fetch();
                 $row_count  = $row_rights[0];
 
                 //Falls der User in keiner Rolle Mitglied ist, die Rechte an dem Ordner besitzt
@@ -280,18 +283,11 @@ class TableFolder extends TableAccess
                           AND fol_fol_id_parent = '. $this->getValue('fol_id'). '
                           AND fol_org_id        = '. $gCurrentOrganization->getValue('org_id'). '
                         ORDER BY fol_name';
-        $result_folders = $this->db->query($sql_folders);
-
-        //Nun alle Dateien auslesen, die in diesem Verzeichnis enthalten sind
-        $sql_files   = 'SELECT *
-                         FROM '. TBL_FILES. '
-                        WHERE fil_fol_id = '. $this->getValue('fol_id'). '
-                        ORDER BY fil_name';
-        $result_files = $this->db->query($sql_files);
+        $foldersStatement = $this->db->query($sql_folders);
 
         //Nun alle Folders und Files in ein mehrdimensionales Array stopfen
         //angefangen mit den Ordnern:
-        while($row_folders = $this->db->fetch_object($result_folders))
+        while($row_folders = $foldersStatement->fetchObject())
         {
             $addToArray = false;
 
@@ -316,8 +312,8 @@ class TableFolder extends TableAccess
                                   AND mem_usr_id = '. $gCurrentUser->getValue('usr_id'). '
                                   AND mem_begin <= \''.DATE_NOW.'\'
                                   AND mem_end    > \''.DATE_NOW.'\'';
-                $result_rights = $this->db->query($sql_rights);
-                $row_rights = $this->db->fetch_array($result_rights);
+                $rightsStatement = $this->db->query($sql_rights);
+                $row_rights = $rightsStatement->fetch();
                 $row_count  = $row_rights[0];
 
                 //Falls der User in mindestens einer Rolle Mitglied ist, die Rechte an dem Ordner besitzt
@@ -365,8 +361,15 @@ class TableFolder extends TableAccess
             }
         }
 
+        //Nun alle Dateien auslesen, die in diesem Verzeichnis enthalten sind
+        $sql_files   = 'SELECT *
+                         FROM '. TBL_FILES. '
+                        WHERE fil_fol_id = '. $this->getValue('fol_id'). '
+                        ORDER BY fil_name';
+        $filesStatement = $this->db->query($sql_files);
+
         //jetzt noch die Dateien ins Array packen:
-        while($row_files = $this->db->fetch_object($result_files))
+        while($row_files = $filesStatement->fetchObject())
         {
             $addToArray = false;
 
@@ -385,7 +388,7 @@ class TableFolder extends TableAccess
             if (file_exists(SERVER_PATH. $this->getValue('fol_path'). '/'. $this->getValue('fol_name'). '/'. $row_files->fil_name)) {
                 $fileExists = true;
 
-                //Filegroesse ermitteln
+                // compute filesize
                 $fileSize = round(filesize(SERVER_PATH. $this->getValue('fol_path'). '/'. $this->getValue('fol_name'). '/'. $row_files->fil_name)/1024);
             }
             else {
@@ -428,39 +431,42 @@ class TableFolder extends TableAccess
                 $fileHandle    = opendir($this->getCompletePathOfFolder());
                 if($fileHandle) {
                     while($file = readdir($fileHandle)) {
-                        if ($file == '.' || $file == '..' || substr($file, 0, 1) == '.') {
+                        if ($file == '.' || $file == '..' || substr($file, 0, 1) == '.')
+                        {
                             continue;
                         }
-                         else {
-
+                        else
+                        {
                             //Gucken ob Datei oder Ordner
-                            if (is_dir($this->getCompletePathOfFolder(). '/'. $file)) {
+                            $fileFolderPath = $this->getCompletePathOfFolder(). '/'. $file;
 
+                            if(is_dir($fileFolderPath))
+                            {
                                 $alreadyAdded = false;
 
                                 //Gucken ob das Verzeichnis bereits bei den regurlären Files dabei ist.
                                 if (isset($completeFolder['folders'])) {
-                                    for($i=0; $i<count($completeFolder['folders']); $i++) {
-
+                                    for($i=0; $i<count($completeFolder['folders']); $i++)
+                                    {
                                         $nextFolder = $completeFolder['folders'][$i];
 
-                                        if ($nextFolder['fol_name'] == $file) {
-
+                                        if ($nextFolder['fol_name'] == $file)
+                                        {
                                             $alreadyAdded = true;
                                         }
 
                                     }
                                 }
 
-                                if (!$alreadyAdded) {
-
-                                    //wenn nicht bereits enthalten wird es nun hinzugefuegt
+                                //wenn nicht bereits enthalten wird es nun hinzugefuegt
+                                if (!$alreadyAdded)
+                                {
                                     $completeFolder['additionalFolders'][] = array('fol_name' => $file);
                                 }
 
                             }
-                            elseif (is_file($this->getCompletePathOfFolder(). '/'. $file)) {
-
+                            elseif (is_file($fileFolderPath))
+                            {
                                 $alreadyAdded = false;
 
                                 //Gucken ob die Datei bereits bei den regurlären Files dabei ist.
@@ -477,10 +483,13 @@ class TableFolder extends TableAccess
                                     }
                                 }
 
-                                if (!$alreadyAdded) {
+                                //wenn nicht bereits enthalten wird es nun hinzugefuegt
+                                if (!$alreadyAdded)
+                                {
+                                    // compute filesize
+                                    $fileSize = round(filesize($fileFolderPath)/1024);
 
-                                    //wenn nicht bereits enthalten wird es nun hinzugefuegt
-                                    $completeFolder['additionalFiles'][] = array('fil_name' => $file);
+                                    $completeFolder['additionalFiles'][] = array('fil_name' => $file, 'fil_size' => $fileSize);
                                 }
                             }
                          }
@@ -533,9 +542,8 @@ class TableFolder extends TableAccess
                                        AND fol_type    = \'DOWNLOAD\'
                                        AND fol_path    = \'/adm_my_files\'
                                        AND fol_org_id  = '. $gCurrentOrganization->getValue('org_id');
-
-                $result_rootFolder = $this->db->query($sql_rootFolder);
-                $rootFolderRow = $this->db->fetch_object($result_rootFolder);
+                $rootFolderStatement = $this->db->query($sql_rootFolder);
+                $rootFolderRow = $rootFolderStatement->fetchObject();
 
                 $rootFolderId = $rootFolderRow->fol_id;
 
@@ -556,9 +564,8 @@ class TableFolder extends TableAccess
             //Informationen zur uebergebenen OrdnerId aus der DB holen
             $sql_currentFolder = 'SELECT * FROM '. TBL_FOLDERS. '
                                    WHERE fol_id   = '.$folderId;
-
-            $result_currentFolder = $this->db->query($sql_currentFolder);
-            $currentFolderRow = $this->db->fetch_object($result_currentFolder);
+            $currentFolderStatement = $this->db->query($sql_currentFolder);
+            $currentFolderRow = $currentFolderStatement->fetchObject();
 
             if ($currentFolderRow->fol_fol_id_parent)
             {
@@ -588,25 +595,36 @@ class TableFolder extends TableAccess
         }
     }
 
-    //Gibt die aktuellen Rollenbrechtigungen des Ordners als Array zurueck
-    public function getRoleArrayOfFolder()
+    /**
+     * Creates an array with all roles ids that have the right to view the folder.
+     * If you need also the name of the folder then set the parameter to true.
+     * @param bool In addition to the id also read the name of the role and return them.
+     * @return Returns an array with all roles ids that have the right to view the folder.
+     */
+    public function getRoleArrayOfFolder($readRolesName = false)
     {
         //RueckgabeArray initialisieren
-        $roleArray = null;
+        $roleArray = array();
 
         //Erst einmal die aktuellen Rollenberechtigungen fuer den Ordner auslesen
         $sql_rolset = 'SELECT * FROM '. TBL_FOLDER_ROLES. ', '. TBL_ROLES. '
                             WHERE flr_fol_id = '. $this->getValue('fol_id'). '
                               AND flr_rol_id = rol_id';
+        $rolesetStatement = $this->db->query($sql_rolset);
 
-        $result_roleset = $this->db->query($sql_rolset);
-
-        while($row_roleset = $this->db->fetch_object($result_roleset))
+        while($rowRoleset = $rolesetStatement->fetchObject())
         {
-            //Jede Rolle wird nun dem Array hinzugefuegt
-            $roleArray[] = array(
-                                'rol_id'        => $row_roleset->rol_id,
-                                'rol_name'      => $row_roleset->rol_name);
+            if($readRolesName)
+            {
+                //Jede Rolle wird nun dem Array hinzugefuegt
+                $roleArray[] = array(
+                                    'rol_id'        => $rowRoleset->rol_id,
+                                    'rol_name'      => $rowRoleset->rol_name);
+            }
+            else
+            {
+                $roleArray[] = $rowRoleset->rol_id;
+            }
         }
 
         return $roleArray;
@@ -656,9 +674,9 @@ class TableFolder extends TableAccess
         $sql_subfolders = 'SELECT *
                               FROM '. TBL_FOLDERS. '
                             WHERE fol_fol_id_parent = '.$folderId;
-        $result_subfolders = $this->db->query($sql_subfolders);
+        $subfoldersStatement = $this->db->query($sql_subfolders);
 
-        while($row_subfolders = $this->db->fetch_object($result_subfolders))
+        while($row_subfolders = $subfoldersStatement->fetchObject())
         {
             //rekursiver Aufruf mit jedem einzelnen Unterordner
             $this->rename($row_subfolders->fol_name, $newPath. '/'. $newName, $row_subfolders->fol_id);
@@ -702,9 +720,9 @@ class TableFolder extends TableAccess
         $sql_subfolders = 'SELECT *
                               FROM '. TBL_FOLDERS. '
                             WHERE fol_fol_id_parent = '.$folderId;
-        $result_subfolders = $this->db->query($sql_subfolders);
+        $subfoldersStatement = $this->db->query($sql_subfolders);
 
-        while($row_subfolders = $this->db->fetch_object($result_subfolders))
+        while($row_subfolders = $subfoldersStatement->fetchObject())
         {
             //rekursiver Aufruf mit jedem einzelnen Unterordner
             $this->setRolesOnFolder($rolesArray, $row_subfolders->fol_id);
@@ -716,10 +734,12 @@ class TableFolder extends TableAccess
         $this->db->query($sql_delete);
 
         //Jetzt die neuen Berechtigungen schreiben
-        if (count($rolesArray) > 0) {
-            for($i=0; $i<count($rolesArray); $i++) {
+        if (count($rolesArray) > 0)
+        {
+            foreach($rolesArray as $rolesId)
+            {
                 $sql_insert = 'INSERT INTO '. TBL_FOLDER_ROLES. ' (flr_fol_id, flr_rol_id)
-                                  VALUES ('. $folderId. ', '. $rolesArray[$i]['rol_id']. ')';
+                                    VALUES ('. $folderId. ', '. $rolesId. ')';
                 $this->db->query($sql_insert);
             }
         }
@@ -727,4 +747,3 @@ class TableFolder extends TableAccess
         $this->db->endTransaction();
     }
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -175,11 +175,11 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); $i++)
                   JOIN '. TBL_USER_DATA. ' last_name
                     ON last_name.usd_usr_id = usr_id
                    AND last_name.usd_usf_id = '.  $gProfileFields->getProperty('LAST_NAME', 'usf_id'). '
-                   AND last_name.usd_value  = \''. $user->getValue('LAST_NAME'). '\'
+                   AND last_name.usd_value  = \''. $gDb->escapeString($user->getValue('LAST_NAME', 'database')). '\'
                   JOIN '. TBL_USER_DATA. ' first_name
                     ON first_name.usd_usr_id = usr_id
                    AND first_name.usd_usf_id = '.  $gProfileFields->getProperty('FIRST_NAME', 'usf_id'). '
-                   AND first_name.usd_value  = \''. $user->getValue('FIRST_NAME'). '\'
+                   AND first_name.usd_value  = \''. $gDb->escapeString($user->getValue('FIRST_NAME', 'database')). '\'
                  WHERE usr_valid = 1 ';
         $result = $gDb->query($sql);
         $rowDuplicateUser = $gDb->fetch_array($result);
@@ -274,4 +274,3 @@ $_SESSION['value_separator']  = '';
 
 $gMessage->setForwardUrl($g_root_path.'/adm_program/modules/members/members.php');
 $gMessage->show($gL10n->get('MEM_IMPORT_SUCCESSFUL', $countImportNewUser, $countImportEditUser, $countImportEditRole));
-?>

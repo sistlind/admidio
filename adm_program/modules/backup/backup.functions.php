@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *
  * Based on backupDB Version 1.2.7-201104261502
@@ -42,7 +42,7 @@ function FunctionIsDisabled($function) {
 function SafeExec($command) {
     static $AllowedExecFunctions = array();
     if (empty($AllowedExecFunctions)) {
-        $AllowedExecFunctions = array('shell_exec'=>true, 'passthru'=>true, 'system'=>true, 'exec'=>true);
+        $AllowedExecFunctions = array('shell_exec' => true, 'passthru' => true, 'system' => true, 'exec' => true);
         foreach ($AllowedExecFunctions as $key => $value) {
             $AllowedExecFunctions[$key] = !FunctionIsDisabled($key);
         }
@@ -274,5 +274,3 @@ function EmailAttachment($from, $to, $subject, $textbody, &$attachmentdata, $att
 /////////////////////////////////////////////////////////////////////
 ///////////////////     END SUPPORT FUNCTIONS     ///////////////////
 /////////////////////////////////////////////////////////////////////
-
-?>

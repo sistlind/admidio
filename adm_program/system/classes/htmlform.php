@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -164,7 +164,7 @@ class HtmlForm extends HtmlFormBasic
         $this->countElements++;
 
         // create array with all options
-        $optionsDefault = array('icon' => '', 'link' => '', 'onClickText' => '', 'class' => '', 'type' => 'button');
+        $optionsDefault = array('icon' => '', 'link' => '', 'onClickText' => '', 'class' => '', 'type' => 'button', 'data-admidio' => '');
         $optionsAll     = array_replace($optionsDefault, $options);
 
         // add text and icon to button
@@ -176,6 +176,11 @@ class HtmlForm extends HtmlFormBasic
         }
         $this->addElement('button');
         $this->addAttribute('class', 'btn btn-default');
+
+        if($optionsAll['data-admidio'] !== '')
+        {
+            $this->addAttribute('data-admidio', $optionsAll['data-admidio']);
+        }
 
         if($optionsAll['onClickText'] !== '')
         {
@@ -491,7 +496,7 @@ class HtmlForm extends HtmlFormBasic
                 filebrowserImageUploadUrl: "'.$g_root_path.'/adm_program/system/ckeditor_upload_handler.php"
             });';
 
-        if($gPreferences['system_js_editor_enabled'] === 1)
+        if($gPreferences['system_js_editor_enabled'] == 1)
         {
             // if a htmlPage object was set then add code to the page, otherwise to the current string
             if(is_object($this->htmlPage))
@@ -649,8 +654,8 @@ class HtmlForm extends HtmlFormBasic
      * @param string $value   A value for the text field. The field will be created with this value.
      * @param array  $options (optional) An array with the following possible entries:
      *                        - @b type : Set the type if the field. Default will be @b text. Possible values are @b text,
-     *                          @b number, @b date or @datetime. If @b date or @datetime are set than a small calendar will
-     *                          be shown if the date field will be selected.
+     *                          @b number, @b date, @b datetime or @b birthday. If @b date, @b datetime or @b birthday are set
+     *                          than a small calendar will be shown if the date field will be selected.
      *                        - @b maxLength : The maximum number of characters that are allowed in a text field.
      *                        - @b minNumber : The minimum number that is allowed in a number field.
      *                        - @b maxNumber : The maximum number that is allowed in a number field.
@@ -724,22 +729,38 @@ class HtmlForm extends HtmlFormBasic
         }
 
         // add a nice modern datepicker to date inputs
-        if($optionsAll['type'] === 'date' || $optionsAll['type'] === 'datetime')
+        if($optionsAll['type'] === 'date' || $optionsAll['type'] === 'datetime' || $optionsAll['type'] === 'birthday')
         {
-            $attributes['data-provide'] = 'datepicker';
             $attributes['placeholder']  = DateTimeExtended::getDateFormatForDatepicker($gPreferences['system_date']);
             $javascriptCode             = '';
+            $datepickerOptions          = '';
 
-            if($this->datepickerInitialized === false)
+            // if you have a birthday field than start with the years selection
+            if($optionsAll['type'] == 'birthday')
+            {
+                $attributes['data-provide'] = 'datepicker-birthday';
+                $datepickerOptions = ' startView: 2, ';
+            }
+            else
+            {
+                $attributes['data-provide'] = 'datepicker';
+                $datepickerOptions = ' todayBtn: "linked", ';
+            }
+
+            if($this->datepickerInitialized === false || $optionsAll['type'] == 'birthday')
             {
                 $javascriptCode = '
-                    $("input[data-provide=\'datepicker\']").datepicker({
+                    $("input[data-provide=\''.$attributes['data-provide'].'\']").datepicker({
                         language: "'.$gL10n->getLanguageIsoCode().'",
                         format: "'.DateTimeExtended::getDateFormatForDatepicker($gPreferences['system_date']).'",
-                        todayHighlight: "true",
-                        autoclose: "true"
+                        '.$datepickerOptions.'
+                        todayHighlight: "true"
                     });';
-                $this->datepickerInitialized = true;
+
+                if($optionsAll['type'] !== 'birthday')
+                {
+                    $this->datepickerInitialized = true;
+                }
             }
 
             // if a htmlPage object was set then add code to the page, otherwise to the current string
@@ -772,7 +793,7 @@ class HtmlForm extends HtmlFormBasic
         if($optionsAll['type'] === 'datetime')
         {
             // first try to split datetime to a date and a time value
-            $datetime = new DateTimeExtended($value, $gPreferences['system_date'].' '.$gPreferences['system_time']);
+            $datetime = DateTime::createFromFormat($gPreferences['system_date'].' '.$gPreferences['system_time'], $value);
             $dateValue = $datetime->format($gPreferences['system_date']);
             $timeValue = $datetime->format($gPreferences['system_time']);
 
@@ -787,7 +808,7 @@ class HtmlForm extends HtmlFormBasic
         else
         {
             // a date type has some problems with chrome so we set it as text type
-            if($optionsAll['type'] === 'date')
+            if($optionsAll['type'] === 'date' || $optionsAll['type'] === 'birthday')
             {
                 $optionsAll['type'] = 'text';
             }
@@ -1066,6 +1087,14 @@ class HtmlForm extends HtmlFormBasic
             {
                 $optionsAll['defaultValue'] = array($optionsAll['defaultValue']);
             }
+
+            if($optionsAll['showContextDependentFirstEntry'] === true && $optionsAll['property'] === FIELD_REQUIRED)
+            {
+                $attributes['placeholder'] = $gL10n->get('SYS_PLEASE_CHOOSE');
+
+                // reset the preferences so the logic for not multiselect will not be performed
+                $optionsAll['showContextDependentFirstEntry'] = false;
+            }
         }
 
         // set specific css class for this field
@@ -1132,7 +1161,7 @@ class HtmlForm extends HtmlFormBasic
                 }
 
                 // add option
-                if($optionsAll['multiselect'] === false && $optionsAll['defaultValue'] === $values[$arrayCount][0])
+                if($optionsAll['multiselect'] === false && $optionsAll['defaultValue'] == $values[$arrayCount][0])
                 {
                     $defaultEntry = true;
                 }
@@ -1142,7 +1171,7 @@ class HtmlForm extends HtmlFormBasic
             else
             {
                 // array has only key and value then create a normal selectbox without optiongroups
-                if($optionsAll['multiselect'] === false && $optionsAll['defaultValue'] === key($values))
+                if($optionsAll['multiselect'] === false && $optionsAll['defaultValue'] == key($values))
                 {
                     $defaultEntry = true;
                 }
@@ -1178,10 +1207,10 @@ class HtmlForm extends HtmlFormBasic
             // if a htmlPage object was set then add code to the page, otherwise to the current string
             if(is_object($this->htmlPage))
             {
-                $this->htmlPage->addCssFile($g_root_path.'/adm_program/libs/select2/select2.css');
-                $this->htmlPage->addCssFile($g_root_path.'/adm_program/libs/select2/select2-bootstrap.css');
-                $this->htmlPage->addJavascriptFile($g_root_path.'/adm_program/libs/select2/select2.min.js');
-                $this->htmlPage->addJavascriptFile($g_root_path.'/adm_program/libs/select2/select2_locale_'.$gL10n->getLanguageIsoCode().'.js');
+                $this->htmlPage->addCssFile($g_root_path.'/adm_program/libs/select2/dist/css/select2.css');
+                $this->htmlPage->addCssFile($g_root_path.'/adm_program/libs/select2/dist/css/select2-bootstrap.css');
+                $this->htmlPage->addJavascriptFile($g_root_path.'/adm_program/libs/select2/dist/js/select2.min.js');
+                $this->htmlPage->addJavascriptFile($g_root_path.'/adm_program/libs/select2/dist/js/i18n/'.$gL10n->getLanguageIsoCode().'.js');
                 $this->htmlPage->addJavascript($javascriptCode, true);
             }
             else
@@ -1203,7 +1232,7 @@ class HtmlForm extends HtmlFormBasic
      * of the third column changed a new optiongroup will be created.
      * @param string $id             Id of the selectbox. This will also be the name of the selectbox.
      * @param string $label          The label of the selectbox.
-     * @param object $databaseObject A Admidio database object that contains a valid connection to a database
+     * @param object $database Object of the class Database. This should be the default global object @b $gDb.
      * @param string $sql            Any SQL statement that return 2 columns. The first column will be the internal value of the
      *                               selectbox item and will be submitted with the form. The second column represents the
      *                               displayed value of the item. Each row of the result will be a new selectbox entry.
@@ -1243,15 +1272,15 @@ class HtmlForm extends HtmlFormBasic
      * $form->addSelectBoxFromSql('admProfileFieldsBox', $gL10n->get('SYS_FIELDS'), $gDb, $sql, array('defaultValue' => $gL10n->get('SYS_SURNAME'), 'showContextDependentFirstEntry' => true));
      * $form->show(); @endcode
      */
-    public function addSelectBoxFromSql($id, $label, $databaseObject, $sql, $options = array())
+    public function addSelectBoxFromSql($id, $label, $database, $sql, $options = array())
     {
         $selectboxEntries = array();
 
         // execute the sql statement
-        $result = $databaseObject->query($sql);
+        $result = $database->query($sql);
 
         // create array from sql result
-        while($row = $databaseObject->fetch_array($result))
+        while($row = $database->fetch_array($result))
         {
             // if result has 3 columns then create a array in array
             if(array_key_exists(2, $row))
@@ -1334,7 +1363,7 @@ class HtmlForm extends HtmlFormBasic
      * You must define the category type (roles, dates, links ...). All categories of this type will be shown.
      * @param string $id             Id of the selectbox. This will also be the name of the selectbox.
      * @param string $label          The label of the selectbox.
-     * @param object $databaseObject A Admidio database object that contains a valid connection to a database
+     * @param object $database A Admidio database object that contains a valid connection to a database
      * @param string $categoryType   Type of category ('DAT', 'LNK', 'ROL', 'USF') that should be shown
      * @param string $selectboxModus The selectbox could be shown in 2 different modus.
      *                               - @b EDIT_CATEGORIES : First entry will be "Please choose" and default category will be preselected.
@@ -1359,7 +1388,7 @@ class HtmlForm extends HtmlFormBasic
      *                        - @b class : An additional css classname. The class @b admSelectbox
      *                          is set as default and need not set with this parameter.
      */
-    public function addSelectBoxForCategories($id, $label, $databaseObject, $categoryType, $selectboxModus, $options = array())
+    public function addSelectBoxForCategories($id, $label, $database, $categoryType, $selectboxModus, $options = array())
     {
         global $gCurrentOrganization, $gValidLogin, $gL10n;
 
@@ -1421,8 +1450,8 @@ class HtmlForm extends HtmlFormBasic
                    AND cat_type   = \''.$categoryType.'\'
                        '.$sqlCondidtions.'
                  ORDER BY cat_sequence ASC ';
-        $result = $databaseObject->query($sql);
-        $countCategories = $databaseObject->num_rows($result);
+        $result = $database->query($sql);
+        $countCategories = $database->num_rows($result);
 
         // if only one category exists then select this if not in filter modus
         if($countCategories === 1)
@@ -1433,7 +1462,7 @@ class HtmlForm extends HtmlFormBasic
                 return null;
             }
 
-            $row = $databaseObject->fetch_array($result);
+            $row = $database->fetch_array($result);
             if($optionsAll['defaultValue'] === null)
             {
                 $optionsAll['defaultValue'] = $row['cat_id'];
@@ -1457,7 +1486,7 @@ class HtmlForm extends HtmlFormBasic
                 $categoriesArray[0] = $gL10n->get('SYS_ALL');
             }
 
-            while($row = $databaseObject->fetch_array($result))
+            while($row = $database->fetch_array($result))
             {
                 // if text is a translation-id then translate it
                 if(strpos($row['cat_name'], '_') == 3)
@@ -1846,4 +1875,3 @@ class HtmlForm extends HtmlFormBasic
         }
     }
 }
-?>

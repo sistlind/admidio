@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -105,7 +105,7 @@ $previousCategoryId   = 0;
 //Get Lists
 $getStart      = $lists->getStartElement();
 $listsResult   = $lists->getDataSet($getStart);
-$numberOfRoles = $listsResult['numResults'];
+$numberOfRoles = $lists->getDataSetCount();
 
 if($numberOfRoles == 0)
 {
@@ -127,7 +127,7 @@ if($numberOfRoles == 0)
         require_once('../../system/login_valid.php');
     }
 }
-    
+
 //Get list configurations
 $listConfigurations = $lists->getListConfigurations();
 
@@ -306,9 +306,7 @@ if($listsResult['numResults'] > 0)
 
 // If necessary show links to navigate to next and previous recordsets of the query
 $base_url = $g_root_path.'/adm_program/modules/lists/lists.php?cat_id='.$getCatId.'&active_role='.$getActiveRole;
-$page->addHtml(admFuncGeneratePagination($base_url, $numberOfRoles, $gPreferences['lists_roles_per_page'], $getStart, TRUE));
+$page->addHtml(admFuncGeneratePagination($base_url, $numberOfRoles, $gPreferences['lists_roles_per_page'], $getStart, true));
 
 $page->addHtml('</div>');
 $page->show();
-
-?>

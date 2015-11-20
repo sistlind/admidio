@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  * Description  : Create, modify and display menus. Each menu item is defined by
  *
  *      - $id   : identifier of the menu item
@@ -55,7 +55,7 @@ class Menu
             $link = $this->root_path . $link;
         }
 
-        return array('id'=>$id, 'link'=>$link, 'text'=>$text, 'icon'=>$icon, 'desc'=>$desc, 'subitems'=>array());
+        return array('id' => $id, 'link' => $link, 'text' => $text, 'icon' => $icon, 'desc' => $desc, 'subitems' => array());
     }
 
     /**
@@ -84,7 +84,7 @@ class Menu
             $link = $this->root_path . $link;
         }
 
-        $this->items[$parentId]['subitems'][$id] = array('link'=>$link, 'text'=>$text);
+        $this->items[$parentId]['subitems'][$id] = array('link' => $link, 'text' => $text);
     }
 
     /**
@@ -205,4 +205,3 @@ class Menu
         }
     }
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -27,6 +27,15 @@ if(file_exists('../../adm_my_files/config.php'))
 {
     require_once('../../adm_my_files/config.php');
 }
+else
+{
+    $g_organization = '';
+}
+
+if(!isset($_SESSION['create_config_file']))
+{
+    $_SESSION['create_config_file'] = true;
+}
 
 if(isset($g_tbl_praefix) === false)
 {
@@ -47,7 +56,7 @@ require_once(substr(__FILE__, 0, strpos(__FILE__, 'adm_program')-1).'/adm_progra
 // check PHP version and show notice if version is too low
 if(version_compare(phpversion(), MIN_PHP_VERSION) === -1)
 {
-    die('<div style="color: #cc0000;">Error: Your PHP version '.phpversion().' does not fulfill
+    exit('<div style="color: #cc0000;">Error: Your PHP version '.phpversion().' does not fulfill
         the minimum requirements for this Admidio version. You need at least PHP '.MIN_PHP_VERSION.' or higher.</div>');
 }
 
@@ -83,24 +92,42 @@ $gL10n->addLanguageData($gLanguageData);
 // if config file exists then connect to database
 if(file_exists('../../adm_my_files/config.php'))
 {
-    $db = Database::createDatabaseObject($gDbType);
-    $connection = $db->connect($g_adm_srv, $g_adm_usr, $g_adm_pw, $g_adm_db);
+    try
+    {
+        $db = new Database($gDbType, $g_adm_srv, null, $g_adm_db, $g_adm_usr, $g_adm_pw);
+    }
+    catch(AdmException $e)
+    {
+        showNotice($gL10n->get('SYS_DATABASE_NO_LOGIN', $e->getText()), 'installation.php?mode=3', $gL10n->get('SYS_BACK'), 'layout/back.png');
+    }
 
     // now check if a valid installation exists.
     $sql = 'SELECT org_id FROM '.TBL_ORGANIZATIONS;
-    $db->query($sql, false);
-    $count = $db->num_rows();
+    $pdoStatement = $db->query($sql, false);
 
-    if($count > 0)
+    // Check the query for results in case installation is runnnig at this time and the config file is already created but database is not installed so far
+    if($pdoStatement !== false && $pdoStatement->rowCount() > 0)
     {
         // valid installation exists -> exit installation
         showNotice($gL10n->get('INS_INSTALLATION_EXISTS'), '../index.php',
                    $gL10n->get('SYS_OVERVIEW'), 'layout/application_view_list.png');
     }
-    elseif($getMode != 8)
+
+    // if config exists then take parameters out of this file
+    if($getMode < 3)
     {
-        showNotice($gL10n->get('INS_CONFIGURATION_FILE_FOUND', 'config.php'), 'installation.php?mode=8',
-                   $gL10n->get('INS_CONTINUE_INSTALLATION'), 'layout/database_in.png');
+        $_SESSION['create_config_file'] = false;
+
+        // save database parameters of config.php in session variables
+        $_SESSION['db_type']     = $gDbType;
+        $_SESSION['db_server']   = $g_adm_srv;
+        $_SESSION['db_user']     = $g_adm_usr;
+        $_SESSION['db_password'] = $g_adm_pw;
+        $_SESSION['db_database'] = $g_adm_db;
+        $_SESSION['prefix']      = $g_tbl_praefix;
+
+        header('Location: installation.php?mode=4');
+        exit();
     }
 }
 elseif(file_exists('../../config.php'))
@@ -110,7 +137,7 @@ elseif(file_exists('../../config.php'))
     exit();
 }
 
-if($getMode == 1)  // (Default) Choose language
+if($getMode === 1)  // (Default) Choose language
 {
     session_destroy();
 
@@ -125,7 +152,7 @@ if($getMode == 1)  // (Default) Choose language
     $form->addSubmitButton('next_page', $gL10n->get('SYS_NEXT'), array('icon' => 'layout/forward.png'));
     $form->show();
 }
-elseif($getMode == 2)  // Welcome to installation
+elseif($getMode === 2)  // Welcome to installation
 {
     // check if a language string was committed
     if(!isset($_POST['system_language']) || trim($_POST['system_language']) === '')
@@ -250,8 +277,11 @@ elseif($getMode == 4)  // Creating organization
         if(!file_exists('../../adm_my_files/config.php'))
         {
             // check database connections
-            $db = Database::createDatabaseObject($_SESSION['db_type']);
-            if($db->connect($_SESSION['db_server'], $_SESSION['db_user'], $_SESSION['db_password'], $_SESSION['db_database']) == false)
+            try
+            {
+                $db = new Database($_SESSION['db_type'], $_SESSION['db_server'], null, $_SESSION['db_database'], $_SESSION['db_user'], $_SESSION['db_password']);
+            }
+            catch(AdmException $e)
             {
                 showNotice($gL10n->get('INS_DATABASE_NO_LOGIN'), 'installation.php?mode=3',
                            $gL10n->get('SYS_BACK'), 'arrow-circle-left');
@@ -265,19 +295,24 @@ elseif($getMode == 4)  // Creating organization
             }
 
             // now check if a valid installation exists.
-            $sql = 'SELECT org_id FROM '.TBL_ORGANIZATIONS;
-            $db->query($sql, false);
-            $count = $db->num_rows();
+            $sql = 'SELECT org_id FROM '.$_SESSION['prefix'].'_organizations';
+            $pdoStatement = $db->query($sql, false);
 
-            if($count > 0)
+            if($pdoStatement !== false && $pdoStatement->rowCount() > 0)
             {
                 // valid installation exists -> exit installation
                 showNotice($gL10n->get('INS_INSTALLATION_EXISTS'), '../index.php', $gL10n->get('SYS_OVERVIEW'), 'layout/application_view_list.png');
             }
+
         }
     }
 
+    // create a page to enter the organization names
+    $form = new HtmlFormInstallation('installation-form', 'installation.php?mode=5');
+
     // initialize form data
+    $shortnameProperty = FIELD_REQUIRED;
+
     if(isset($_SESSION['orga_shortname']))
     {
         $orgaShortName = $_SESSION['orga_shortname'];
@@ -286,16 +321,19 @@ elseif($getMode == 4)  // Creating organization
     }
     else
     {
-        $orgaShortName = '';
+        $orgaShortName = $g_organization;
         $orgaLongName  = '';
         $orgaEmail     = '';
+
+        if($g_organization !== '')
+        {
+            $shortnameProperty = FIELD_READONLY;
+        }
     }
 
-    // create a page to enter the organization names
-    $form = new HtmlFormInstallation('installation-form', 'installation.php?mode=5');
     $form->setFormDescription($gL10n->get('ORG_NEW_ORGANIZATION_DESC'), $gL10n->get('INS_SET_ORGANIZATION'));
     $form->openGroupBox('gbChooseLanguage', $gL10n->get('INS_NAME_OF_ORGANIZATION'));
-    $form->addInput('orga_shortname', $gL10n->get('SYS_NAME_ABBREVIATION'), $orgaShortName, array('maxLength' => 10, 'property' => FIELD_REQUIRED, 'class' => 'form-control-small'));
+    $form->addInput('orga_shortname', $gL10n->get('SYS_NAME_ABBREVIATION'), $orgaShortName, array('maxLength' => 10, 'property' => $shortnameProperty, 'class' => 'form-control-small'));
     $form->addInput('orga_longname', $gL10n->get('SYS_NAME'), $orgaLongName, array('maxLength' => 50, 'property' => FIELD_REQUIRED));
     $form->addInput('orga_email', $gL10n->get('ORG_SYSTEM_MAIL_ADDRESS'), $orgaEmail, array('type' => 'email', 'maxLength' => 50, 'property' => FIELD_REQUIRED));
     $form->closeGroupBox();
@@ -374,6 +412,13 @@ elseif($getMode == 6)  // Creating configuration file
                        $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
+        // username should only have valid chars
+        if(!strValidCharacters($_SESSION['user_login'], 'noSpecialChar'))
+        {
+            showNotice($gL10n->get('SYS_FIELD_INVALID_CHAR', $gL10n->get('SYS_USERNAME')), 'installation.php?mode=5', $gL10n->get('SYS_BACK'), 'layout/back.png');
+        }
+
+        // email should only have valid chars
         $_SESSION['user_email'] = admStrToLower($_SESSION['user_email']);
 
         if(!strValidCharacters($_SESSION['user_email'], 'email'))
@@ -382,6 +427,7 @@ elseif($getMode == 6)  // Creating configuration file
                        $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
 
+        // password must be the same with password confirm
         if($_SESSION['user_password'] !== $_SESSION['user_password_confirm'])
         {
             showNotice($gL10n->get('INS_PASSWORDS_NOT_EQUAL'), 'installation.php?mode=5',
@@ -393,6 +439,13 @@ elseif($getMode == 6)  // Creating configuration file
             showNotice($gL10n->get('PRO_PASSWORD_LENGTH'), 'installation.php?mode=5',
                        $gL10n->get('SYS_BACK'), 'arrow-circle-left');
         }
+    }
+
+    // if config file exists than don't create a new one
+    if($_SESSION['create_config_file'] === false)
+    {
+        header('Location: installation.php?mode=8');
+        exit();
     }
 
     // read configuration file structure
@@ -559,12 +612,12 @@ elseif($getMode == 8) // Start installation
     $sql = 'INSERT INTO '. TBL_CATEGORIES. ' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_system, cat_sequence, cat_usr_id_create, cat_timestamp_create)
             VALUES (NULL, \'USF\', \'MASTER_DATA\', \'SYS_MASTER_DATA\', 0, 1, 1, '.$systemUserId.',\''. DATETIME_NOW.'\') ';
     $db->query($sql);
-    $cat_id_master_data = $db->insert_id();
+    $cat_id_master_data = $db->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_CATEGORIES. ' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_system, cat_sequence, cat_usr_id_create, cat_timestamp_create)
             VALUES (NULL, \'USF\', \'SOCIAL_NETWORKS\', \'SYS_SOCIAL_NETWORKS\', 0, 0, 2, '.$systemUserId.',\''. DATETIME_NOW.'\') ';
     $db->query($sql);
-    $cat_id_messenger = $db->insert_id();
+    $cat_id_messenger = $db->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_CATEGORIES.' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_default, cat_system, cat_sequence, cat_usr_id_create, cat_timestamp_create)
             VALUES (NULL, \'ROL\', \'CONFIRMATION_OF_PARTICIPATION\', \'SYS_CONFIRMATION_OF_PARTICIPATION\', 1, 0, 1, 5, '.$systemUserId.',\''. DATETIME_NOW.'\')
@@ -575,7 +628,7 @@ elseif($getMode == 8) // Start installation
     $sql = 'INSERT INTO '. TBL_CATEGORIES. ' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_system, cat_sequence, cat_usr_id_create, cat_timestamp_create)
             VALUES (NULL, \'INF\', \'MASTER_DATA\', \'SYS_MASTER_DATA\', 0, 1, 1, '.$systemUserId.',\''. DATETIME_NOW.'\') ';
     $db->query($sql);
-    $cat_id_master_inf = $db->insert_id();
+    $cat_id_master_inf = $db->lastInsertId();
 
     // Stammdatenfelder anlegen
     $sql = 'INSERT INTO '. TBL_USER_FIELDS. ' (usf_cat_id, usf_type, usf_name_intern, usf_name, usf_description, usf_value_list, usf_system, usf_disabled, usf_mandatory, usf_sequence, usf_usr_id_create, usf_timestamp_create)
@@ -594,7 +647,7 @@ female.png|SYS_FEMALE\', 0, 0, 0, 11, '.$gCurrentUser->getValue('usr_id').',\''.
                  , ('.$cat_id_master_data.', \'EMAIL\', \'EMAIL\',    \'SYS_EMAIL\', NULL, NULL, 1, 0, 1, 12, '.$gCurrentUser->getValue('usr_id').',\''. DATETIME_NOW.'\')
                  , ('.$cat_id_master_data.', \'URL\',  \'WEBSITE\',   \'SYS_WEBSITE\', NULL, NULL, 0, 0, 0, 13, '.$gCurrentUser->getValue('usr_id').',\''. DATETIME_NOW.'\') ';
     $db->query($sql);
-    $usf_id_homepage = $db->insert_id();
+    $usf_id_homepage = $db->lastInsertId();
 
     // Messenger anlegen
     $sql = 'INSERT INTO '. TBL_USER_FIELDS. ' (usf_cat_id, usf_type, usf_name_intern, usf_name, usf_description, usf_icon, usf_url, usf_system, usf_sequence, usf_usr_id_create, usf_timestamp_create)
@@ -615,8 +668,13 @@ female.png|SYS_FEMALE\', 0, 0, 0, 11, '.$gCurrentUser->getValue('usr_id').',\''.
                  , ('.$cat_id_master_inf.', \'NUMBER\', \'PRICE\',   \'SYS_QUANTITY\', NULL, 0, 0, 0, 3, '.$gCurrentUser->getValue('usr_id').',\''. DATETIME_NOW.'\') ';
     $db->query($sql);
 
-    // now set db specific admidio preferences
-    $db->setDBSpecificAdmidioProperties();
+    if($gDbType === 'postgresql')
+    {
+        // soundex is not a default function in PostgreSQL
+        $sql = 'UPDATE '.TBL_PREFERENCES.' SET prf_value = \'0\'
+                 WHERE prf_name LIKE \'system_search_similar\'';
+        $db->query($sql);
+    }
 
     // create new organization
     $gCurrentOrganization = new Organization($db, $_SESSION['orga_shortname']);
@@ -694,5 +752,3 @@ female.png|SYS_FEMALE\', 0, 0, 0, 11, '.$gCurrentUser->getValue('usr_id').',\''.
     $form->closeButtonGroup();
     $form->show();
 }
-
-?>

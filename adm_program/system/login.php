@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -22,8 +22,8 @@ $sql = 'SELECT rol_id FROM '.TBL_ROLES.', '.TBL_CATEGORIES.'
            AND rol_cat_id = cat_id
            AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
                OR cat_org_id IS NULL )';
-$gDb->query($sql);
-$row = $gDb->fetch_array();
+$pdoStatement = $gDb->query($sql);
+$row = $pdoStatement->fetch();
 
 // create role object for webmaster
 $roleWebmaster = new TableRoles($gDb, $row['rol_id']);
@@ -47,7 +47,9 @@ $form->addInput('usr_password', $gL10n->get('SYS_PASSWORD'), null,
 // show selectbox with all organizations of database
 if($gPreferences['system_organization_select'] == 1)
 {
-    $sql = 'SELECT org_id, org_longname FROM '.TBL_ORGANIZATIONS.' ORDER BY org_longname ASC, org_shortname ASC';
+    $sql = 'SELECT org_id, org_longname
+              FROM '.TBL_ORGANIZATIONS.'
+          ORDER BY org_longname ASC, org_shortname ASC';
     $form->addSelectBoxFromSql('org_id', $gL10n->get('SYS_ORGANIZATION'), $gDb, $sql,
                                array('property' => FIELD_REQUIRED, 'defaultValue' => $gCurrentOrganization->getValue('org_id')));
 }
@@ -93,5 +95,3 @@ $page->addHtml('
     </div>');
 
 $page->show();
-
-?>

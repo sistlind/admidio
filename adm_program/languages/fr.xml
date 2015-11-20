@@ -94,10 +94,8 @@
         <text id="DAT_VISIBLE_TO" development="new" translation="edited">Visible pour</text>
 
         <!-- Phrases only in Downloadsmodule - 50 items -->
-        <text id="DOW_ACCESS_ALLOWED" development="new" translation="edited">Accès autorisé</text>
         <text id="DOW_ADD_TO_DATABASE" development="new" translation="edited">Ajouter à la base de donnée</text>
         <text id="DOW_ADDITIONAL_FILES" development="new" translation="edited">Cette liste vise à fournir un aperçu des fichiers et dossiers qui ne sont pas importé dans la base de données. Ajoutez-les ici. Les droits d'accès seront copiés du dossier sélectionné.</text>
-        <text id="DOW_CHOOSE_FILE" development="new" translation="edited">Sélectionner un fichier</text>
         <text id="DOW_COUNTER" development="new" translation="edited">Compteur</text>
         <text id="DOW_CREATE_FOLDER" development="new" translation="edited">Créer un dossier</text>
         <text id="DOW_DOWNLOADS" development="new" translation="edited">Téléchargements</text>
@@ -114,7 +112,6 @@
         <text id="DOW_FILE_RENAME_ERROR" development="new" translation="edited">Une erreur c'est produite quand le fichier %VAR1% a été renommé.</text>
         <text id="DOW_FILE_TO_LARGE" development="new" translation="edited">La taille des fichiers téléchargés dépasse la limite accordée(Taille maximum: %VAR1% MB).</text>
         <text id="DOW_FILE_TYPE" development="new" translation="edited">Type de fichier</text>
-        <text id="DOW_FILE_UPLOAD_ERROR" development="new" translation="edited">Une erreur non identifiée s'est produite lors du transfère du fichier %VAR1%.</text>
         <text id="DOW_FILE_UPLOADED" development="new" translation="edited">Téléchargement du fichier %VAR1_BOLD% terminé.</text>
         <text id="DOW_FOLDER_CREATED" development="new" translation="edited">Le dossier %VAR1_BOLD% a été créé.</text>
         <text id="DOW_FOLDER_EXISTS" development="new" translation="edited">Le dossier (%VAR1%) existe déjà!\n\nVeuillez sélectionner un nom différent.</text>
@@ -128,18 +125,12 @@
         <text id="DOW_MAXIMUM_FILE_SIZE_DESC" development="new" translation="edited">Les utilisateurs ne sont pas autorisés à télécharger des fichiers de plus petite taille que celles affichées ici. 0 pour désactiver le téléchargement. (defaut: 3MB)</text>
         <text id="DOW_NEW_FILE_NAME" development="new" translation="edited">Nouveau nom de fichier</text>
         <text id="DOW_NEW_NAME" development="new" translation="edited">Nouveau nom</text>
-        <text id="DOW_NO_ACCESS" development="new" translation="edited">Accès refusé</text>
-        <text id="DOW_NO_PUBLIC_ACCESS" development="new" translation="edited">L'accès publique est refusé.</text>
-        <text id="DOW_PUBLIC_DOWNLOAD_FLAG" development="new" translation="edited">Si cette option est activée, seuls les utilisateurs des rôles autorisés aurons droit d'afficher le contenu de ce dossier.</text>
-        <text id="DOW_ROLE_ACCESS_PERMISSIONS" development="new" translation="edited">Permission d'accès des rôles.</text>
         <text id="DOW_ROLE_ACCESS_PERMISSIONS_DESC" development="new" translation="edited">Ce panneau vous permet de configurer les permissions d'accès aux dossiers. Les droits d'accès sont définis de façon récursive pour les sous-dossiers et toutes les autorisations sur les dossiers existants seront remplacés. Les rôles autorisés doivent avoir les permissions d'accès pour les dossiers plus haut.</text>
         <text id="DOW_SET_FOLER_PERMISSIONS" development="new" translation="edited">Appliquer les autorisations du dossier</text>
         <text id="DOW_UNMANAGED_FILES" development="new" translation="edited">Fichiers non gérés</text>
         <text id="DOW_UPLOAD_FILE" development="new" translation="edited">Télécharger le fichier</text>
-        <text id="DOW_EDIT_FILE" development="new" translation="edited">Éditer le fichier</text>
         <text id="DOW_EDIT_FOLDER" development="new" translation="edited">Éditer le dossier</text>
         <text id="DOW_PREVIOUS_NAME" development="new" translation="edited">Nom précédent</text>
-        <text id="DOW_UPLOAD_FILE" development="new" translation="edited">Téléchargement du fichier</text>
         <text id="DOW_UPLOAD_FILE_TO_FOLDER" development="new" translation="edited">Télécharger le fichier vers le dossier %VAR1_BOLD%</text>
         <text id="DOW_UPLOAD_POST_EMPTY" development="new" translation="edited">Le fichier n'a pas pu être transféré. \ taille nDélais dépassé, taille de téléchargement du fichier %VAR1%B!</text>
 
@@ -216,7 +207,6 @@
         <text id="INS_DATABASE_IS_UPDATED" development="new" translation="edited">Mise à jour de la base de données en cours...</text>
         <text id="INS_DATABASE_LOGIN" development="new" translation="edited">Saisie des informations de la base de données</text>
         <text id="INS_DATABASE_LOGIN_DESC" development="new" translation="edited">Fournissez votre accès à la base de données ici. Le préfixe de la table peut être personnalisé si nécessaire. La personnalisation ne devrait pas être nécessaire si plusieurs installations de Admidio utilisent la même base de données.</text>
-        <text id="INS_DATABASE_NO_LOGIN" development="new" translation="edited">Les informations d'accès à la base de données fournis sont incorrect!\n\nVeuillez vérifier mettre à jour les informations ou vérifier si la base de données est disponible en ligne et accessible.</text>
         <text id="INS_DATABASE_WILL_BE_ESTABLISHED" development="new" translation="edited">Création de la base de données</text>
         <text id="INS_DESCRIPTION_BOARD" development="new" translation="edited">Tableau administratif des associations</text>
         <text id="INS_DESCRIPTION_CONFERENCE_ROOM" development="new" translation="edited">Les rencontres peuvent prendre place ici. La salle doit d'abord être réservé avant la rencontre.</text>
@@ -290,8 +280,7 @@
         <text id="LST_ACTIVE_FORMER_MEMBERS" development="new" translation="edited">Membres actifs et fondateurs</text>
         <text id="LST_ACTIVE_MEMBERS" development="new" translation="edited">Membres actifs</text>
         <text id="LST_ACTIVE_ROLES" development="new" translation="edited">Liste des membres selon les rôles du bottin</text>
-        <text id="LST_ADD_ANOTHER_COLUMN" development="new" translation="edited">Ajouter une colonne</text>
-        <text id="LST_CHANGE_LIST" development="new" translation="edited">Désirez-vous charger et changer la configuration par défaut ou créer une nouvelle configuration ?</text>
+        <text id="LST_ADD_COLUMN" development="new" translation="edited">Ajouter une colonne</text>
         <text id="LST_CHOOSE_ROLE" development="new" translation="edited">Choisissez un rôle pour la liste sélectionnée.</text>
         <text id="LST_CONFIGURATION" development="new" translation="edited">Configuration</text>
         <text id="LST_CONFIGURATION_ALL_USERS" development="new" translation="edited">Permission d'utiliser la configuration pour tous les membres</text>
@@ -301,8 +290,6 @@
         <text id="LST_CONFIGURATION_SAVE" development="new" translation="edited">Veuillez sélectionner un nom pour la configuration</text>
         <text id="LST_CREATE_NEW_CONFIGURATION" development="new" translation="edited">Création de la nouvelle configuration</text>
         <text id="LST_CREATE_OWN_LIST" development="new" translation="edited">Créer ma propre liste</text>
-        <text id="LST_DEFAULT_CONFIGURATION" development="new" translation="edited">Configurations par défaut</text>
-        <text id="LST_DEFAULT_CONFIGURATION_DESC" development="new" translation="edited">Spécifier une configuration par défaut. Sélectionner la configuration de votre choix et cliquez sur le symbole suivant: %VAR1%. La configuration sélectionnée sera active pour tous les membres du rôle. Les membres ne seront pas capable d'utiliser leurs propres configurations.</text>
         <text id="LST_DEFAULT_LIST_NOT_SET_UP" development="new" translation="edited">Aucune liste de configuration par défaut n'a été spécifiée par l'administrateur !\n\nContactez l'administrateur pour de l'aide.</text>
         <text id="LST_DELETE_CONFIGURATION" development="new" translation="edited">Supprimer la configuration</text>
         <text id="LST_EMAIL_TO_MEMBERS" development="new" translation="edited">Envoyer un courriel à tous les membres</text>
@@ -334,11 +321,10 @@
         <text id="LST_NEW_DEFAULT_CONFIGURATION" development="new" translation="edited">La configuration sera défini comme configuration par défaut</text>
         <text id="LST_NUMBER_OF_ROLES_PER_PAGE" development="new" translation="edited">Nombre de rôle par page</text>
         <text id="LST_PRESET_CONFIGURATION" development="new" translation="edited">Configuration par défaut</text>
-        <text id="LST_PRESET_CONFIGURATION_DESC" development="new" translation="edited">En tant que webmestre, vous êtes capable de définir la configuration par défaut de tous les utilisateurs. Configurez les colonnes et les rangés et enregistrez les en donnant un nom à votre groupe de configuration. Sélectionnez une nouvelle liste prédéfinie et cliquez ici: %VAR1%</text>
+        <text id="LST_PRESET_CONFIGURATION_DESC" development="new" translation="edited">En tant que webmestre, vous êtes capable de définir la configuration par défaut de tous les utilisateurs. Configurez les colonnes et les rangés et enregistrez les en donnant un nom à votre groupe de configuration.</text>
         <text id="LST_PRINT_PREVIEW" development="new" translation="edited">Afficher l'aperçu</text>
         <text id="LST_ROLE_INFORMATION" development="new" translation="edited">Informations du rôle</text>
         <text id="LST_SAVE_CONFIGURATION" development="new" translation="edited">Enregistrer la configuration</text>
-        <text id="LST_SAVE_CONFIGURATION_OTHER_NAME" development="new" translation="edited">Enregistrer la configuration sous un différent nom</text>
         <text id="LST_SEARCH_AGE_EXAMPLE" development="new" translation="edited">18y</text>
         <text id="LST_SEARCH_AGE_DESC" development="new" translation="edited">Recherche des utilisateurs de moins de 18 ans</text>
         <text id="LST_SEARCH_DATE_EXAMPLE" development="new" translation="edited">01.03.1986</text>
@@ -354,7 +340,6 @@
         <text id="LST_SEARCH_TELEFON_DESC" development="new" translation="edited">Recherche des utilisateurs avec un numéro de téléphone incluant 241 et terminant avec 54</text>
         <text id="LST_SEARCH_YES_NO_FIELD" development="new" translation="edited">oui/non champs</text>
         <text id="LST_SEARCH_YES_NO_FIELD_DESC" development="new" translation="edited">Recherche des utilisateur avec mention</text>
-        <text id="LST_SET_COLUMNS" development="new" translation="edited">Définir les colonnes pour afficher dans une liste</text>
         <text id="LST_SHOW_LIST" development="new" translation="edited">Afficher la liste</text>
         <text id="LST_SHOW_LISTS" development="new" translation="edited">Afficher les listes</text>
         <text id="LST_YOUR_CONFIGURATION" development="new" translation="edited">Votre configuration</text>
@@ -508,7 +493,7 @@
         <text id="ORG_NO_FIELD_CREATED" development="new" translation="edited">Aucun champ d'organisation spécifique ont été éviscérées encore!</text>
         <text id="ORG_NOTIFY_WEBMASTER" development="new" translation="edited">Informer l'administrateur des nouveaux enregistrements</text>
         <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE" development="new" translation="edited">Nombre d'entrées par page</text>
-        <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE_DESC" development="new" translation="edited">Définir le nombre d'éléments affichés sur une page. La pagination est fournie si nombre d'éléments dépasse la valeur définie. Aperçu avant impression et la fonctionnalité d'exportation ne sont pas affectés. Si la valeur est 0, tous les éléments seront cotées et la pagination est désactivée. (Par défaut: 0)</text>
+        <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE_DESC" development="new" translation="edited">Définir le nombre d'éléments affichés sur une page. La pagination est fournie si nombre d'éléments dépasse la valeur définie. Aperçu avant impression et la fonctionnalité d'exportation ne sont pas affectés. Si la valeur est 0, tous les éléments seront cotées et la pagination est désactivée. (Par défaut: 10)</text>
         <text id="ORG_ONLY_FOR_REGISTERED_USER" development="new" translation="edited">Pour les utilisateurs connectés uniquement</text>
         <text id="ORG_ORGANIZATION_PROPERTIES_DESC" development="new" translation="edited">Gérer les préférences de l'organisation générale ou préférences module ici.</text>
         <text id="ORG_PARENT_ORGANIZATION" development="new" translation="edited">Organisation parent</text>
@@ -522,10 +507,9 @@
         <text id="ORG_SEND_PASSWORD" development="new" translation="edited">Envoyer le mot de passe</text>
         <text id="ORG_SEND_PASSWORD_DESC" development="new" translation="edited">Le mot de passe oublié régénéré peut être demandée par les utilisateurs à être envoyés automatiquement à la même adresse e-mail. En cas de désactivation, les utilisateurs sont en mesure de faire cette demande à l'administrateur uniquement. (Par défaut: oui)</text>
         <text id="ORG_SEND_NEW_PASSWORD" development="new" translation="edited">Envoyer le nouveau mot de passe</text>
-        <text id="ORG_SYSTEM_INFOS" development="new" translation="edited">Sysinfo</text>
         <text id="ORG_SYSTEM_INFORMATIONS" development="new" translation="edited">Informations système</text>
         <text id="ORG_SYSTEM_MAIL_ADDRESS" development="new" translation="edited">Adresse courriel du système</text>
-        <text id="ORG_SYSTEM_MAIL_ADDRESS_DESC" development="new" translation="edited">Saisissez l'adresse courriel d'un administrateur. Cette adresse sera utilisée comme adresse d'expéditeur pour les messages système et des confirmations d'inscription. (Par défaut: webmaster@%VAR1%)</text>
+        <text id="ORG_SYSTEM_MAIL_ADDRESS_DESC" development="new" translation="edited">Saisissez l'adresse courriel d'un administrateur. Cette adresse sera utilisée comme adresse d'expéditeur pour les messages système et des confirmations d'inscription.</text>
         <text id="ORG_SYSTEM_MAIL_TEXTS_DESC" development="new" translation="edited">S'il vous plaît, veuillez individualiser tous les messages du système ici. Les textes doivent comporter des paragraphes (sujet et contenu) qui sont identifiés par des titres comme contenu # et # # # sujet.\n\nCahque message peut avoir de l'espace libre pour les messages en cours.</text>
         <text id="ORG_TIME_FORMAT" development="new" translation="edited">Format du temps</text>
         <text id="ORG_TIME_FORMAT_DESC" development="new" translation="edited">Format respecté %VAR1 fonction PHP. (Par défaut: H: i)</text>
@@ -590,12 +574,6 @@
         <text id="PHO_POPUP_WINDOW" development="new" translation="edited">Fenêtre popup</text>
         <text id="PHO_PREVIOUS_PHOTO" development="new" translation="edited">Image précédente</text>
         <text id="PHO_RESOLUTION_MORE_THAN" development="new" translation="edited">Résolution supérieure</text>
-        <text id="PHO_RESTRICTIONS_HELP_1" development="new" translation="edited">Les hotos doivent être enregistrés en tant que fichiers JPG ou PNG.</text>
-        <text id="PHO_RESTRICTIONS_HELP_2" development="new" translation="edited">Le serveur est capable de traiter des photos d'une taille maximale de mégapixels %VAR1%.</text>
-        <text id="PHO_RESTRICTIONS_HELP_3" development="new" translation="edited">Importer un fichier ne doit pas être supérieure à %VAR1%MO.</text>
-        <text id="PHO_RESTRICTIONS_HELP_4" development="new" translation="edited">Les photos sont automatiquement redimensionnées aux pixels% VAR1% sur le bord long (bord d'autres proportionnelle) avant d'enregistrer.</text>
-        <text id="PHO_RESTRICTIONS_HELP_5" development="new" translation="edited">Le nom du fichier n'est pas pertinent que tous les fichiers sont nommés de façon consécutive.</text>
-        <text id="PHO_RESTRICTIONS_HELP_6" development="new" translation="edited">Le téléversement de fichier peut prendre un certain temps avec une connexion Internet rapide, trop. Avant de télécharger, il est recommandé de copier tous les fichiers dans un dossier, et de les redimensionner à %VAR1% pixels (bord long). Un JPG de qualité doit être au moins à 90% (faible compression) pour bon résultat.</text>
         <text id="PHO_SAME_WINDOW" development="new" translation="edited">Même fenêtre</text>
         <text id="PHO_SCALE_AT_UPLOAD" development="new" translation="edited">Téléversement échelle</text>
         <text id="PHO_SCALE_AT_UPLOAD_DESC" development="new" translation="edited">Les photos peuvent ainsi être redimensionnés pendant le téléchargement. La valeur en pixel définit le bord long du portrait et des photos au format paysage. L'autre côté reste proportionnelle au bord long. (Par défaut: 640 pixels)</text>
@@ -604,9 +582,6 @@
         <text id="PHO_SHOW_CAPTION" development="new" translation="edited">Afficher le filigrane</text>
         <text id="PHO_SHOW_CAPTION_DESC" development="new" translation="edited">Le texte sera affiché dans toutes les photos avec un long bord de plus de 200 pixels. (Par défaut: ©%VAR1%)</text>
         <text id="PHO_SHOWN_ON_READY" development="new" translation="edited">Les photos ont été ajouté avec succès à l'album si elles figurent sur cette page.</text>
-        <text id="PHO_UPLOAD_HELP_1" development="new" translation="edited">Cliquez %VAR1_BOLD% afin de sélectionner les fichiers photo sur disque dur pour le téléchargement.</text>
-        <text id="PHO_UPLOAD_HELP_2" development="new" translation="edited">Lors de l'utilisation du processus de sélection de téléchargement individuelle de photos, l'opération doit être répété jusqu'à cinq fois ou jusqu'à ce que toutes les images soient télécharger.</text>
-        <text id="PHO_UPLOAD_HELP_3" development="new" translation="edited">Cliquez %VAR1_BOLD% et soyez patient.</text>
         <text id="PHO_UPLOAD_MORE" development="new" translation="edited">Télécharger davantage de photos</text>
         <text id="PHO_UPLOAD_PHOTOS" development="new" translation="edited">Transférez vos photos</text>
         <text id="PHO_WANT_DELETE_PHOTO" development="new" translation="edited">La photo sélectionnée va être supprimé. Confirmez-vous ?</text>
@@ -752,7 +727,6 @@
         <text id="SYS_ABR_NO" development="new" translation="edited" description="Abbreviation pour les n ° Number">No.</text>
         <text id="SYS_ACTIVE" development="new" translation="edited">Actif</text>
         <text id="SYS_ACTIVATED" development="new" translation="edited">Activé</text>
-        <text id="SYS_ADD_ROLE" development="new" translation="edited">Ajouter un rôle</text>
         <text id="SYS_ADD_RECIPIENTS" development="new" translation="edited">Ajouter un destinataire</text>
         <text id="SYS_ADDRESS" development="new" translation="edited">Adresse</text>
         <text id="SYS_ADMIDIO_SHORT_DESC" development="new" translation="edited">Le système de gestion en ligne pour les associations, groupes et organismes</text>
@@ -768,8 +742,6 @@
         <text id="SYS_BACK_TO_MODULE_OVERVIEW" development="new" translation="edited">Retour à l'aperçu du module</text>
         <text id="SYS_BETA_VERSION" development="new" translation="edited">Vous utilisez une version BETA de Admidio. \n\nIl pourrait y avoir des problème de stabilité et des perte de données peut se produire. S'il vous plaît utiliser cette version à des fins de test uniquement!</text>
         <text id="SYS_BIRTHDAY" development="new" translation="edited">Anniversaire</text>
-        <text id="SYS_BROWSE" development="new" translation="edited">Parcourir</text>
-        <text id="SYS_BROWSE_ERROR" development="new" translation="edited">La recherche de fichiers n'a pas pu être effectuée.</text>
         <text id="SYS_CAPTCHA" development="new" translation="edited">Captcha</text>
         <text id="SYS_CAPTCHA_CALC" development="new" translation="edited">Résultat du calcul</text>
         <text id="SYS_CAPTCHA_CALC_CODE_INVALID" development="new" translation="edited">Code Captcha invalide. Essayez à nouveau!</text>
@@ -966,7 +938,6 @@
         <text id="SYS_REGISTRATION" development="new" translation="edited">Inscription</text>
         <text id="SYS_REMEMBER_ME" development="new" translation="edited">Rester connecté</text>
         <text id="SYS_REMOVE" development="new" translation="edited">Supprimer</text>
-        <text id="SYS_REMOVE_ROLE" development="new" translation="edited">Retirez le rôle</text>
         <text id="SYS_REPEAT" development="new" translation="edited">Répétez</text>
         <text id="SYS_RESTRICTIONS" development="new" translation="edited">Resctrictions</text>
         <text id="SYS_ROLE" development="new" translation="edited">Rôle</text>
@@ -1022,8 +993,6 @@
         <text id="SYS_UNLIMITED" development="new" translation="edited">Illimité</text>
         <text id="SYS_UNLOCK" development="new" translation="edited">Déverrouiller</text>
         <text id="SYS_UPDATE" development="new" translation="edited">Mise à jour</text>
-        <text id="SYS_UPLOAD" development="new" translation="edited">Téléversé</text>
-        <text id="SYS_UPLOAD_ERROR" development="new" translation="edited">Le(s) Fichier(s) n'a pas pu être téléchargé.</text>
         <text id="SYS_UPLOAD_MAX_FILESIZE" development="new" translation="edited">Taille du fichier maximum télécharger</text>
         <text id="SYS_USER" development="new" translation="edited">Utilisateur</text>
         <text id="SYS_USER_ID_NOT_FOUND" development="new" translation="edited">Aucun utilisateur pourrait être trouvé avec cette ID!</text>

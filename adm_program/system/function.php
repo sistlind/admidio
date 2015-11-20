@@ -4,20 +4,33 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
-/**
- * Autoloading function of class files. This function is automatically called by PHP.
- * Therefore the class name must be the same as the file name except for case sensitive.
- * @param string $className Name of the class for which the file should be loaded
- */
-function __autoload($className)
+ /**
+  * Autoloading function of class files. This function will be later registered
+  *.for default autoload implementation. Therefore the class name must be the same
+  * as the file name except for case sensitive.
+  * @param $className Name of the class for which the file should be loaded.
+  * @return Return @b false if the file for the class wasn't found.
+  */
+function admFuncAutoload($className)
 {
-    require_once(SERVER_PATH.'/adm_program/system/classes/'.strtolower($className).'.php');
+    $fileName = SERVER_PATH. '/adm_program/system/classes/'.strtolower($className).'.php';
+
+    if(file_exists($fileName))
+    {
+        include($fileName);
+    }
+    else
+    {
+        return false;
+    }
 }
 
+// now register this function in this script so only function.php must be included for autoload
+spl_autoload_register('admFuncAutoload');
 
 /**
  * Function checks if the user is a member of the role.
@@ -399,11 +412,7 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
             {
                 $array[$variableName] = 0;
             }
-            elseif($datatype === 'string' || $datatype === 'html')
-            {
-                $array[$variableName] = '';
-            }
-            elseif($datatype === 'date')
+            else
             {
                 $array[$variableName] = '';
             }
@@ -437,7 +446,10 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
         case 'file':
             try
             {
-                admStrIsValidFileName($array[$variableName]);
+                if($array[$variableName] !== '')
+                {
+                    admStrIsValidFileName($array[$variableName]);
+                }
             }
             catch(AdmException $e)
             {
@@ -466,6 +478,10 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
             if (!is_numeric($array[$variableName]))
             {
                 $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
+            }
+            else
+            {
+                $array[$variableName] = (int) $array[$variableName];
             }
             break;
 
@@ -526,7 +542,7 @@ function admFuncShowCreateChangeInfoById($userIdCreated, $timestampCreate, $user
         $htmlEditName   = '';
 
         // compose name of user who create the recordset
-        if($timestampCreate !== '')
+        if(strlen($timestampCreate) > 0)
         {
             if($userIdCreated > 0)
             {
@@ -548,7 +564,7 @@ function admFuncShowCreateChangeInfoById($userIdCreated, $timestampCreate, $user
         }
 
         // compose name of user who edit the recordset
-        if($timestampEdited !== '')
+        if(strlen($timestampEdited) > 0)
         {
             if($userIdEdited > 0)
             {
@@ -604,11 +620,11 @@ function admFuncShowCreateChangeInfoByName($userNameCreated, $timestampCreate, $
     if($gPreferences['system_show_create_edit'] > 0)
     {
         // compose name of user who create the recordset
-        if($timestampCreate !== '')
+        if(strlen($timestampCreate) > 0)
         {
             $userNameCreated = trim($userNameCreated);
 
-            if($userNameCreated === '')
+            if(strlen($userNameCreated) == 0)
             {
                 $userNameCreated = $gL10n->get('SYS_DELETED_USER');
             }
@@ -624,11 +640,11 @@ function admFuncShowCreateChangeInfoByName($userNameCreated, $timestampCreate, $
         }
 
         // compose name of user who edit the recordset
-        if($timestampEdited !== '')
+        if(strlen($timestampEdited) > 0)
         {
             $userNameEdited = trim($userNameEdited);
 
-            if($userNameEdited === '')
+            if(strlen($userNameEdited) == 0)
             {
                 $userNameEdited = $gL10n->get('SYS_DELETED_USER');
             }
@@ -702,4 +718,3 @@ function admFuncGetDirectoryEntries($directory, $searchType = 'file')
 
     return $array_files;
 }
-?>

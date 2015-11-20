@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -102,8 +102,8 @@ $sql = 'SELECT COUNT(1) as count
           FROM '.TBL_USER_LOG.'
          WHERE 1 = 1 '.
                $sqlConditions;
-$gDb->query($sql);
-$row = $gDb->fetch_array();
+$pdoStatement = $gDb->query($sql);
+$row = $pdoStatement->fetch();
 $countChanges = $row['count'];
 
 // create select statement with all necessary data
@@ -217,4 +217,3 @@ while($row = $gDb->fetch_array($resultFieldHistory))
 
 $page->addHtml($table->show(false));
 $page->show();
-?>

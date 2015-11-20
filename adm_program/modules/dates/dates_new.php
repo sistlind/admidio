@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -40,7 +40,12 @@ $dateRegistrationPossible = 0;
 $dateCurrentUserAssigned  = 0;
 
 // set headline of the script
-if($getDateId > 0)
+if($getCopy)
+{
+    $headline = $gL10n->get('SYS_COPY_VAR', $getHeadline);
+    $mode = 5;
+}
+elseif($getDateId > 0)
 {
     $headline = $gL10n->get('SYS_EDIT_VAR', $getHeadline);
     $mode = 5;
@@ -93,12 +98,9 @@ else
         $date->setValue('dat_begin', date('Y-m-d H:00:00', time()+3600));
         $date->setValue('dat_end', date('Y-m-d H:00:00', time()+7200));
 
-        if($getCopy == false)
-        {
-            // a new event will be visible for all users per default
-            $date->setVisibleRoles(array('0'));
-            $dateRoles = array(0);
-        }
+        // a new event will be visible for all users per default
+        $date->setVisibleRoles(array('0'));
+        $dateRoles = array(0);
     }
     else
     {
@@ -106,12 +108,6 @@ else
 
         // get the saved roles for visibility
         $dateRoles = $date->getVisibleRoles();
-
-        if($getCopy)
-        {
-            $date->setValue('dat_id', 0);
-            $getDateId = 0;
-        }
 
         // Pruefung, ob der Termin zur aktuellen Organisation gehoert bzw. global ist
         if($date->editRight() == false)
@@ -220,7 +216,7 @@ $datesMenu = $page->getMenu();
 $datesMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'arrow-circle-left');
 
 // show form
-$form = new HtmlForm('dates_edit_form', $g_root_path.'/adm_program/modules/dates/dates_function.php?dat_id='.$getDateId.'&amp;mode='.$mode, $page);
+$form = new HtmlForm('dates_edit_form', $g_root_path.'/adm_program/modules/dates/dates_function.php?dat_id='.$getDateId.'&amp;mode='.$mode.'&amp;copy='.$getCopy, $page);
 $form->openGroupBox('gb_title_location', $gL10n->get('SYS_TITLE').' & '.$gL10n->get('DAT_LOCATION'));
     $form->addInput('dat_headline', $gL10n->get('SYS_TITLE'), $date->getValue('dat_headline'), array('maxLength' => 100, 'property' => FIELD_REQUIRED));
 
@@ -279,7 +275,7 @@ $form->openGroupBox('gb_visibility_registration', $gL10n->get('DAT_VISIBILITY').
         $roles[] = array($row['rol_id'], $row['rol_name'], $row['cat_name']);
     }
     $form->addSelectBox('date_roles', $gL10n->get('DAT_VISIBLE_TO'), $roles, array('property' => FIELD_REQUIRED,
-                        'defaultValue' => $dateRoles, 'showContextDependentFirstEntry' => false, 'multiselect' => true));
+                        'defaultValue' => $dateRoles, 'multiselect' => true));
 
     $form->addCheckbox('dat_highlight', $gL10n->get('DAT_HIGHLIGHT_DATE'), $date->getValue('dat_highlight'));
 
@@ -307,5 +303,3 @@ $form->addHtml(admFuncShowCreateChangeInfoById($date->getValue('dat_usr_id_creat
 // add form to html page and show page
 $page->addHtml($form->show(false));
 $page->show();
-
-?>

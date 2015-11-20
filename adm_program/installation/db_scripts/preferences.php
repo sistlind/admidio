@@ -8,7 +8,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -17,6 +17,7 @@ $orga_preferences = array(
     // System
     'enable_rss'                    => '1',
     'enable_auto_login'             => '1',
+    'default_country'               => 'DEU',
     'logout_minutes'                => '20',
     'homepage_logout'               => 'adm_program/index.php',
     'homepage_login'                => 'adm_program/index.php',
@@ -107,13 +108,15 @@ $orga_preferences = array(
     'lists_roles_per_page'        => '10',
     'lists_members_per_page'      => '25',
     'lists_hide_overview_details' => '0',
+    'lists_default_configuation'  => '',
 
     // Messages
     'enable_mail_module'          => '1',
     'enable_pm_module'            => '1',
     'enable_chat_module'          => '0',
     'enable_mail_captcha'         => '1',
-    'mail_max_receiver'           => '1',
+    'mail_max_receiver'           => '10',
+    'mail_show_former'            => '1',
     'mail_into_to'                => '0',
     'max_email_attachment_size'   => '1',
     'mail_sendmail_address'       => '',
@@ -129,7 +132,6 @@ $orga_preferences = array(
     'ecard_template'              => 'postcard.tpl',
 
     // Profile
-    'default_country'           => 'DEU',
     'profile_log_edit_fields'   => '1',
     'profile_show_map_link'     => '1',
     'profile_show_roles'        => '1',
@@ -156,4 +158,3 @@ $orga_preferences = array(
     // Inventory
     'enable_inventory_module'   => '0'
  );
-?>

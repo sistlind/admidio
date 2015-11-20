@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -45,12 +45,12 @@ $image = NULL;
 if(isset($_SESSION['photo_album']) && $_SESSION['photo_album']->getValue('pho_id') == $getPhotoId)
 {
     $photoAlbum =& $_SESSION['photo_album'];
-    $photoAlbum->db =& $gDb;
+    $photoAlbum->setDatabase($gDb);
 }
 else
 {
     $photoAlbum = new TablePhotos($gDb, $getPhotoId);
-    $_SESSION['photo_album'] =& $photoAlbum;
+    $_SESSION['photo_album'] = $photoAlbum;
 }
 
 // Bildpfad zusammensetzten
@@ -140,4 +140,3 @@ if($image != NULL)
     $image->copyToBrowser();
     $image->delete();
 }
-?>

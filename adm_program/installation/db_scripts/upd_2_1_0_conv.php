@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -91,7 +91,7 @@ while($row_orga = $gDb->fetch_array($result_orga))
                                            , ('. $row_orga['org_id']. ', \'DAT\', \'Kurse\', 0, 1)
                                            , ('. $row_orga['org_id']. ', \'DAT\', \'Training\', 0, 1)';
     $gDb->query($sql);
-    $category_common = $gDb->insert_id();
+    $category_common = $gDb->lastInsertId();
 
     // Alle Termine der neuen Kategorie zuordnen
     $sql = 'UPDATE '. TBL_DATES. ' SET dat_cat_id = '. $category_common. '
@@ -190,7 +190,7 @@ while($row_orga = $gDb->fetch_array($result_orga))
     $sql = 'INSERT INTO '. TBL_LISTS. ' (lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global, lst_default)
                  VALUES ('.$row_orga['org_id'].', '.$row_webmaster['webmaster_id'].', \'Adressliste\', \''.DATETIME_NOW.'\', 1, 1)';
     $gDb->query($sql);
-    $AdresslisteId = $gDb->insert_id();
+    $AdresslisteId = $gDb->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_LIST_COLUMNS. ' (lsc_lst_id, lsc_number, lsc_usf_id, lsc_special_field, lsc_sort)
                  VALUES ('.$AdresslisteId.', 1, '.$rowNachname[0].', null, \'ASC\')
@@ -204,7 +204,7 @@ while($row_orga = $gDb->fetch_array($result_orga))
     $sql = 'INSERT INTO '. TBL_LISTS. ' (lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global, lst_default)
                  VALUES ('.$row_orga['org_id'].', '.$row_webmaster['webmaster_id'].', \'Telefonliste\', \''.DATETIME_NOW.'\', 1, 0)';
     $gDb->query($sql);
-    $AdresslisteId = $gDb->insert_id();
+    $AdresslisteId = $gDb->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_LIST_COLUMNS. ' (lsc_lst_id, lsc_number, lsc_usf_id, lsc_special_field, lsc_sort)
                  VALUES ('.$AdresslisteId.', 1, '.$rowNachname[0].', null, \'ASC\')
@@ -218,7 +218,7 @@ while($row_orga = $gDb->fetch_array($result_orga))
     $sql = 'INSERT INTO '. TBL_LISTS. ' (lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global, lst_default)
                  VALUES ('.$row_orga['org_id'].', '.$row_webmaster['webmaster_id'].', \'Kontaktdaten\', \''.DATETIME_NOW.'\', 1, 0)';
     $gDb->query($sql);
-    $AdresslisteId = $gDb->insert_id();
+    $AdresslisteId = $gDb->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_LIST_COLUMNS. ' (lsc_lst_id, lsc_number, lsc_usf_id, lsc_special_field, lsc_sort)
                  VALUES ('.$AdresslisteId.', 1, '.$rowNachname[0].', null, \'ASC\')
@@ -235,7 +235,7 @@ while($row_orga = $gDb->fetch_array($result_orga))
     $sql = 'INSERT INTO '. TBL_LISTS. ' (lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global, lst_default)
                  VALUES ('.$row_orga['org_id'].', '.$row_webmaster['webmaster_id'].', \'Mitgliedschaft\', \''.DATETIME_NOW.'\', 1, 0)';
     $gDb->query($sql);
-    $AdresslisteId = $gDb->insert_id();
+    $AdresslisteId = $gDb->lastInsertId();
 
     $sql = 'INSERT INTO '. TBL_LIST_COLUMNS. ' (lsc_lst_id, lsc_number, lsc_usf_id, lsc_special_field, lsc_sort)
                  VALUES ('.$AdresslisteId.', 1, '.$rowNachname[0].', null, \'ASC\')
@@ -350,5 +350,3 @@ while($row_orga = $gDb->fetch_array($result_orga))
     }
     $gDb->query($sql);
 }
-
-?>

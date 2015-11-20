@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -28,12 +28,13 @@ class AutoLogin extends TableAccess
     /**
      * Constructor that will create an object of a recordset of the table adm_auto_login.
      * If the id is set than the specific auto login will be loaded.
-     * @param object $db Object of the class database. This should be the default object $gDb.
-     * @param $session The recordset of the auto login with this session will be loaded. If session isn't set than an empty object of the table is created.
+     * @param object     $database Object of the class Database. This should be the default global object @b $gDb.
+     * @param string|int $session  The recordset of the auto login with this session will be loaded.
+     *                             If session isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $session = 0)
+    public function __construct(&$database, $session = 0)
     {
-        parent::__construct($db, TBL_AUTO_LOGIN, 'atl');
+        parent::__construct($database, TBL_AUTO_LOGIN, 'atl');
 
         // if not numeric than the session id is commited
         if(is_numeric($session))
@@ -78,19 +79,18 @@ class AutoLogin extends TableAccess
     }
 
     /**
-     * Method checks the data of the cookie against the data stored in the
-     * database table @b adm_auto_login. If cookie data is ok then the
-     * user id will be set in the current session. Now there is a valid login
-     * for this user.
-     * @param object $session The Session object of the current Admidio session.
-     * @param $cookieData     The data of the cookie @b ADMIDIO_DATA.
+     * Method checks the data of the cookie against the data stored in the database
+     * table @b adm_auto_login. If cookie data is ok then the user id will be set
+     * in the current session. Now there is a valid login for this user.
+     * @param object $session    The Session object of the current Admidio session.
+     * @param        $cookieData The data of the cookie @b ADMIDIO_DATA.
      */
     public function setValidLogin($session, $cookieData)
     {
         $dataArray = explode(';', $cookieData);
 
-        if($dataArray[0] == true         // autologin
-        && is_numeric($dataArray[1]))    // user_id
+        if($dataArray[0] == true      // autologin
+        && is_numeric($dataArray[1])) // user_id
         {
             // restore user if saved database user id == cookie user id
             // if session is inactive than set it to an active session
@@ -105,7 +105,7 @@ class AutoLogin extends TableAccess
             }
 
             // auto login successful then create a valid session
-            $session->setValue('ses_usr_id',  $this->getValue('atl_usr_id'));
+            $session->setValue('ses_usr_id', $this->getValue('atl_usr_id'));
         }
     }
 
@@ -126,4 +126,3 @@ class AutoLogin extends TableAccess
         $this->db->query($sql);
     }
 }
-?>

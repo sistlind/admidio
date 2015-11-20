@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * type        - Modulkuerzel in dem ein Eintrag geloescht werden soll
  * element_id  - ID des HTML-Elements, welches nach dem Loeschen entfernt werden soll
@@ -140,7 +140,7 @@ echo '
     <div id="message_text" class="col-xs-10">'.$gL10n->get($text, $textVariable, $textVariable2).'</div>
 </div>
 <div class="modal-footer">
-        <button id="btn_yes" class="btn btn-default" type="button" onclick="javascript:callUrlHideElement(\''.$get_element_id.'\', \''.$url.'\''.$callbackFunction.')">
+        <button id="btn_yes" class="btn btn-default" type="button" onclick="callUrlHideElement(\''.$get_element_id.'\', \''.$url.'\''.$callbackFunction.')">
             <img src="'. THEME_PATH. '/icons/ok.png" alt="'.$gL10n->get('SYS_YES').'" />'.$gL10n->get('SYS_YES').'&nbsp;&nbsp;
         </button>
         <button id="btn_no" class="btn btn-default" type="button" data-dismiss="modal">
@@ -150,4 +150,3 @@ echo '
             <img src="'. THEME_PATH. '/icons/close.png" alt="'.$gL10n->get('SYS_CLOSE').'" />'.$gL10n->get('SYS_CLOSE').'
         </button>
 </div>';
-?>

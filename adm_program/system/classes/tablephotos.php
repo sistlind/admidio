@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Fotoveranstaltungsobjekt zu erstellen.
  * Eine Fotoveranstaltung kann ueber diese Klasse in der Datenbank verwaltet werden.
@@ -29,12 +29,12 @@ class TablePhotos extends TableAccess
 
     /** Constructor that will create an object of a recordset of the table adm_photos.
      *  If the id is set than the specific photo album will be loaded.
-     *  @param $db Object of the class database. This should be the default object $gDb.
-     *  @param $pho_id The recordset of the photo album with this id will be loaded. If id isn't set than an empty object of the table is created.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $pho_id   The recordset of the photo album with this id will be loaded. If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $photo_id = 0)
+    public function __construct(&$database, $photo_id = 0)
     {
-        parent::__construct($db, TBL_PHOTOS, 'pho', $photo_id);
+        parent::__construct($database, TBL_PHOTOS, 'pho', $photo_id);
 
         $hasChildAlbums = null;
     }
@@ -57,9 +57,9 @@ class TablePhotos extends TableAccess
                   FROM '. TBL_PHOTOS. '
                  WHERE pho_pho_id_parent = '.$pho_id.'
                    AND pho_locked = 0';
-        $pho_result = $this->db->query($sql);
+        $childAlbumsStatement = $this->db->query($sql);
 
-        while($pho_row = $this->db->fetch_array($pho_result))
+        while($pho_row = $childAlbumsStatement->fetch())
         {
             $total_images = $total_images + $pho_row['pho_quantity'] + $this->countImages($pho_row['pho_id']);
         }
@@ -114,9 +114,9 @@ class TablePhotos extends TableAccess
         // erst einmal rekursiv zur tiefsten Tochterveranstaltung gehen
         $sql     = 'SELECT pho_id FROM '. TBL_PHOTOS. '
                      WHERE pho_pho_id_parent = '.$photo_id;
-        $result1 = $this->db->query($sql);
+        $childAlbumStatement = $this->db->query($sql);
 
-        while($row = $this->db->fetch_array($result1))
+        while($row = $childAlbumStatement->fetch())
         {
             if($return_code)
             {
@@ -161,9 +161,9 @@ class TablePhotos extends TableAccess
         {
             $sql     = 'SELECT COUNT(1) FROM '. TBL_PHOTOS. '
                          WHERE pho_pho_id_parent = '.$this->getValue('pho_id');
-            $this->db->query($sql);
+            $countChildAlbums = $this->db->query($sql);
 
-            $row = $this->db->fetch_array();
+            $row = $countChildAlbums->fetch();
 
             if($row[0] > 0)
             {
@@ -191,7 +191,7 @@ class TablePhotos extends TableAccess
 
         if($this->new_record)
         {
-            $this->setValue('pho_org_shortname', $gCurrentOrganization->getValue('org_shortname'));
+            $this->setValue('pho_org_id', $gCurrentOrganization->getValue('org_id'));
         }
 
         parent::save($updateFingerPrint);
@@ -224,9 +224,9 @@ class TablePhotos extends TableAccess
                      WHERE pho_pho_id_parent = '.$pho_id.'
                        AND pho_locked = 0
                      ORDER BY pho_quantity DESC';
-            $result_child = $this->db->query($sql);
+            $childAlbumsStatement = $this->db->query($sql);
 
-            while($pho_row = $this->db->fetch_array($result_child))
+            while($pho_row = $childAlbumsStatement->fetch())
             {
                 if($shuffle_image['shuffle_img_nr'] == 0)
                 {
@@ -247,4 +247,3 @@ class TablePhotos extends TableAccess
         return $shuffle_image;
     }
 }
-?>

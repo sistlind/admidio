@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -402,7 +402,7 @@ class HtmlPage
     public function show($directOutput = true)
     {
         global $g_root_path, $gL10n, $gDb, $gCurrentSession, $gCurrentOrganization, $gCurrentUser, $gPreferences;
-        global $gValidLogin, $gProfileFields, $gHomepage;
+        global $gValidLogin, $gProfileFields, $gHomepage, $gDbType;
 
         $headerContent    = '';
         $htmlMyHeader     = '';
@@ -445,16 +445,10 @@ class HtmlPage
             $htmlMyBodyTop = ob_get_contents();
             ob_end_clean();
 
-            // if user had set another db in theme content then switch back to admidio db
-            $gDb->setCurrentDB();
-
             ob_start();
             include(THEME_SERVER_PATH.'/my_body_bottom.php');
             $htmlMyBodyBottom = ob_get_contents();
             ob_end_clean();
-
-            // if user had set another db in theme content then switch back to admidio db
-            $gDb->setCurrentDB();
         }
 
         // add css files to page
@@ -466,7 +460,7 @@ class HtmlPage
         // add some special scripts so that ie8 could better understand the Bootstrap 3 framework
         $headerContent .= '<!--[if lt IE 9]>
             <script src="'.$g_root_path.'/adm_program/libs/html5shiv/html5shiv.min.js"></script>
-            <script src="'.$g_root_path.'/adm_program/libs/respond/respond.js"></script>
+            <script src="'.$g_root_path.'/adm_program/libs/respond/respond.min.js"></script>
         <![endif]-->';
 
         if ($gPreferences['system_browser_update_check'] == 1)
@@ -567,4 +561,3 @@ class HtmlPage
         }
     }
 }
-?>

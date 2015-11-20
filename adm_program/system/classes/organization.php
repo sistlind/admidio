@@ -3,24 +3,22 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
-
-/**
- * @class Organization
- * @brief Handle organization data of Admidio and is connected to database table adm_organizations
+/** @class Organization
+ *  @brief Handle organization data of Admidio and is connected to database table adm_organizations
  *
- * This class creates the organization object and manages the access to the
- * organization specific preferences of the table adm_preferences. There
- * are also some method to read the relationship of organizations if the
- * database contains more then one organization.
- * @par Examples
- * @code // create object and read the value of the language preference
- * $organization = new Organization($gDb, $organizationId);
- * $preferences  = $organization->getPreferences();
- * $language     = $preferences['system_language'];
- * // language = 'de' @endcode
+ *  This class creates the organization object and manages the access to the
+ *  organization specific preferences of the table adm_preferences. There
+ *  are also some method to read the relationship of organizations if the
+ *  database contains more then one organization.
+ *  @par Examples
+ *  @code // create object and read the value of the language preference
+ *  $organization = new Organization($gDb, $organizationId);
+ *  $preferences  = $organization->getPreferences();
+ *  $language     = $preferences['system_language'];
+ *  // language = 'de' @endcode
  */
 class Organization extends TableAccess
 {
@@ -31,14 +29,14 @@ class Organization extends TableAccess
     /**
      * Constructor that will create an object of a recordset of the table adm_organizations.
      * If the id is set than the specific organization will be loaded.
-     * @param object     $db           Object of the class database. This should be the default object $gDb.
+     * @param object     $database     Object of the class Database. This should be the default global object @b $gDb.
      * @param int|string $organization The recordset of the organization with this id will be loaded.
      *                                 The organization can be the table id or the organization shortname.
      *                                 If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $organization = '')
+    public function __construct(&$database, $organization = '')
     {
-        parent::__construct($db, TBL_ORGANIZATIONS, 'org');
+        parent::__construct($database, TBL_ORGANIZATIONS, 'org');
 
         if(is_numeric($organization))
         {
@@ -76,8 +74,8 @@ class Organization extends TableAccess
         // read id of system user from database
         $sql = 'SELECT usr_id FROM '.TBL_USERS.'
                  WHERE usr_login_name LIKE \''.$gL10n->get('SYS_SYSTEM').'\' ';
-        $this->db->query($sql);
-        $row = $this->db->fetch_array();
+        $systemUserStatement = $this->db->query($sql);
+        $row = $systemUserStatement->fetch();
         $systemUserId = $row['usr_id'];
 
         // create all systemmail texts and write them into table adm_texts
@@ -104,7 +102,7 @@ class Organization extends TableAccess
         $sql = 'INSERT INTO '. TBL_CATEGORIES. ' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_default, cat_sequence, cat_usr_id_create, cat_timestamp_create)
                                                VALUES ('. $this->getValue('org_id'). ', \'ROL\', \'COMMON\', \'SYS_COMMON\', 0, 1, 1, '.$systemUserId.',\''. DATETIME_NOW.'\')';
         $this->db->query($sql);
-        $categoryCommon = $this->db->insert_id();
+        $categoryCommon = $this->db->lastInsertId();
 
         $sql = 'INSERT INTO '. TBL_CATEGORIES.' (cat_org_id, cat_type, cat_name_intern, cat_name, cat_hidden, cat_default, cat_system, cat_sequence, cat_usr_id_create, cat_timestamp_create)
                                          VALUES ('. $this->getValue('org_id').', \'ROL\', \'GROUPS\',  \'INS_GROUPS\', 0, 0, 0, 2, '.$systemUserId.',\''. DATETIME_NOW.'\')
@@ -190,7 +188,6 @@ class Organization extends TableAccess
         $addressList->setValue('lst_name', $gL10n->get('INS_ADDRESS_LIST'));
         $addressList->setValue('lst_org_id', $this->getValue('org_id'));
         $addressList->setValue('lst_global', 1);
-        $addressList->setValue('lst_default', 1);
         $addressList->addColumn(1, $gProfileFields->getProperty('LAST_NAME', 'usf_id'), 'ASC');
         $addressList->addColumn(2, $gProfileFields->getProperty('FIRST_NAME', 'usf_id'), 'ASC');
         $addressList->addColumn(3, $gProfileFields->getProperty('BIRTHDAY', 'usf_id'));
@@ -198,6 +195,12 @@ class Organization extends TableAccess
         $addressList->addColumn(5, $gProfileFields->getProperty('POSTCODE', 'usf_id'));
         $addressList->addColumn(6, $gProfileFields->getProperty('CITY', 'usf_id'));
         $addressList->save();
+
+        // set addresslist to default configuration
+        $sql = 'UPDATE '. TBL_PREFERENCES. ' SET prf_value = \''.$addressList->getValue('lst_id').'\'
+                 WHERE prf_org_id = '.$this->getValue('org_id').'
+                   AND prf_name   = \'lists_default_configuation\' ';
+        $this->db->query($sql);
 
         $phoneList = new ListConfiguration($this->db);
         $phoneList->setValue('lst_name', $gL10n->get('INS_PHONE_LIST'));
@@ -296,9 +299,9 @@ class Organization extends TableAccess
             }
             $sql .= ' org_id = '.$this->getValue('org_org_id_parent');
         }
-        $this->db->query($sql);
+        $organizationsStatement = $this->db->query($sql);
 
-        while($row = $this->db->fetch_array())
+        while($row = $organizationsStatement->fetch())
         {
             if($longname)
             {
@@ -324,9 +327,9 @@ class Organization extends TableAccess
         {
             $sql    = 'SELECT * FROM '. TBL_PREFERENCES. '
                         WHERE prf_org_id = '. $this->getValue('org_id');
-            $result = $this->db->query($sql);
+            $preferencesStatement = $this->db->query($sql);
 
-            while($prf_row = $this->db->fetch_array($result))
+            while($prf_row = $preferencesStatement->fetch())
             {
                 $this->preferences[$prf_row['prf_name']] = $prf_row['prf_value'];
             }
@@ -360,12 +363,14 @@ class Organization extends TableAccess
 
     /**
      * Method checks if the organization is configured as a child organization in the recordset.
-     * @param int $organization The @b org_shortname or @b org_id of the organization that should be set.
-     *                          If parameter isn't set than check the organization of this object.
+     * @param int $organizationId The @b org_shortname or @b org_id of the organization that should be set.
+     *                            If parameter isn't set than check the organization of this object.
      * @return bool Return @b true if the organization is a child of another organization
      */
-    public function isChildOrganization($organization = 0)
+    public function isChildOrganization($organizationId = 0)
     {
+        $returnCode = false;
+
         if($this->bCheckChildOrganizations == false)
         {
             // read parent organization from database
@@ -374,22 +379,17 @@ class Organization extends TableAccess
         }
 
         // if no orga was set in parameter then check the orga of this object
-        if($organization == 0)
+        if($organizationId === 0)
         {
-            $organization = $this->getValue('org_id');
+            $organizationId = $this->getValue('org_id');
         }
 
-        if(is_numeric($organization))
+        if(is_numeric($organizationId))
         {
-            // parameter was org_id
-            $ret_code = array_key_exists($organization, $this->childOrganizations);
+            $returnCode = array_key_exists($organizationId, $this->childOrganizations);
         }
-        else
-        {
-            // parameter was org_shortname
-            $ret_code = in_array($organization, $this->childOrganizations);
-        }
-        return $ret_code;
+
+        return $returnCode;
     }
 
     /**
@@ -461,4 +461,3 @@ class Organization extends TableAccess
         return parent::setValue($columnName, $newValue, $checkValue);
     }
 }
-?>

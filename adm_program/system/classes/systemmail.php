@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Beside the methods of the parent class there are the following additional methods:
  *
@@ -28,18 +28,18 @@ class SystemMail extends Email
 {
     private $smTextObject;
     private $smOrganization;
-    private $db;
+    private $db;                    ///< An object of the class Database for communication with the database
     private $smMailText;
     private $smMailHeader;
-    private $smVariables = array();   // speichert zusaetzliche Variablen fuer den Mailtext
+    private $smVariables = array(); // speichert zusaetzliche Variablen fuer den Mailtext
 
     /**
-     * Constructor
-     * @param object $db
+     *  Constructor that will create an object of a SystemMail to handle all system notifications.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
      */
-    public function __construct(&$db)
+    public function __construct(&$database)
     {
-        $this->db          =& $db;
+        $this->db          =& $database;
         $this->smTextObject = new TableText($this->db);
         parent::__construct();
     }
@@ -48,7 +48,6 @@ class SystemMail extends Email
      * diese Methode liest den Mailtext aus der DB und ersetzt vorkommende Platzhalter durch den gewuenschten Inhalt
      * @param  string $systemMailId eindeutige Bezeichnung der entsprechenden Systemmail, entspricht adm_texts.txt_name
      * @param  object $user         Benutzerobjekt, zu dem die Daten dann ausgelesen und in die entsprechenden Platzhalter gesetzt werden
-     * @return string
      */
     public function getMailText($systemMailId, &$user)
     {
@@ -70,8 +69,8 @@ class SystemMail extends Email
         $mailSrcText = $this->smTextObject->getValue('txt_text');
 
         // now replace all parameters in email text
-        $mailSrcText = preg_replace('/%user_first_name%/', $user->getValue('FIRST_NAME'),  $mailSrcText);
-        $mailSrcText = preg_replace('/%user_last_name%/',  $user->getValue('LAST_NAME'), $mailSrcText);
+        $mailSrcText = preg_replace('/%user_first_name%/', $user->getValue('FIRST_NAME', 'database'),  $mailSrcText);
+        $mailSrcText = preg_replace('/%user_last_name%/',  $user->getValue('LAST_NAME', 'database'), $mailSrcText);
         $mailSrcText = preg_replace('/%user_login_name%/', $user->getValue('usr_login_name'), $mailSrcText);
         $mailSrcText = preg_replace('/%user_email%/', $user->getValue('EMAIL'),   $mailSrcText);
         $mailSrcText = preg_replace('/%webmaster_email%/', $gPreferences['email_administrator'],  $mailSrcText);
@@ -145,4 +144,3 @@ class SystemMail extends Email
         return true;
     }
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Textobjekt zu erstellen.
  * Texte koennen ueber diese Klasse in der Datenbank verwaltet werden.
@@ -19,15 +19,15 @@
 class TableText extends TableAccess
 {
     /**
-     * Constructor that will create an object of a recordset of the table adm_texts.
-     * If the id is set than the specific text will be loaded.
-     * @param object $db Object of the class database. This should be the default object $gDb.
-     * @param string $name The recordset of the text with this name will be loaded.
-     *                     If name isn't set than an empty object of the table is created.
+     *  Constructor that will create an object of a recordset of the table adm_texts.
+     *  If the id is set than the specific text will be loaded.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param string $name     The recordset of the text with this name will be loaded.
+     *                          If name isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $name = '')
+    public function __construct(&$database, $name = '')
     {
-        parent::__construct($db, TBL_TEXTS, 'txt', $name);
+        parent::__construct($database, TBL_TEXTS, 'txt', $name);
     }
 
     /**
@@ -70,4 +70,3 @@ class TableText extends TableAccess
         parent::save($updateFingerPrint);
     }
 }
-?>

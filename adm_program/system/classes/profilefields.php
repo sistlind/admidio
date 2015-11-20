@@ -13,7 +13,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -23,21 +23,32 @@ class ProfileFields
     public $mUserData = array();        ///< Array with all user data objects
 
     protected $mUserId;                 ///< UserId of the current user of this object
-    public $mDb;                        ///< db object must public because of session handling
+    protected $mDb;                     ///< An object of the class Database for communication with the database
     protected $noValueCheck;            ///< if true, than no value will be checked if method setValue is called
     public $columnsValueChanged;        ///< flag if a value of one field had changed
 
     /** constructor that will initialize variables and read the profile field structure
-     *  @param object $db Database object (should be @b $gDb)
-     *  @param $organizationId The id of the organization for which the profile field structure should be read
+     *  @param object $database       Database object (should be @b $gDb)
+     *  @param int    $organizationId The id of the organization for which the profile field structure should be read
      */
-    public function __construct(&$db, $organizationId)
+    public function __construct(&$database, $organizationId)
     {
-        $this->mDb =& $db;
+        $this->setDatabase($database);
+
         $this->readProfileFields($organizationId);
         $this->mUserId = 0;
         $this->noValueCheck = false;
         $this->columnsValueChanged = false;
+    }
+
+    /**
+     *  Called on serialization of this object. The database object could not
+     *  be serialized and should be ignored.
+     *  @return Returns all class variables that should be serialized.
+     */
+    public function __sleep()
+    {
+        return array_diff(array_keys(get_object_vars($this)), array('mDb'));
     }
 
     /** user data of all profile fields will be initialized
@@ -376,9 +387,9 @@ class ProfileFields
                    AND (  cat_org_id IS NULL
                        OR cat_org_id  = '.$organizationId.' )
                  ORDER BY cat_sequence ASC, usf_sequence ASC ';
-        $usfResult = $this->mDb->query($sql);
+        $userFieldsStatement = $this->mDb->query($sql);
 
-        while($row = $this->mDb->fetch_array($usfResult))
+        while($row = $userFieldsStatement->fetch())
         {
             if(isset($this->mProfileFields[$row['usf_name_intern']]) == false)
             {
@@ -411,9 +422,9 @@ class ProfileFields
             $sql = 'SELECT * FROM '.TBL_USER_DATA.', '. TBL_USER_FIELDS. '
                      WHERE usd_usf_id = usf_id
                        AND usd_usr_id = '.$userId;
-            $usdResult = $this->mDb->query($sql);
+            $userDataStatement = $this->mDb->query($sql);
 
-            while($row = $this->mDb->fetch_array($usdResult))
+            while($row = $userDataStatement->fetch())
             {
                 if(isset($this->mUserData[$row['usd_usf_id']]) == false)
                 {
@@ -453,6 +464,18 @@ class ProfileFields
         $this->columnsValueChanged = false;
         $this->mUserId = $userId;
         $this->mDb->endTransaction();
+    }
+
+    /**
+     *  Set the database object for communication with the database of this class.
+     *  @param object $database An object of the class Database. This should be the global $gDb object.
+     */
+    public function setDatabase(&$database)
+    {
+        if(is_object($database))
+        {
+            $this->mDb =& $database;
+        }
     }
 
     // set value for column usd_value of field
@@ -568,4 +591,3 @@ class ProfileFields
         return $returnCode;
     }
 }
-?>

@@ -150,7 +150,7 @@
  *
  *                       )
  *
- *                   [headline] => Übersicht der aktiven Rollen
+ *                   [headline] => ï¿½bersicht der aktiven Rollen
  *                   [id] => 0
  *                   [mode] => Default
  *                   [order] => ASC
@@ -164,7 +164,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -295,20 +295,15 @@ class ModuleLists extends Modules
             $sql .= ' OFFSET '.$startElement;
         }
 
-        $result = $gDb->query($sql);
+        $listsStatement = $gDb->query($sql);
 
-        $lists= array('numResults'=>$gDb->num_rows($result), 'limit' => $limit, 'totalCount'=>$this->getDataSetCount());
-        while($row = $gDb->fetch_array($result))
-        {
-            $lists['recordset'][] = $row;
-        }
-        // Set empty array if no results are found
-        if(!isset($lists['recordset']))
-        {
-            $lists['recordset'] = array();
-        }
-        // Push parameter to array
-        $lists['parameter'] = $this->getParameters();
+        //array for results
+        $lists['recordset']  = $listsStatement->fetchAll();
+        $lists['numResults'] = $listsStatement->rowCount();
+        $lists['limit']      = $limit;
+        $lists['totalCount'] = $this->getDataSetCount();
+        $lists['parameter']  = $this->getParameters();
+
         return $lists;
     }
 
@@ -388,4 +383,3 @@ class ModuleLists extends Modules
         }
     }
 }
-?>

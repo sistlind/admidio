@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -61,9 +61,9 @@ class ModuleMenu
      */
     public function addCategoryItem($id, $categoryType, $defaultCategory, $link, $text, $admin = false)
     {
-        $this->items[$id] = array('id'=>$id, 'type'=>'category', 'categoryType'=>$categoryType,
-                                  'defaultCategory'=>$defaultCategory, 'link'=>$link, 'text'=>$text,
-                                  'admin'=>$admin, 'subitems'=>array());
+        $this->items[$id] = array('id' => $id, 'type' => 'category', 'categoryType' => $categoryType,
+                                  'defaultCategory' => $defaultCategory, 'link' => $link, 'text' => $text,
+                                  'admin' => $admin, 'subitems' => array());
     }
 
     /**
@@ -107,7 +107,7 @@ class ModuleMenu
      */
     public function addForm($id, $formHtml)
     {
-        $this->items[$id] = array('id'=>$id, 'type'=>'form', 'content'=>$formHtml);
+        $this->items[$id] = array('id' => $id, 'type' => 'form', 'content' => $formHtml);
     }
 
     /**
@@ -117,7 +117,7 @@ class ModuleMenu
      */
     public function addHtml($id, $html)
     {
-        $this->items[$id] = array('id'=>$id, 'type'=>'html', 'content'=>$html);
+        $this->items[$id] = array('id' => $id, 'type' => 'html', 'content' => $html);
     }
 
     /**
@@ -246,8 +246,8 @@ class ModuleMenu
             $icon = THEME_PATH.'/icons/'.$icon;
         }
 
-        return array('id'=>$id, 'type'=>$type, 'link'=>$link, 'text'=>$text,
-                     'icon'=>$icon, 'subitems'=>array(), 'js'=>$js);
+        return array('id' => $id, 'type' => $type, 'link' => $link, 'text' => $text,
+                     'icon' => $icon, 'subitems' => array(), 'js' => $js);
     }
 
     /**
@@ -320,4 +320,3 @@ class ModuleMenu
         return $html;
     }
 }
-?>

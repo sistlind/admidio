@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -12,24 +12,24 @@
 function validate_bbc($table, $idCol, $col)
 {
     global $gDb;
-    $bbcodes =array(array('o'=>'[b]', 'c'=>'[/b]'),
-                    array('o'=>'[i]', 'c'=>'[/i]'),
-                    array('o'=>'[u]', 'c'=>'[/u]'),
-                    array('o'=>'[big]', 'c'=>'[/big]'),
-                    array('o'=>'[small]', 'c'=>'[/small]'),
-                    array('o'=>'[center]', 'c'=>'[/center]'),
-                    array('o'=>'[img', 'c'=>'[/img]'),
-                    array('o'=>'[url', 'c'=>'[/url]'),
-                    array('o'=>'[email', 'c'=>'[/email]'));
+    $bbcodes =array(array('o' => '[b]', 'c' => '[/b]'),
+                    array('o' => '[i]', 'c' => '[/i]'),
+                    array('o' => '[u]', 'c' => '[/u]'),
+                    array('o' => '[big]', 'c' => '[/big]'),
+                    array('o' => '[small]', 'c' => '[/small]'),
+                    array('o' => '[center]', 'c' => '[/center]'),
+                    array('o' => '[img', 'c' => '[/img]'),
+                    array('o' => '[url', 'c' => '[/url]'),
+                    array('o' => '[email', 'c' => '[/email]'));
 
     //get all entrys with bb-codes
     $sql = 'SELECT '.$idCol.', '.$col.'
             FROM '.$table. '
             WHERE '.$col.' LIKE \'%[%\'';
-    $result = $gDb->query($sql);
+    $bbcodeStatement = $gDb->query($sql);
 
     //walk through all results
-    while($row = mysql_fetch_object($result))
+    while($row = $bbcodeStatement->fetchObject())
     {
         $sql_append = $row->$col;
 
@@ -48,7 +48,7 @@ function validate_bbc($table, $idCol, $col)
         {
             $sql_update = 'UPDATE '.$table. '
                     SET '.$col.' = \''.$sql_append.'\' WHERE '.$idCol.' = \''.$row->$idCol.'\'';
-            $result_update = $gDb->query($sql_update);
+            $gDb->query($sql_update);
         }
 
     }
@@ -63,11 +63,11 @@ validate_bbc(TBL_ROOMS, 'room_id', 'room_description');
 
 // check internal fieldname if name is unique, if not add suffix to name
 $sql = 'SELECT usf_id, usf_name_intern FROM '.TBL_USER_FIELDS.' ORDER by usf_name_intern ';
-$result = $gDb->query($sql);
+$userFieldsStatement = $gDb->query($sql);
 $lastNameIntern = '';
 $i = 0;
 
-while($row = mysql_fetch_array($result))
+while($row = $userFieldsStatement->fetch())
 {
     $i++;
     if($row['usf_name_intern'] == $lastNameIntern)
@@ -79,5 +79,3 @@ while($row = mysql_fetch_array($result))
 
     $lastNameIntern = $row['usf_name_intern'];
 }
-
-?>

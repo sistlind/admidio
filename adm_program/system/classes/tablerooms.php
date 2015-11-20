@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu, um ein neues Raumobjekt in der Datenbanktabelle
  * adm_rooms zu erstellen.
@@ -17,14 +17,14 @@
 class TableRooms extends TableAccess
 {
     /**
-     * Constructor that will create an object of a recordset of the table adm_rooms.
-     * If the id is set than the specific room will be loaded.
-     * @param object $db Object of the class database. This should be the default object $gDb.
-     * @param int    $room_id The recordset of the room with this id will be loaded. If id isn't set than an empty object of the table is created.
+     *  Constructor that will create an object of a recordset of the table adm_rooms.
+     *  If the id is set than the specific room will be loaded.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $room_id  The recordset of the room with this id will be loaded. If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $room_id = 0)
+    public function __construct(&$database, $room_id = 0)
     {
-        parent::__construct($db, TBL_ROOMS, 'room', $room_id);
+        parent::__construct($database, TBL_ROOMS, 'room', $room_id);
     }
 
     /**
@@ -78,4 +78,3 @@ class TableRooms extends TableAccess
         return parent::setValue($columnName, $newValue, $checkValue);
     }
 }
-?>

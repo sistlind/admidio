@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -46,7 +46,7 @@ unset($_SESSION['ecard_request']);
 if (isset($_SESSION['photo_album']) && $_SESSION['photo_album']->getValue('pho_id') == $getPhotoId)
 {
     $photoAlbum =& $_SESSION['photo_album'];
-    $photoAlbum->db =& $gDb;
+    $photoAlbum->setDatabase($gDb);
 }
 else
 {
@@ -57,7 +57,7 @@ else
         $photoAlbum->readDataById($getPhotoId);
     }
 
-    $_SESSION['photo_album'] =& $photoAlbum;
+    $_SESSION['photo_album'] = $photoAlbum;
 }
 
 // set headline of module
@@ -81,7 +81,7 @@ $gNavigation->addUrl(CURRENT_URL, $headline);
 
 
 // pruefen, ob Album zur aktuellen Organisation gehoert
-if($getPhotoId > 0 && $photoAlbum->getValue('pho_org_shortname') != $gCurrentOrganization->getValue('org_shortname'))
+if($getPhotoId > 0 && $photoAlbum->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
 {
     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
 }
@@ -150,7 +150,7 @@ $page->addJavascript('
     $("#menu_item_upload_photo").attr("data-toggle", "modal");
     $("#menu_item_upload_photo").attr("data-target", "#admidio_modal");
     $(".admidio-btn-album-upload").click(function(event){
-        $.get("'.$g_root_path.'/adm_program/modules/photos/photoupload.php?pho_id=" + $(this).attr("data-pho-id"),
+        $.get("'.$g_root_path.'/adm_program/system/file_upload.php?module=photos&id=" + $(this).attr("data-pho-id"),
             function(response) {
                 $(".modal-content").html(response);
                 $("#admidio_modal").modal();
@@ -182,7 +182,7 @@ if($gCurrentUser->editPhotoRight())
     if($getPhotoId > 0)
     {
         // show link to upload photos
-        $photosMenu->addItem('menu_item_upload_photo', $g_root_path.'/adm_program/modules/photos/photoupload.php?pho_id='.$getPhotoId,
+        $photosMenu->addItem('menu_item_upload_photo', $g_root_path.'/adm_program/system/file_upload.php?module=photos&id='.$getPhotoId,
                                     $gL10n->get('PHO_UPLOAD_PHOTOS'), 'photo_upload.png');
     }
 }
@@ -385,9 +385,9 @@ if($photoAlbum->getValue('pho_quantity') > 0)
 /************************Albumliste*************************************/
 
 //erfassen der Alben die in der Albentabelle ausgegeben werden sollen
-$sql='      SELECT *
-            FROM '. TBL_PHOTOS. '
-            WHERE pho_org_shortname = \''.$gCurrentOrganization->getValue('org_shortname').'\'';
+$sql = 'SELECT *
+          FROM '. TBL_PHOTOS. '
+         WHERE pho_org_id = '.$gCurrentOrganization->getValue('org_id');
 if($getPhotoId == 0)
 {
     $sql = $sql.' AND (pho_pho_id_parent IS NULL) ';
@@ -402,10 +402,12 @@ if($gCurrentUser->editPhotoRight() == false)
 }
 
 $sql = $sql.' ORDER BY pho_begin DESC ';
-$result_list = $gDb->query($sql);
+
+$albumStatement = $gDb->query($sql);
+$albumList      = $albumStatement->fetchAll();
 
 //Gesamtzahl der auszugebenden Alben
-$albumsCount = $gDb->num_rows($result_list);
+$albumsCount = $albumStatement->rowCount();
 
 // falls zum aktuellen Album Fotos und Unteralben existieren,
 // dann einen Trennstrich zeichnen
@@ -414,22 +416,15 @@ if($photoAlbum->getValue('pho_quantity') > 0 && $albumsCount > 0)
     $page->addHtml('<hr />');
 }
 
-//Dateizeiger auf erstes auszugebendes Element setzen
-if($albumsCount > 0)
-{
-    $gDb->data_seek($result_list, $getStart);
-}
-
 $childPhotoAlbum = new TablePhotos($gDb);
 
 $page->addHtml('<div class="row">');
 
 for($x = $getStart; $x <= $getStart + $gPreferences['photo_albums_per_page'] - 1 && $x < $albumsCount; $x++)
 {
-    $adm_photo_list = $gDb->fetch_array($result_list);
     // Daten in ein Photo-Objekt uebertragen
     $childPhotoAlbum->clear();
-    $childPhotoAlbum->setArray($adm_photo_list);
+    $childPhotoAlbum->setArray($albumList[$x]);
 
     // folder of the album
     $ordner = SERVER_PATH. '/adm_my_files/photos/'.$childPhotoAlbum->getValue('pho_begin', 'Y-m-d').'_'.$childPhotoAlbum->getValue('pho_id');
@@ -458,7 +453,7 @@ for($x = $getStart; $x <= $getStart + $gPreferences['photo_albums_per_page'] - 1
         }
 
         $page->addHtml('
-          <div class="col-sm-6" id="panel_pho_'.$childPhotoAlbum->getValue('pho_id').'">
+          <div class="col-sm-6 admidio-album-card" id="panel_pho_'.$childPhotoAlbum->getValue('pho_id').'">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <div class="pull-left"><h4 class="panel-title">'.$albumTitle.'</h4></div>
@@ -487,11 +482,11 @@ for($x = $getStart; $x <= $getStart + $gPreferences['photo_albums_per_page'] - 1
                 </div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-md-6">
+                        <div class="col-xs-12 col-sm-12 col-md-6 admidio-album-card-preview">
                             <a href="'.$g_root_path.'/adm_program/modules/photos/photos.php?pho_id='.$childPhotoAlbum->getValue('pho_id').'"><img
                                 class="thumbnail" src="'.$g_root_path.'/adm_program/modules/photos/photo_show.php?pho_id='.$shuffle_image['shuffle_pho_id'].'&amp;photo_nr='.$shuffle_image['shuffle_img_nr'].'&amp;thumb=1" alt="'.$gL10n->get('PHO_PHOTOS').'" /></a>
                         </div>
-                        <div class="col-xs-12 col-sm-12 col-md-6">');
+                        <div class="col-xs-12 col-sm-12 col-md-6 admidio-album-card-description">');
                             $form = new HtmlForm('form_album_'.$childPhotoAlbum->getValue('pho_id'), null, $page, array('type' => 'vertical'));
                             $form->addStaticControl('pho_date', $gL10n->get('SYS_DATE'), $albumDate);
                             $form->addStaticControl('pho_count', $gL10n->get('SYS_PHOTOS'), $childPhotoAlbum->countImages());
@@ -510,7 +505,7 @@ for($x = $getStart; $x <= $getStart + $gPreferences['photo_albums_per_page'] - 1
                     }
 
                     // Notice for users with foto edit right that this album is locked
-                    if($adm_photo_list['pho_locked'] == 1 && file_exists($ordner))
+                    if($childPhotoAlbum->getValue('pho_locked') == 1 && file_exists($ordner))
                     {
                         $page->addHtml('<div class="alert alert-warning alert-small" role="alert"><span class="glyphicon glyphicon-warning-sign"></span>'.$gL10n->get('PHO_ALBUM_NOT_APPROVED').'</div>');
                     }
@@ -554,9 +549,7 @@ if(($photoAlbum->getValue('pho_quantity')=='0' || strlen($photoAlbum->getValue('
 
 // If necessary show links to navigate to next and previous albums of the query
 $base_url = $g_root_path.'/adm_program/modules/photos/photos.php?pho_id='.$getPhotoId;
-$page->addHtml(admFuncGeneratePagination($base_url, $albumsCount, $gPreferences['photo_albums_per_page'], $getStart, TRUE));
+$page->addHtml(admFuncGeneratePagination($base_url, $albumsCount, $gPreferences['photo_albums_per_page'], $getStart, true));
 
 // show html of complete page
 $page->show();
-
-?>

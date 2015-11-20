@@ -16,8 +16,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  Author:      : Thomas-RCV
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *******************************************************************************/
 
@@ -30,14 +29,13 @@ class Participants
     public $memberDate;             ///< Array with surname, firstname of all participants of the date in current object.
     public $mDb;                    ///< db object must public because of session handling
 
-    /** constructor that will initialize variables and check if $rolId is numeric
-     *  else @b FALSE will be returned.
-     *  @param $db Database object (should be @b $gDb)
-     *  @param $rolId The Role ID of a date
+    /** Constructor that will initialize variables and check if $rolId is numeric
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $rolId    The role ID of a date
      */
-    public function __construct(&$db, $rolId = 0)
+    public function __construct(&$database, $rolId = 0)
     {
-        $this->mDb        =& $db;
+        $this->mDb =& $database;
         $this->clear();
         $this->checkId($rolId);
     }
@@ -97,13 +95,12 @@ class Participants
                 FROM '.TBL_MEMBERS.'
                 WHERE mem_rol_id = '.$this->rolId.'
                 AND mem_end    >= \''.DATE_NOW.'\'';
-
-        $result = $this->mDb->query($sql);
+        $membersStatement = $this->mDb->query($sql);
 
         // Write all member Id´s and leader status in an array
         $numParticipants = array();
 
-        while ($row = $this->mDb->fetch_array($result))
+        while ($row = $membersStatement->fetch())
         {
             $numParticipants [] = array('member' => $row['mem_usr_id'], 'leader' => $row['mem_leader']);
         }
@@ -180,7 +177,7 @@ class Participants
 
         if(!in_array($order, array('ASC', 'DESC')))
         {
-            return FALSE;
+            return false;
         }
         else
         {
@@ -197,10 +194,9 @@ class Participants
                             AND firstname.usd_usf_id = '.$gProfileFields->getProperty('FIRST_NAME', 'usf_id').'
                     WHERE mem_rol_id = '.$this->rolId.'
                     ORDER BY surname '.$this->order.' ';
+            $membersStatement = $this->mDb->query($sql);
 
-            $result = $this->mDb->query($sql);
-
-            while ($row = $this->mDb->fetch_array($result))
+            while ($row = $membersStatement->fetch())
             {
                 $participants[] = array('surname' => $row['surname'], 'firstname' => $row['firstname'], 'leader' => $row['mem_leader']);
             }
@@ -210,4 +206,3 @@ class Participants
         }
     }
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Terminobjekt zu erstellen.
  * Ein Termin kann ueber diese Klasse in der Datenbank verwaltet werden
@@ -22,17 +22,17 @@ class TableDate extends TableAccess
     protected $changeVisibleRoles;
 
     /**
-     * Constructor that will create an object of a recordset of the table adm_dates.
-     * If the id is set than the specific date will be loaded.
-     * @param $db Object of the class database. This should be the default object $gDb.
-     * @param $dat_id The recordset of the date with this id will be loaded. If id isn't set than an empty object of the table is created.
+     *  Constructor that will create an object of a recordset of the table adm_dates.
+     *  If the id is set than the specific date will be loaded.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $dat_id   The recordset of the date with this id will be loaded. If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $dat_id = 0)
+    public function __construct(&$database, $dat_id = 0)
     {
         // read also data of assigned category
         $this->connectAdditionalTable(TBL_CATEGORIES, 'cat_id', 'dat_cat_id');
 
-        parent::__construct($db, TBL_DATES, 'dat', $dat_id);
+        parent::__construct($database, TBL_DATES, 'dat', $dat_id);
     }
 
     /**
@@ -277,9 +277,9 @@ class TableDate extends TableAccess
             // alle Rollen-IDs einlesen, die diesen Termin sehen duerfen
             $this->visibleRoles = array();
             $sql = 'SELECT dtr_rol_id FROM '.TBL_DATE_ROLE.' WHERE dtr_dat_id = '.$this->getValue('dat_id');
-            $this->db->query($sql);
+            $dateRolesStatement = $this->db->query($sql);
 
-            while($row = $this->db->fetch_array())
+            while($row = $dateRolesStatement->fetch())
             {
                 if($row['dtr_rol_id'] === null)
                 {
@@ -384,4 +384,3 @@ class TableDate extends TableAccess
         $this->visibleRoles = $arrVisibleRoles;
     }
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -105,8 +105,8 @@ $systemUser->setValue('usr_timestamp_create', DATETIME_NOW);
 $systemUser->save(false); // no registered user -> UserIdCreate couldn't be filled
 
 $sql = 'SELECT usf_id FROM '. TBL_USER_FIELDS. ' WHERE usf_name_intern = \'LAST_NAME\'';
-$gDb->query($sql);
-$usfRow = $gDb->fetch_array();
+$pdoStatement = $gDb->query($sql);
+$usfRow = $pdoStatement->fetch();
 
 $sql = 'INSERT INTO '. TBL_USER_DATA. ' (usd_usf_id, usd_usr_id, usd_value)
             VALUES ('.$usfRow['usf_id'].', '.$systemUser->getValue('usr_id').', \''.$gL10n->get('SYS_SYSTEM').'\')';
@@ -143,4 +143,3 @@ $sql = 'UPDATE '.TBL_USER_FIELDS
         OR usf_name LIKE \'SYS_BIRTHDAY\'
         OR usf_name LIKE \'SYS_WEBSITE\'';
 $gDb->query($sql);
-?>

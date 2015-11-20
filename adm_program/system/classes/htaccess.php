@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein .htaccessFile zu erstellen.
  * Ein Ordner kann ueber diese Klasse mit einem htaccess-File geschuetzt werden.
@@ -23,13 +23,18 @@
  *
  *****************************************************************************/
 
+/**
+ * Class Htaccess
+ */
 class Htaccess
 {
     protected $folderPath;
     protected $htaccessFileExistsAlready = false;
     protected $folderExists              = false;
 
-    //Konstruktor
+    /**
+     * @param string $folderPathParam
+     */
     public function __construct($folderPathParam)
     {
         $this->folderPath = $folderPathParam;
@@ -38,32 +43,35 @@ class Htaccess
         {
             $this->folderExists = true;
 
-            if (file_exists($folderPathParam. '/.htaccess'))
+            if (file_exists($folderPathParam . '/.htaccess'))
             {
                 $this->htaccessFileExistsAlready = true;
             }
         }
     }
 
-    //Schuetzt den uebergebenen Ordner
+    /**
+     * Schuetzt den uebergebenen Ordner
+     */
     public function protectFolder()
     {
         if ($this->folderExists && !$this->htaccessFileExistsAlready)
         {
-            $file=fopen($this->folderPath. '/.htaccess', 'w+');
+            $file = fopen($this->folderPath . '/.htaccess', 'w+');
             fwrite($file, "Order deny,allow\n");
             fwrite($file, "Deny from all\n");
             fclose($file);
         }
     }
 
-    //Entfernt den Ordnerschutz (loeschen der htaccessDatei)
+    /**
+     * Entfernt den Ordnerschutz (loeschen der htaccessDatei)
+     */
     public function unprotectFolder()
     {
         if ($this->folderExists && $this->htaccessFileExistsAlready)
         {
-            @unlink($this->folderPath. '/.htaccess', 'w+');
+            @unlink($this->folderPath . '/.htaccess', 'w+');
         }
     }
 }
-?>

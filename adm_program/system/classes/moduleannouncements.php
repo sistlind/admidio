@@ -19,7 +19,7 @@
  *                      [0] => 3
  *                      [ann_id] => 3
  *                      [1] => DEMO
- *                      [ann_org_shortname] => DEMO
+ *                      [ann_org_id] => 1
  *                      [2] => 1
  *                      [ann_global] => 1
  *                      [3] => Willkommen im Demobereich
@@ -75,7 +75,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  ******************************************************************************/
 
@@ -94,9 +94,9 @@ class ModuleAnnouncements extends Modules
 
         $sql = 'SELECT COUNT(1) as count
                   FROM '. TBL_ANNOUNCEMENTS. '
-                 WHERE (  ann_org_shortname = \''. $gCurrentOrganization->getValue('org_shortname'). '\'
-                    OR (   ann_global   = 1
-                   AND ann_org_shortname IN ('.$gCurrentOrganization->getFamilySQL(true).') ))
+                 WHERE (  ann_org_id = '. $gCurrentOrganization->getValue('org_id'). '
+                       OR (   ann_global = 1
+                          AND ann_org_id IN ('.$gCurrentOrganization->getFamilySQL().') ))
                        '.$this->getConditions.'';
         $result = $gDb->query($sql);
         $row    = $gDb->fetch_array($result);
@@ -167,9 +167,9 @@ class ModuleAnnouncements extends Modules
         $sql = 'SELECT ann.*, '.$additionalFields.'
                   FROM '. TBL_ANNOUNCEMENTS. ' ann
                        '.$additionalTables.'
-                 WHERE (  ann_org_shortname = \''. $gCurrentOrganization->getValue('org_shortname'). '\'
-                    OR (   ann_global   = 1
-                   AND ann_org_shortname IN ('.$gCurrentOrganization->getFamilySQL(true).') ))
+                 WHERE (  ann_org_id = '. $gCurrentOrganization->getValue('org_id'). '
+                       OR (   ann_global = 1
+                          AND ann_org_id IN ('.$gCurrentOrganization->getFamilySQL().') ))
                        '.$this->getConditions.'
                  ORDER BY ann_timestamp_create DESC';
 
@@ -183,19 +183,15 @@ class ModuleAnnouncements extends Modules
             $sql .= ' OFFSET '.$startElement;
         }
 
-        $result = $gDb->query($sql);
+        $announcementsStatement = $gDb->query($sql);
 
         //array for results
-        $announcements= array('numResults'=>$gDb->num_rows($result), 'limit' => $limit, 'totalCount'=>$this->getDataSetCount());
+        $announcements['recordset']  = $announcementsStatement->fetchAll();
+        $announcements['numResults'] = $announcementsStatement->rowCount();
+        $announcements['limit']      = $limit;
+        $announcements['totalCount'] = $this->getDataSetCount();
+        $announcements['parameter']  = $this->getParameters();
 
-        //Ergebnisse auf Array pushen
-        while($row = $gDb->fetch_array($result))
-        {
-            $announcements['recordset'][] = $row;
-        }
-
-        // Push parameter to array
-        $announcements['parameter'] = $this->getParameters();
         return $announcements;
     }
 
@@ -221,7 +217,7 @@ class ModuleAnnouncements extends Modules
         $objDate = new DateTimeExtended($dateRangeStart, 'Y-m-d');
         if($objDate->isValid())
         {
-            $this->setParameter('dateStartFormatEnglish', substr($objDate->getDateTimeString(), 0, 10));
+            $this->setParameter('dateStartFormatEnglish', $objDate->format('Y-m-d'));
             $this->setParameter('dateStartFormatAdmidio', $objDate->format($gPreferences['system_date']));
         }
         else
@@ -231,7 +227,7 @@ class ModuleAnnouncements extends Modules
 
             if($objDate->isValid())
             {
-                $this->setParameter('dateStartFormatEnglish', substr($objDate->getDateTimeString(), 0, 10));
+                $this->setParameter('dateStartFormatEnglish', $objDate->format('Y-m-d'));
                 $this->setParameter('dateStartFormatAdmidio', $objDate->format($gPreferences['system_date']));
             }
             else
@@ -244,7 +240,7 @@ class ModuleAnnouncements extends Modules
         $objDate = new DateTimeExtended($dateRangeEnd, 'Y-m-d');
         if($objDate->isValid())
         {
-            $this->setParameter('dateEndFormatEnglish', substr($objDate->getDateTimeString(), 0, 10));
+            $this->setParameter('dateEndFormatEnglish', $objDate->format('Y-m-d'));
             $this->setParameter('dateEndFormatAdmidio', $objDate->format($gPreferences['system_date']));
         }
         else
@@ -254,7 +250,7 @@ class ModuleAnnouncements extends Modules
 
             if($objDate->isValid())
             {
-                $this->setParameter('dateEndFormatEnglish', substr($objDate->getDateTimeString(), 0, 10));
+                $this->setParameter('dateEndFormatEnglish', $objDate->format('Y-m-d'));
                 $this->setParameter('dateEndFormatAdmidio', $objDate->format($gPreferences['system_date']));
             }
             else
@@ -265,4 +261,3 @@ class ModuleAnnouncements extends Modules
 
     }
 }
-?>

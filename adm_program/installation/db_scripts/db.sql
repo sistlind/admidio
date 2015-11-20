@@ -3,7 +3,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  ******************************************************************************/
 
@@ -50,7 +50,7 @@ drop table if exists %PREFIX%_ids cascade;
 create table %PREFIX%_announcements
 (
     ann_id                         integer       unsigned not null AUTO_INCREMENT,
-    ann_org_shortname              varchar(10)   not null,
+    ann_org_id                     integer       unsigned,
     ann_global                     boolean       not null default '0',
     ann_headline                   varchar(100)  not null,
     ann_description                text,
@@ -409,7 +409,6 @@ create table %PREFIX%_lists
     lst_name                       varchar(255),
     lst_timestamp                  timestamp     not null default CURRENT_TIMESTAMP,
     lst_global                     boolean       not null default '0',
-    lst_default                    boolean       not null default '0',
     primary key (lst_id)
 )
 engine = InnoDB
@@ -529,8 +528,8 @@ create unique index ak_%PREFIX%_shortname on %PREFIX%_organizations (org_shortna
 create table %PREFIX%_photos
 (
     pho_id                         integer       unsigned not null AUTO_INCREMENT,
-    pho_org_shortname              varchar(10)   not null,
-    pho_quantity                   integer        unsigned not null default 0,
+    pho_org_id                     integer       unsigned not null,
+    pho_quantity                   integer       unsigned not null default 0,
     pho_name                       varchar(50)   not null,
     pho_begin                      date          not null,
     pho_end                        date          not null,
@@ -825,8 +824,8 @@ create unique index IDX_%PREFIX%_USR_LOGIN_NAME on %PREFIX%_users (usr_login_nam
 /*==============================================================*/
 /* Constraints                                                  */
 /*==============================================================*/
-alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_ORG foreign key (ann_org_shortname)
-      references %PREFIX%_organizations (org_shortname) on delete restrict on update restrict;
+alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_ORG foreign key (ann_org_id)
+      references %PREFIX%_organizations (org_id) on delete restrict on update restrict;
 alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_USR_CREATE foreign key (ann_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_USR_CHANGE foreign key (ann_usr_id_change)
@@ -933,8 +932,8 @@ alter table %PREFIX%_organizations add constraint %PREFIX%_FK_ORG_ORG_PARENT for
 
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_PHO_PARENT foreign key (pho_pho_id_parent)
       references %PREFIX%_photos (pho_id) on delete set null on update restrict;
-alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_ORG foreign key (pho_org_shortname)
-      references %PREFIX%_organizations (org_shortname) on delete restrict on update restrict;
+alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_ORG foreign key (pho_org_id)
+      references %PREFIX%_organizations (org_id) on delete restrict on update restrict;
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_USR_CREATE foreign key (pho_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_USR_CHANGE foreign key (pho_usr_id_change)

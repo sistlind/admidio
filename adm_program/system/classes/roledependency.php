@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -13,7 +13,7 @@
  */
 class RoleDependency
 {
-    public $db;
+    protected $db;          ///< An object of the class Database for communication with the database
 
     public $roleIdParent;
     public $roleIdChild;
@@ -27,18 +27,17 @@ class RoleDependency
     public $persisted;
 
     /**
-     * Constructor
-     * @param object $db
+     *  Constructor that will create an object of a recordset of the specified table.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
      */
-    public function __construct(&$db)
+    public function __construct(&$database)
     {
-        $this->db =& $db;
+        $this->db =& $database;
         $this->clear();
     }
 
     /**
-     * alle Klassenvariablen wieder zuruecksetzen
-     * @return void
+     *  Initializes all class parameters and deletes all read data.
      */
     public function clear()
     {
@@ -51,12 +50,11 @@ class RoleDependency
         $this->roleIdParentOrig = 0;
         $this->roleIdChildOrig  = 0;
 
-        $this->persisted = false;
+        $this->persisted        = false;
     }
 
     /**
      * aktuelle Rollenabhaengigkeit loeschen
-     * @return void
      */
     public function delete()
     {
@@ -83,9 +81,9 @@ class RoleDependency
             $sql = 'SELECT * FROM '. TBL_ROLE_DEPENDENCIES.
                    ' WHERE rld_rol_id_child  = '.$childRoleId.'
                        AND rld_rol_id_parent = '.$parentRoleId;
-            $this->db->query($sql);
+            $roleDependenciesStatement = $this->db->query($sql);
 
-            $row = $this->db->fetch_object();
+            $row = $roleDependenciesStatement->fetchObject();
             if($row)
             {
                 $this->roleIdParent     = $row->rld_rol_id_parent;
@@ -111,7 +109,6 @@ class RoleDependency
     /**
      * @param  object $db
      * @param  int    $parentId
-     * @return array
      */
     public static function getChildRoles(&$db, $parentId)
     {
@@ -121,12 +118,12 @@ class RoleDependency
         {
             $sql = 'SELECT rld_rol_id_child FROM '. TBL_ROLE_DEPENDENCIES.
                    ' WHERE rld_rol_id_parent = '.$parentId;
-            $db->query($sql);
+            $pdoStatement = $db->query($sql);
 
-            $num_rows = $db->num_rows();
-            if ($num_rows)
+            $numRows = $pdoStatement->rowCount();
+            if ($numRows)
             {
-                while ($row = $db->fetch_object())
+                while ($row = $pdoStatement->fetchObject())
                 {
                     $allChildIds[] = $row->rld_rol_id_child;
                 }
@@ -139,7 +136,6 @@ class RoleDependency
     /**
      * @param  object $db
      * @param  int    $childId
-     * @return array
      */
     public static function getParentRoles(&$db, $childId)
     {
@@ -149,12 +145,12 @@ class RoleDependency
         {
             $sql = 'SELECT rld_rol_id_parent FROM '.TBL_ROLE_DEPENDENCIES.
                    ' WHERE rld_rol_id_child = '.$childId;
-            $db->query($sql);
+            $pdoStatement = $db->query($sql);
 
-            $num_rows = $db->num_rows();
-            if ($num_rows)
+            $numRows = $pdoStatement->rowCount();
+            if ($numRows)
             {
-                while ($row = $db->fetch_object())
+                while ($row = $pdoStatement->fetchObject())
                 {
                     $allParentIds[] = $row->rld_rol_id_parent;
                 }
@@ -166,7 +162,6 @@ class RoleDependency
 
     /**
      * @param  int $login_user_id
-     * @return int
      */
     public function insert($login_user_id)
     {
@@ -184,9 +179,6 @@ class RoleDependency
         return -1;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmpty()
     {
         if ($this->roleIdParent === 0 && $this->roleIdChild === 0)
@@ -202,7 +194,6 @@ class RoleDependency
     /**
      * @param  object $db
      * @param  int    $parentId
-     * @return int
      */
     public static function removeChildRoles(&$db, $parentId)
     {
@@ -220,7 +211,6 @@ class RoleDependency
 
     /**
      * @param  int $parentId
-     * @return int
      */
     public function setParent($parentId)
     {
@@ -237,7 +227,6 @@ class RoleDependency
 
     /**
      * @param  int $childId
-     * @return int
      */
     public function setChild($childId)
     {
@@ -255,7 +244,6 @@ class RoleDependency
     /**
      * Es muss die ID des eingeloggten Users uebergeben werden, damit die Aenderung protokolliert werden kann
      * @param  int $login_user_id
-     * @return int
      */
     public function update($login_user_id)
     {
@@ -281,7 +269,7 @@ class RoleDependency
      * Adds all active memberships of the child role to the parent role.
      * If a membership still exists than start date will not be changed. Only
      * the end date will be set to 31.12.9999.
-     * @return int Returns -1 if no parent or child row exists
+     * @return Returns -1 if no parent or child row exists
      */
     public function updateMembership()
     {
@@ -291,14 +279,14 @@ class RoleDependency
                    ' WHERE mem_rol_id = '.$this->roleIdChild.'
                        AND mem_begin <= \''.DATE_NOW.'\'
                        AND mem_end    > \''.DATE_NOW.'\'';
-            $result = $this->db->query($sql);
+            $membershipStatement = $this->db->query($sql);
 
-            $num_rows = $this->db->num_rows($result);
+            $num_rows = $membershipStatement->rowCount();
             if ($num_rows)
             {
                 $member = new TableMembers($this->db);
 
-                while ($row = $this->db->fetch_object($result))
+                while ($row = $membershipStatement->fetch())
                 {
                     $member->startMembership($this->roleIdParent, $row->mem_usr_id);
                 }
@@ -310,4 +298,3 @@ class RoleDependency
         return -1;
     }
 }
-?>

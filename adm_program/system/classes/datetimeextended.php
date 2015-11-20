@@ -4,17 +4,13 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
- *
- * The following functions are available:
- *
- * isValid() - gibt true oder false zurueck, je nachdem ob DateTime gueltig ist
- * getDateTimeString()
- *           - liefert das gesetzte DateTime im Format 'Y-m-d H:i:s' zurueck
- * getAge()  - berechnet aus dem Datum das Alter einer Person
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
+/**
+ * Class DateTimeExtended
+ */
 class DateTimeExtended extends DateTime
 {
     private $valid;
@@ -51,15 +47,6 @@ class DateTimeExtended extends DateTime
     }
 
     /**
-     * liefert das gesetzte DateTime im Format 'Y-m-d H:i:s' zurueck
-     * @return string
-     */
-    public function getDateTimeString()
-    {
-        return $this->format('Y-m-d H:i:s');
-    }
-
-    /**
      * berechnet aus dem Datum das Alter einer Person
      * @return int
      */
@@ -86,7 +73,8 @@ class DateTimeExtended extends DateTime
             4 => $gL10n->get('SYS_THURSDAY'),
             5 => $gL10n->get('SYS_FRIDAY'),
             6 => $gL10n->get('SYS_SATURDAY'),
-            7 => $gL10n->get('SYS_SUNDAY'));
+            7 => $gL10n->get('SYS_SUNDAY')
+        );
 
         if ($weekday > 0)
         {
@@ -155,4 +143,3 @@ class DateTimeExtended extends DateTime
         return $destFormat;
     }
 }
-?>

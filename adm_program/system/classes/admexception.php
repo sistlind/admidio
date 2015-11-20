@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -48,7 +48,10 @@ class AdmException extends Exception
     {
         global $gDb;
 
-        $gDb->endTransaction();
+        if(is_object($gDb))
+        {
+            $gDb->endTransaction();
+        }
 
         // save param in class parameters
         $this->param1 = $param1;
@@ -69,7 +72,7 @@ class AdmException extends Exception
         global $gL10n;
 
         // if text is a translation-id then translate it
-        if(strpos($this->message, '_') == 3)
+        if(strpos($this->message, '_') === 3)
         {
             return $gL10n->get($this->message, $this->param1, $this->param2, $this->param3, $this->param4);
         }
@@ -119,5 +122,3 @@ class AdmException extends Exception
         exit();
     }
 }
-
-?>

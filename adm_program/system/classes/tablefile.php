@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Fileobjekt zu erstellen.
  * Eine Datei kann ueber diese Klasse in der Datenbank verwaltet werden
@@ -23,15 +23,15 @@ class TableFile extends TableAccess
 {
     /** Constructor that will create an object of a recordset of the table adm_files.
      *  If the id is set than the specific files will be loaded.
-     *  @param $db Object of the class database. This should be the default object $gDb.
-     *  @param $fil_id The recordset of the files with this id will be loaded. If id isn't set than an empty object of the table is created.
+     *  @param object $database Object of the class Database. This should be the default global object @b $gDb.
+     *  @param int    $fil_id   The recordset of the files with this id will be loaded. If id isn't set than an empty object of the table is created.
      */
-    public function __construct(&$db, $fil_id = 0)
+    public function __construct(&$database, $fil_id = 0)
     {
         // read also data of assigned folder
         $this->connectAdditionalTable(TBL_FOLDERS, 'fol_id', 'fil_fol_id');
 
-        parent::__construct($db, TBL_FILES, 'fil', $fil_id);
+        parent::__construct($database, TBL_FILES, 'fil', $fil_id);
     }
 
     /** Deletes the selected record of the table and the assiciated file in the file system.
@@ -74,7 +74,7 @@ class TableFile extends TableAccess
 
         //Pruefen ob der aktuelle Benutzer Rechte an der Datei hat
         //Gucken ob ueberhaupt ein Datensatz gefunden wurde...
-        if ($this->getValue('fil_id'))
+        if ($this->getValue('fil_id') > 0)
         {
             //Falls die Datei gelocked ist und der User keine Downloadadminrechte hat, bekommt er nix zu sehen..
             if (!$gCurrentUser->editDownloadRight() && $this->getValue('fil_locked'))
@@ -98,8 +98,8 @@ class TableFile extends TableAccess
                           AND mem_usr_id = '. $gCurrentUser->getValue('usr_id'). '
                           AND mem_begin <= \''.DATE_NOW.'\'
                           AND mem_end    > \''.DATE_NOW.'\'';
-                $result_rights = $this->db->query($sql_rights);
-                $row_rights = $this->db->fetch_array($result_rights);
+                $rightsStatement = $this->db->query($sql_rights);
+                $row_rights = $rightsStatement->fetch();
                 $row_count  = $row_rights[0];
 
                 //Falls der User in keiner Rolle Mitglied ist, die Rechte an dem Ordner besitzt
@@ -117,6 +117,29 @@ class TableFile extends TableAccess
             }
         }
         throw new AdmException('SYS_INVALID_PAGE_VIEW');
+    }
+
+    /**
+     *  If the value was manipulated before with @b setValue than the manipulated value is returned.
+     *  @param $columnName The name of the database column whose value should be read
+     *  @param $format For date or timestamp columns the format should be the date/time format e.g. @b d.m.Y = '02.04.2011'. @n
+     *                 For text columns the format can be @b database that would return the original database value without any transformations
+     *  @return Returns the value of the database column.
+     *          If the value was manipulated before with @b setValue than the manipulated value is returned.
+     */
+    public function getValue($columnName, $format = '')
+    {
+        global $gL10n;
+
+        $value = parent::getValue($columnName, $format);
+
+        // getValue transforms & to html chars. This must be undone.
+        if($columnName == 'fil_name')
+        {
+            $value = htmlspecialchars_decode($value);
+        }
+
+        return $value;
     }
 
     /** Save all changed columns of the recordset in table of database. Therefore the class remembers if it's
@@ -138,4 +161,3 @@ class TableFile extends TableAccess
         parent::save($updateFingerPrint);
     }
 }
-?>

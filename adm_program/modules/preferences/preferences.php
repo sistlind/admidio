@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -80,17 +80,16 @@ $page->addJavascript('
             url:     action,
             data:    $(this).serialize(),
             success: function(data) {
-                if(data == "success") {
+                if (data === "success") {
                     $("#"+id+" .form-alert").attr("class", "alert alert-success form-alert");
                     $("#"+id+" .form-alert").html("<span class=\"glyphicon glyphicon-ok\"></span><strong>'.$gL10n->get('SYS_SAVE_DATA').'</strong>");
                     $("#"+id+" .form-alert").fadeIn("slow");
                     $("#"+id+" .form-alert").animate({opacity: 1.0}, 2500);
                     $("#"+id+" .form-alert").fadeOut("slow");
-                }
-                else {
+                } else {
                     $("#"+id+" .form-alert").attr("class", "alert alert-danger form-alert");
                     $("#"+id+" .form-alert").fadeIn();
-                    $("#"+id+" .form-alert").html("<span class=\"glyphicon glyphicon-exclamation-sign\"></span>"+data);
+                    $("#"+id+" .form-alert").html("<span class=\"glyphicon glyphicon-exclamation-sign\"></span>" + data);
                 }
             }
         });
@@ -183,8 +182,8 @@ $page->addHtml('
                         $form->addInput('org_longname', $gL10n->get('SYS_NAME'), $form_values['org_longname'], array('maxLength' => 60, 'property' => FIELD_REQUIRED));
                         $form->addInput('org_homepage', $gL10n->get('SYS_WEBSITE'), $form_values['org_homepage'], array('maxLength' => 60));
 
-                        //Falls andere Orgas untergeordnet sind, darf diese Orga keiner anderen Orga untergeordnet werden
-                        if($gCurrentOrganization->hasChildOrganizations() == false)
+                        // Falls andere Orgas untergeordnet sind, darf diese Orga keiner anderen Orga untergeordnet werden
+                        if(!$gCurrentOrganization->hasChildOrganizations())
                         {
                             $sql = 'SELECT org_id, org_longname FROM '. TBL_ORGANIZATIONS.'
                                      WHERE org_id <> '. $gCurrentOrganization->getValue('org_id'). '
@@ -301,7 +300,7 @@ $page->addHtml('
                         $text = new TableText($gDb);
                         $form = new HtmlForm('system_notification_preferences_form', $g_root_path.'/adm_program/modules/preferences/preferences_function.php?form=system_notification', $page, array('class' => 'form-preferences'));
                         $form->addCheckbox('enable_system_mails', $gL10n->get('ORG_ACTIVATE_SYSTEM_MAILS'), $form_values['enable_system_mails'], array('helpTextIdInline' => 'ORG_ACTIVATE_SYSTEM_MAILS_DESC'));
-                        $form->addInput('email_administrator', $gL10n->get('ORG_SYSTEM_MAIL_ADDRESS'), $form_values['email_administrator'], array('type' => 'email', 'maxLength' => 50, 'helpTextIdInline' => array('ORG_SYSTEM_MAIL_ADDRESS_DESC', $_SERVER['HTTP_HOST'])));
+                        $form->addInput('email_administrator', $gL10n->get('ORG_SYSTEM_MAIL_ADDRESS'), $form_values['email_administrator'], array('type' => 'email', 'maxLength' => 50, 'helpTextIdInline' => 'ORG_SYSTEM_MAIL_ADDRESS_DESC'));
                         $form->addCheckbox('enable_email_notification', $gL10n->get('ORG_SYSTEM_MAIL_NEW_ENTRIES'), $form_values['enable_email_notification'], array('helpTextIdInline' => array('ORG_SYSTEM_MAIL_NEW_ENTRIES_DESC', '<i>'.$gPreferences['email_administrator'].'</i>')));
                         $form->addCustomContent($gL10n->get('SYS_SYSTEM_MAILS'),
                             '<p>'.$gL10n->get('ORG_SYSTEM_MAIL_TEXTS_DESC').':</p>
@@ -363,7 +362,7 @@ $page->addHtml('
                         $selectBoxEntries = array('11' => '11', '12' => '12', '13' => '13', '14' => '14', '16' => '16', '18' => '18', '20' => '20', '22' => '22', '24' => '24', '30' => '30');
                         $form->addSelectBox('captcha_signature_font_size', $gL10n->get('SYS_FONT_SIZE'), $selectBoxEntries, array('defaultValue' => $form_values['captcha_signature_font_size'], 'showContextDependentFirstEntry' => false, 'helpTextIdInline' => 'ORG_CAPTCHA_SIGNATURE_FONT_SIZE'));
 
-                        if($gPreferences['captcha_type']=='pic')
+                        if($gPreferences['captcha_type'] === 'pic')
                         {
                             $captcha_parameter = '&amp;type=pic';
                         }
@@ -385,7 +384,7 @@ $page->addHtml('
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <a data-toggle="collapse" data-parent="#accordion_common" href="#collapse_system_informations">
-                            <span class="fa fa-info-circle fa-fw fa-gap-right" aria-hidden="true"></span>'.$gL10n->get('ORG_SYSTEM_INFOS').'
+                            <span class="fa fa-info-circle fa-fw fa-gap-right" aria-hidden="true"></span>'.$gL10n->get('ORG_SYSTEM_INFORMATIONS').'
                         </a>
                     </h4>
                 </div>
@@ -399,13 +398,13 @@ $page->addHtml('
                         $form->addCustomContent($gL10n->get('SYS_ADMIDIO_VERSION'), $html);
 
                         // if database version is different to file version, then show database version
-                        if(strcmp(ADMIDIO_VERSION, $gSystemComponent->getValue('com_version')) != 0)
+                        if(strcmp(ADMIDIO_VERSION, $gSystemComponent->getValue('com_version')) !== 0)
                         {
-                            $form->addStaticControl('database_version', $gL10n->get('ORG_DIFFERENT_DATABASE_VERSION'), $gSystemComponent->getValue('com_version'));
+                            $form->addStaticControl('admidio_database_version', $gL10n->get('ORG_DIFFERENT_DATABASE_VERSION'), $gSystemComponent->getValue('com_version'));
                         }
                         $form->addStaticControl('last_update_step', $gL10n->get('ORG_LAST_UPDATE_STEP'), $gSystemComponent->getValue('com_update_step'));
 
-                        if(version_compare(phpversion(), MIN_PHP_VERSION) == -1)
+                        if(version_compare(phpversion(), MIN_PHP_VERSION) === -1)
                         {
                             $html = '<span class="text-danger"><strong>'.phpversion().'</strong></span> &rarr; '.$gL10n->get('SYS_PHP_VERSION_REQUIRED', MIN_PHP_VERSION);
                         }
@@ -413,17 +412,17 @@ $page->addHtml('
                         {
                             $html = '<span class="text-success"><strong>'.phpversion().'</strong></span>';
                         }
-                        $form->addCustomContent($gL10n->get('SYS_PHP_VERSION'), $html);
+                        $form->addStaticControl('php_version', $gL10n->get('SYS_PHP_VERSION'), $html);
 
-                        if(version_compare($gDb->getVersion(), $gDb->getMinVersion()) == -1)
+                        if(version_compare($gDb->getVersion(), $gDb->getMinimumRequiredVersion()) == -1)
                         {
-                            $html = '<span class="text-danger"><strong>'.$gDb->getVersion().'</strong></span> &rarr; '.$gL10n->get('SYS_DATABASE_VERSION_REQUIRED', $gDb->getMinVersion());
+                            $html = '<span class="text-danger"><strong>'.$gDb->getVersion().'</strong></span> &rarr; '.$gL10n->get('SYS_DATABASE_VERSION_REQUIRED', $gDb->getMinimumRequiredVersion());
                         }
                         else
                         {
                             $html = '<span class="text-success"><strong>'.$gDb->getVersion().'</strong></span>';
                         }
-                        $form->addCustomContent($gDb->getName().'-'.$gL10n->get('SYS_VERSION'), $html);
+                        $form->addStaticControl('database_version', $gDb->getName().'-'.$gL10n->get('SYS_VERSION'), $html);
 
                         if(ini_get('safe_mode') == 1)
                         {
@@ -433,9 +432,9 @@ $page->addHtml('
                         {
                             $html = '<span class="text-success"><strong>'.$gL10n->get('SYS_OFF').'</strong></span>';
                         }
-                        $form->addCustomContent($gL10n->get('SYS_SAFE_MODE'), $html);
+                        $form->addStaticControl('safe_mode', $gL10n->get('SYS_SAFE_MODE'), $html);
 
-                        if(ini_get('post_max_size')!='')
+                        if(ini_get('post_max_size') !== '')
                         {
                             $form->addStaticControl('post_max_size', $gL10n->get('SYS_POST_MAX_SIZE'), ini_get('post_max_size'));
                         }
@@ -444,7 +443,7 @@ $page->addHtml('
                             $form->addStaticControl('post_max_size', $gL10n->get('SYS_POST_MAX_SIZE'), $gL10n->get('SYS_NOT_SET'));
                         }
 
-                        if(ini_get('memory_limit')!='')
+                        if(ini_get('memory_limit') !== '')
                         {
                             $form->addStaticControl('memory_limit', $gL10n->get('SYS_MEMORY_LIMIT'), ini_get('memory_limit'));
                         }
@@ -461,9 +460,9 @@ $page->addHtml('
                         {
                             $html = '<span class="text-danger"><strong>'.$gL10n->get('SYS_OFF').'</strong></span>';
                         }
-                        $form->addCustomContent($gL10n->get('SYS_FILE_UPLOADS'), $html);
+                        $form->addStaticControl('file_uploads', $gL10n->get('SYS_FILE_UPLOADS'), $html);
 
-                        if(ini_get('upload_max_filesize')!='')
+                        if(ini_get('upload_max_filesize') !== '')
                         {
                             $form->addStaticControl('upload_max_filesize', $gL10n->get('SYS_UPLOAD_MAX_FILESIZE'), ini_get('upload_max_filesize'));
                         }
@@ -474,7 +473,7 @@ $page->addHtml('
 
                         $form->addStaticControl('max_processable_image_size', $gL10n->get('SYS_MAX_PROCESSABLE_IMAGE_SIZE'), round((admFuncProcessableImageSize()/1000000), 2).' '.$gL10n->get('SYS_MEGA_PIXEL'));
                         $html = '<a href="preferences_function.php?mode=4" target="_blank">phpinfo()</a>';
-                        $form->addCustomContent($gL10n->get('SYS_PHP_INFO'), $html);
+                        $form->addStaticControl('php_info', $gL10n->get('SYS_PHP_INFO'), $html);
 
                         if(isset($gDebug) && $gDebug)
                         {
@@ -484,7 +483,7 @@ $page->addHtml('
                         {
                             $html = '<span class="text-success"><strong>'.$gL10n->get('SYS_OFF').'</strong></span>';
                         }
-                        $form->addCustomContent($gL10n->get('SYS_DEBUG_MODUS'), $html);
+                        $form->addStaticControl('debug_mode', $gL10n->get('SYS_DEBUG_MODUS'), $html);
                         $page->addHtml($form->show(false));
                     $page->addHtml('</div>
                 </div>
@@ -652,6 +651,13 @@ $page->addHtml('
                         $selectBoxEntries = array('10' => '10', '25' => '25', '50' => '50', '100' => '100');
                         $form->addSelectBox('lists_members_per_page', $gL10n->get('LST_MEMBERS_PER_PAGE'), $selectBoxEntries, array('defaultValue' => $form_values['lists_members_per_page'], 'showContextDependentFirstEntry' => false, 'helpTextIdInline' => 'LST_MEMBERS_PER_PAGE_DESC'));
                         $form->addCheckbox('lists_hide_overview_details', $gL10n->get('LST_HIDE_DETAILS'), $form_values['lists_hide_overview_details'], array('helpTextIdInline' => 'LST_HIDE_DETAILS_DESC'));
+                        // read all global lists
+                        $sql = 'SELECT lst_id, lst_name
+                                  FROM '. TBL_LISTS. '
+                                 WHERE lst_org_id = '. $gCurrentOrganization->getValue('org_id') .'
+                                   AND lst_global = 1
+                                 ORDER BY lst_name ASC, lst_timestamp DESC ';
+                        $form->addSelectBoxFromSql('lists_default_configuation', $gL10n->get('LST_DEFAULT_CONFIGURATION'), $gDb, $sql, array('defaultValue' => $form_values['lists_default_configuation'], 'showContextDependentFirstEntry' => false, 'helpTextIdInline' => 'LST_DEFAULT_CONFIGURATION_DESC'));
                         $html = '<a class="btn" href="'. $g_root_path. '/adm_program/modules/categories/categories.php?type=ROL"><img
                                     src="'. THEME_PATH. '/icons/application_view_tile.png" alt="'.$gL10n->get('SYS_SWITCH_TO_CATEGORIES_ADMINISTRATION').'" />'.$gL10n->get('SYS_SWITCH_TO_CATEGORIES_ADMINISTRATION').'</a>';
                         $htmlDesc = $gL10n->get('DAT_MAINTAIN_CATEGORIES_DESC').'<div class="alert alert-warning alert-small" role="alert"><span class="glyphicon glyphicon-warning-sign"></span>'.$gL10n->get('ORG_NOT_SAVED_SETTINGS_LOST').'</div>';
@@ -678,6 +684,7 @@ $page->addHtml('
                         $form->addCheckbox('enable_chat_module', $gL10n->get('MSG_ACTIVATE_CHAT_MODULE'), $form_values['enable_chat_module'], array('helpTextIdInline' => 'MSG_ACTIVATE_CHAT_MODULE_DESC'));
                         $form->addCheckbox('enable_mail_captcha', $gL10n->get('ORG_ENABLE_CAPTCHA'), $form_values['enable_mail_captcha'], array('helpTextIdInline' => 'MAI_SHOW_CAPTCHA_DESC'));
                         $form->addInput('mail_max_receiver', $gL10n->get('MAI_MAX_RECEIVER'), $form_values['mail_max_receiver'], array('type' => 'number', 'minNumber' => 0, 'maxNumber' => 9999, 'helpTextIdInline' => 'MAI_MAX_RECEIVER_DESC'));
+                        $form->addCheckbox('mail_show_former', $gL10n->get('MSG_SHOW_FORMER'), $form_values['mail_show_former'], array('helpTextIdInline' => 'MSG_SHOW_FORMER_DESC'));
                         $form->addCheckbox('mail_into_to', $gL10n->get('MAI_INTO_TO'), $form_values['mail_into_to'], array('helpTextIdInline' => 'MAI_INTO_TO_DESC'));
                         $form->addInput('max_email_attachment_size', $gL10n->get('MAI_ATTACHMENT_SIZE').' (MB)', $form_values['max_email_attachment_size'], array('type' => 'number', 'minNumber' => 0, 'maxNumber' => 999999, 'helpTextIdInline' => 'MAI_ATTACHMENT_SIZE_DESC'));
                         $form->addInput('mail_sendmail_address', $gL10n->get('MAI_SENDER_EMAIL'), $form_values['mail_sendmail_address'], array('maxLength' => 50, 'helpTextIdInline' => array('MAI_SENDER_EMAIL_ADDRESS_DESC', $_SERVER['HTTP_HOST'])));
@@ -816,5 +823,3 @@ $page->addHtml('
 </div>');
 
 $page->show();
-
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * start     : Position of query recordset where the visual output should start
  * headline  : Ueberschrift, die ueber den Links steht
@@ -195,9 +195,7 @@ $page->addHtml('</div>');
 
 // If necessary show links to navigate to next and previous recordsets of the query
 $baseUrl = $g_root_path.'/adm_program/modules/links/links.php?headline='. $getHeadline;
-$page->addHtml(admFuncGeneratePagination($baseUrl, $weblinksCount, $weblinksPerPage, $weblinks->getStartElement(), TRUE));
+$page->addHtml(admFuncGeneratePagination($baseUrl, $weblinksCount, $weblinksPerPage, $weblinks->getStartElement(), true));
 
 // show html of complete page
 $page->show();
-
-?>

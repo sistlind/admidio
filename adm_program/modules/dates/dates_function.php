@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -16,6 +16,7 @@
  *          5 - Termin aendern
  *          6 - Termin im iCal-Format exportieren
  * rol_id : vorselektierte Rolle der Rollenauswahlbox
+ * copy   : true - The event of the dat_id will be copied and the base for this new event
  * number_role_select : Nummer der Rollenauswahlbox, die angezeigt werden soll
  *
  *****************************************************************************/
@@ -26,7 +27,10 @@ require_once('../../system/common.php');
 $getDateId = admFuncVariableIsValid($_GET, 'dat_id', 'numeric');
 $getMode   = admFuncVariableIsValid($_GET, 'mode', 'numeric', array('requireValue' => true));
 $getRoleId = admFuncVariableIsValid($_GET, 'rol_id', 'numeric');
+$getCopy   = admFuncVariableIsValid($_GET, 'copy', 'boolean');
 $getNumberRoleSelect = admFuncVariableIsValid($_GET, 'number_role_select', 'numeric');
+
+$originalDateId = 0;
 
 // check if module is active
 if($gPreferences['enable_dates_module'] == 0)
@@ -47,6 +51,12 @@ if(!$gCurrentUser->editDates() && $getMode != 3 && $getMode != 4 && $getMode != 
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
 }
 
+if($getCopy)
+{
+    $originalDateId = $getDateId;
+    $getDateId      = 0;
+}
+
 // Terminobjekt anlegen
 $date = new TableDate($gDb);
 
@@ -64,7 +74,6 @@ if($getDateId > 0)
 if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
 {
     $_SESSION['dates_request'] = $_POST;
-    error_log(print_r($_POST, true));
 
     // ------------------------------------------------
     // pruefen ob alle notwendigen Felder gefuellt sind
@@ -97,8 +106,9 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
 
     if(isset($_POST['dat_all_day']))
     {
-        $_POST['date_from_time'] = '00:00';
-        $_POST['date_to_time']   = '00:00'; // Ganztägig ist nur logisch bei 23:59 Uhr (rn)
+        $midnightDateTime = DateTime::createFromFormat('Y-m-d H:i:s', '2000-01-01 00:00:00');
+        $_POST['date_from_time'] = $midnightDateTime->format($gPreferences['system_time']);
+        $_POST['date_to_time']   = $midnightDateTime->format($gPreferences['system_time']);
         $date->setValue('dat_all_day', 1);
     }
     else
@@ -119,31 +129,31 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
     }
 
     // ------------------------------------------------
-    // Datum und Uhrzeit auf Gueltigkeit pruefen
+    // Check valid format of date and time input
     // ------------------------------------------------
 
-    $startDateTime = new DateTimeExtended($_POST['date_from'].' '.$_POST['date_from_time'], $gPreferences['system_date'].' '.$gPreferences['system_time']);
+    $startDateTime = DateTime::createFromFormat($gPreferences['system_date'].' '.$gPreferences['system_time'], $_POST['date_from'].' '.$_POST['date_from_time']);
+    if(!$startDateTime)
+    {
+        // Error: now check if date format or time format was wrong and show message
+        $startDateTime = DateTime::createFromFormat($gPreferences['system_date'], $_POST['date_from']);
 
-    if($startDateTime->isValid())
-    {
-        // Datum & Uhrzeit formatiert zurueckschreiben
-        $date->setValue('dat_begin', $startDateTime->getDateTimeString());
-    }
-    else
-    {
-        // Fehler: pruefen, ob Datum oder Uhrzeit falsches Format hat
-        $startDateTime = new DateTimeExtended($_POST['date_from'], $gPreferences['system_date']);
-        if($startDateTime->isValid())
+        if(!$startDateTime)
         {
             $gMessage->show($gL10n->get('SYS_DATE_INVALID', $gL10n->get('SYS_START'), $gPreferences['system_date']));
         }
         else
         {
-            $gMessage->show($gL10n->get('SYS_TIME_INVALID', $gL10n->get('SYS_TIME').' '.$gL10n->get('SYS_START'), $gPreferences['system_time']));
+        $gMessage->show($gL10n->get('SYS_TIME_INVALID', $gL10n->get('SYS_TIME').' '.$gL10n->get('SYS_START'), $gPreferences['system_time']));
         }
     }
+    else
+    {
+        // now write date and time with database format to date object
+        $date->setValue('dat_begin', $startDateTime->format('Y-m-d H:i:s'));
+    }
 
-    // wenn Datum-bis nicht gefüllt ist, dann mit Datum-von nehmen
+    // if date-to is not filled then take date-from
     if(strlen($_POST['date_to'])   == 0)
     {
         $_POST['date_to'] = $_POST['date_from'];
@@ -153,18 +163,14 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
         $_POST['date_to_time'] = $_POST['date_from_time'];
     }
 
-    $endDateTime = new DateTimeExtended($_POST['date_to'].' '.$_POST['date_to_time'], $gPreferences['system_date'].' '.$gPreferences['system_time']);
+    $endDateTime = DateTime::createFromFormat($gPreferences['system_date'].' '.$gPreferences['system_time'], $_POST['date_to'].' '.$_POST['date_to_time']);
 
-    if($endDateTime->isValid())
+    if(!$endDateTime)
     {
-        // Datum & Uhrzeit formatiert zurueckschreiben
-        $date->setValue('dat_end', $endDateTime->getDateTimeString());
-    }
-    else
-    {
-        // Fehler: pruefen, ob Datum oder Uhrzeit falsches Format hat
-        $endDateTime = new DateTimeExtended($_POST['date_to'], $gPreferences['system_date']);
-        if($endDateTime->isValid())
+        // Error: now check if date format or time format was wrong and show message
+        $endDateTime = DateTime::createFromFormat($gPreferences['system_date'], $_POST['date_to']);
+
+        if(!$endDateTime)
         {
             $gMessage->show($gL10n->get('SYS_DATE_INVALID', $gL10n->get('SYS_END'), $gPreferences['system_date']));
         }
@@ -173,9 +179,14 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
             $gMessage->show($gL10n->get('SYS_TIME_INVALID', $gL10n->get('SYS_TIME').' '.$gL10n->get('SYS_END'), $gPreferences['system_time']));
         }
     }
+    else
+    {
+        // now write date and time with database format to date object
+        $date->setValue('dat_end', $endDateTime->format('Y-m-d H:i:s'));
+    }
 
     // DateTo should be greater than DateFrom (Timestamp must be less)
-    if($startDateTime < $endDateTime)
+    if($startDateTime > $endDateTime)
     {
         $gMessage->show($gL10n->get('SYS_DATE_END_BEFORE_BEGIN'));
     }
@@ -219,8 +230,8 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
         {
             $sql = 'SELECT COUNT(dat_id) AS is_reserved
                       FROM '.TBL_DATES.'
-                     WHERE dat_begin  <= \''.$endDateTime->getDateTimeString().'\'
-                       AND dat_end    >= \''.$startDateTime->getDateTimeString().'\'
+                     WHERE dat_begin  <= \''.$endDateTime->format('Y-m-d H:i:s').'\'
+                       AND dat_end    >= \''.$startDateTime->format('Y-m-d H:i:s').'\'
                        AND dat_room_id = '.$_POST['dat_room_id'].'
                        AND dat_id     <> '.$getDateId;
             $result = $gDb->query($sql);
@@ -284,8 +295,8 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
 
         $sql_cal = 'SELECT cat_name FROM '.TBL_CATEGORIES.'
                      WHERE cat_id = '.$_POST['dat_cat_id'];
-        $gDb->query($sql_cal);
-        $row_cal  = $gDb->fetch_array();
+        $pdoStatement = $gDb->query($sql_cal);
+        $row_cal  = $pdoStatement->fetch();
         $calendar = $row_cal['cat_name'];
 
         if(strlen($_POST['dat_location']) > 0)
@@ -339,19 +350,36 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
         // Kategorie fuer Terminbestaetigungen einlesen
         $sql = 'SELECT cat_id FROM '.TBL_CATEGORIES.'
                  WHERE cat_name_intern LIKE \'CONFIRMATION_OF_PARTICIPATION\'';
-        $gDb->query($sql);
-        $row = $gDb->fetch_array();
+        $pdoStatement = $gDb->query($sql);
+        $row = $pdoStatement->fetch();
 
         // create role for participations
-        $role = new TableRoles($gDb);
-        $role->setValue('rol_cat_id', $row['cat_id']);
+        if($getCopy)
+        {
+            // copy original role with their settings
+            $sql = 'SELECT dat_rol_id FROM '.TBL_DATES.'
+                     WHERE dat_id = '.$originalDateId;
+            $pdoStatement = $gDb->query($sql);
+            $row = $pdoStatement->fetch();
+
+            $role = new TableRoles($gDb, $row['dat_rol_id']);
+            $role->setValue('rol_id', '0');
+        }
+        else
+        {
+            $role = new TableRoles($gDb);
+
+            // these are the default settings for a date role
+            $role->setValue('rol_cat_id', $row['cat_id']);
+            $role->setValue('rol_this_list_view', '1');    // role members are allowed to view lists
+            $role->setValue('rol_mail_this_role', '1');    // role members are allowed to send mail to this role
+            $role->setValue('rol_visible', '0');
+            $role->setValue('rol_leader_rights', ROLE_LEADER_MEMBERS_ASSIGN);    // leaders are allowed to add or remove participations
+            $role->setValue('rol_max_members', $_POST['dat_max_members']);
+        }
+
         $role->setValue('rol_name', $gL10n->get('DAT_DATE').' '. $date->getValue('dat_begin', 'Y-m-d H:i').' - '.$date->getValue('dat_id'));
         $role->setValue('rol_description', $date->getValue('dat_headline'));
-        $role->setValue('rol_this_list_view', '1');    // role members are allowed to view lists
-        $role->setValue('rol_mail_this_role', '1');    // role members are allowed to send mail to this role
-        $role->setValue('rol_visible', '0');
-        $role->setValue('rol_leader_rights', ROLE_LEADER_MEMBERS_ASSIGN);    // leaders are allowed to add or remove participations
-        $role->setValue('rol_max_members', $_POST['dat_max_members']);
 
         // save role in database
         $return_code2 = $role->save();
@@ -383,7 +411,16 @@ if($getMode == 1 || $getMode == 5)  // Neuen Termin anlegen/aendern
         // if event exists and you could register to this event then we must check
         // if the data of the role must be changed
         $role = new TableRoles($gDb, $date->getValue('dat_rol_id'));
-        $roleName = $gL10n->get('DAT_DATE').' '. $date->getValue('dat_begin', 'Y-m-d H:i').' - '.$date->getValue('dat_id');
+
+        // only change name of role if no custom name was set
+        if(strpos($role->getValue('rol_name'), $gL10n->get('DAT_DATE')) !== false)
+        {
+            $roleName = $gL10n->get('DAT_DATE').' '. $date->getValue('dat_begin', 'Y-m-d H:i').' - '.$date->getValue('dat_id');
+        }
+        else
+        {
+            $roleName = $role->getValue('rol_name');
+        }
 
         if($role->getValue('rol_max_members') != $date->getValue('dat_max_members')
         || $role->getValue('role_name' != $roleName))
@@ -467,5 +504,3 @@ elseif($getMode == 6)  // Termin im iCal-Format exportieren
     echo $date->getIcal($_SERVER['HTTP_HOST']);
     exit();
 }
-
-?>

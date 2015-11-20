@@ -6,7 +6,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -22,7 +22,7 @@ require_once('../../system/login_valid.php');
 $getPhotoId = admFuncVariableIsValid($_GET, 'pho_id', 'numeric');
 $getPhotoNr = admFuncVariableIsValid($_GET, 'photo_nr', 'numeric');
 
-// tempfolder 
+// tempfolder
 // change this value if your provider requires the usage of special directories (e.g. HostEurope)
 //$tempfolder = "/is/htdocs/user_tmp/xxxxxx/";
 $tempfolder = sys_get_temp_dir();
@@ -51,9 +51,9 @@ $photo_album = new TablePhotos($gDb);
 
 // get id of album
 $photo_album->readDataById($getPhotoId);
-    
+
 // check whether album belongs to the current organization
-if($photo_album->getValue('pho_org_shortname') != $gCurrentOrganization->getValue('org_shortname'))
+if($photo_album->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
 }
@@ -119,9 +119,9 @@ if($getPhotoNr == null)
     /************************add sub albums as subfolders*************************************/
 
     // get sub albums
-    $sql='      SELECT *
-                FROM '. TBL_PHOTOS. '
-                WHERE pho_org_shortname = \''.$gCurrentOrganization->getValue('org_shortname').'\'';
+    $sql = 'SELECT *
+              FROM '. TBL_PHOTOS. '
+             WHERE pho_org_id = '.$gCurrentOrganization->getValue('org_id');
     if($getPhotoId == 0)
     {
         $sql = $sql.' AND (pho_pho_id_parent IS NULL) ';
@@ -238,4 +238,3 @@ if($getPhotoNr == null)
     }
 
 }
-?>

@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  * pho_id : Id of the album that should be edited
@@ -56,7 +56,7 @@ if ($getMode == 'change')
     $photoAlbum->readDataById($getPhotoId);
 
     // Pruefung, ob das Fotoalbum zur aktuellen Organisation gehoert
-    if($photoAlbum->getValue('pho_org_shortname') != $gCurrentOrganization->getValue('org_shortname'))
+    if($photoAlbum->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
     {
         $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
     }
@@ -93,7 +93,7 @@ function subfolder($parent_id, $vorschub, $photoAlbum, $pho_id)
               FROM '. TBL_PHOTOS. '
              WHERE pho_id <> '. $photoAlbum->getValue('pho_id').
                    $sqlConditionParentId.'
-               AND pho_org_shortname LIKE \''.$gCurrentOrganization->getValue('org_shortname').'\'';
+               AND pho_org_id = '.$gCurrentOrganization->getValue('org_id');
     $result_child = $gDb->query($sql);
 
     while($adm_photo_child = $gDb->fetch_array($result_child))
@@ -143,5 +143,3 @@ $form->addHtml(admFuncShowCreateChangeInfoById($photoAlbum->getValue('pho_usr_id
 // add form to html page and show page
 $page->addHtml($form->show(false));
 $page->show();
-
-?>

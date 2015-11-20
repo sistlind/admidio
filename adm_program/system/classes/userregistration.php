@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -38,7 +38,7 @@ class UserRegistration extends User
     /**
      * Constructor that will create an object of a recordset of the users table.
      * If the id is set than this recordset will be loaded.
-     * @param object $db             Object of the class database. This could be the default object @b $gDb.
+     * @param object $database       Object of the class Database. This should be the default global object @b $gDb.
      * @param object $userFields     An object of the ProfileFields class with the profile field structure
      *                               of the current organization. This could be the default object @b $gProfileFields.
      * @param int    $userId         The id of the user who should be loaded. If id isn't set than an empty object
@@ -46,13 +46,13 @@ class UserRegistration extends User
      * @param int    $organizationId The id of the organization for which the user should be registered.
      *                               If no id is set than the user will be registered for the current organization.
      */
-    public function __construct(&$db, $userFields, $userId = 0, $organizationId = 0)
+    public function __construct(&$database, $userFields, $userId = 0, $organizationId = 0)
     {
         global $gCurrentOrganization;
 
         $this->sendEmail = true;
 
-        parent::__construct($db, $userFields, $userId);
+        parent::__construct($database, $userFields, $userId);
 
         if($organizationId > 0)
         {
@@ -93,7 +93,7 @@ class UserRegistration extends User
         {
             // send mail to user that his registration was accepted
             $sysmail = new SystemMail($this->db);
-            $sysmail->addRecipient($this->getValue('EMAIL'), $this->getValue('FIRST_NAME').' '.$this->getValue('LAST_NAME'));
+            $sysmail->addRecipient($this->getValue('EMAIL'), $this->getValue('FIRST_NAME', 'database').' '.$this->getValue('LAST_NAME', 'database'));
             $sysmail->sendSystemMail('SYSMAIL_REGISTRATION_USER', $this);
         }
 
@@ -122,9 +122,9 @@ class UserRegistration extends User
         if($this->getValue('usr_valid') == 0)
         {
             $sql = 'SELECT reg_id FROM '.TBL_REGISTRATIONS.' WHERE reg_usr_id = '.$this->getValue('usr_id');
-            $this->db->query($sql);
+            $registrationsStatement = $this->db->query($sql);
 
-            if($this->db->num_rows() === 0)
+            if($registrationsStatement->rowCount() === 0)
             {
                 $return = parent::delete();
             }
@@ -204,9 +204,9 @@ class UserRegistration extends User
                            AND mem_end           > \''.DATE_NOW.'\'
                            AND mem_usr_id        = usr_id
                            AND usr_valid         = 1 ';
-                $result = $this->db->query($sql);
+                $emailStatement = $this->db->query($sql);
 
-                while($row = $this->db->fetch_array($result))
+                while($row = $emailStatement->fetch())
                 {
                     // send mail that a new registration is available
                     $sysmail = new SystemMail($this->db);
@@ -217,4 +217,3 @@ class UserRegistration extends User
         }
     }
 }
-?>

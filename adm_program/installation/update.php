@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -23,7 +23,7 @@ elseif(file_exists('../../config.php'))
     // config file at destination of version 2.0 exists -> copy config file to new destination
     if(!@copy('../../config.php', '../../adm_my_files/config.php'))
     {
-        die('<div style="color: #cc0000;">Error: The file <b>config.php</b> could not be copied to the folder <b>adm_my_files</b>.
+        exit('<div style="color: #cc0000;">Error: The file <b>config.php</b> could not be copied to the folder <b>adm_my_files</b>.
             Please check if this folder has the necessary write rights. If it\'s not possible to set this right then copy the
             config.php from the Admidio main folder to adm_my_files with your FTP program.</div>');
     }
@@ -53,7 +53,7 @@ require_once(substr(__FILE__, 0, strpos(__FILE__, 'adm_program')-1).'/adm_progra
 // check PHP version and show notice if version is too low
 if(version_compare(phpversion(), MIN_PHP_VERSION) === -1)
 {
-    die('<div style="color: #cc0000;">Error: Your PHP version '.phpversion().' does not fulfill
+    exit('<div style="color: #cc0000;">Error: Your PHP version '.phpversion().' does not fulfill
         the minimum requirements for this Admidio version. You need at least PHP '.MIN_PHP_VERSION.' or higher.</div>');
 }
 
@@ -74,15 +74,20 @@ if(!isset($gDbType))
 }
 
 // connect to database
-$gDb = Database::createDatabaseObject($gDbType);
-$gDbConnection = $gDb->connect($g_adm_srv, $g_adm_usr, $g_adm_pw, $g_adm_db);
+try
+{
+    $gDb = new Database($gDbType, $g_adm_srv, null, $g_adm_db, $g_adm_usr, $g_adm_pw);
+}
+catch(AdmException $e)
+{
+    showNotice($gL10n->get('SYS_DATABASE_NO_LOGIN', $e->getText()), 'installation.php?mode=3', $gL10n->get('SYS_BACK'), 'layout/back.png');
+}
 
 // now check if a valid installation exists.
 $sql = 'SELECT org_id FROM '.TBL_ORGANIZATIONS;
-$gDb->query($sql, false);
-$count = $gDb->num_rows();
+$pdoStatement = $gDb->query($sql, false);
 
-if($count === 0)
+if(!$pdoStatement || $pdoStatement->rowCount() === 0)
 {
     // no valid installation exists -> show installation wizard
     header('Location: installation.php');
@@ -94,7 +99,7 @@ $gCurrentOrganization = new Organization($gDb, $g_organization);
 if($gCurrentOrganization->getValue('org_id') == 0)
 {
     // Organisation wurde nicht gefunden
-    die('<div style="color: #cc0000;">Error: The organization of the config.php could not be found in the database!</div>');
+    exit('<div style="color: #cc0000;">Error: The organization of the config.php could not be found in the database!</div>');
 }
 
 // organisationsspezifische Einstellungen aus adm_preferences auslesen
@@ -392,9 +397,6 @@ elseif($getMode == 2)
                         $flagNextVersion = true;
                     }
 
-                    // now set db specific admidio preferences
-                    $gDb->setDBSpecificAdmidioProperties($version);
-
                     // check if an php update file exists and then execute the script
                     if(file_exists($phpUpdateFile))
                     {
@@ -422,6 +424,14 @@ elseif($getMode == 2)
                 }
             }
         }
+    }
+
+    if($gDbType === 'postgresql')
+    {
+        // soundex is not a default function in PostgreSQL
+        $sql = 'UPDATE '.TBL_PREFERENCES.' SET prf_value = \'0\'
+                 WHERE prf_name LIKE \'system_search_similar\'';
+        $gDb->query($sql);
     }
 
     // since version 3 we do the update with xml files and a new class model
@@ -464,5 +474,3 @@ elseif($getMode == 2)
     $form->closeButtonGroup();
     $form->show();
 }
-
-?>

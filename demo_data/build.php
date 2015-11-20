@@ -4,7 +4,7 @@
  *
  * Copyright    : © 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -25,7 +25,7 @@ elseif(file_exists('../config.php'))
 }
 else
 {
-    die('<p style="color: #cc0000;">Error: Config file not found!</p>');
+    exit('<p style="color: #cc0000;">Error: Config file not found!</p>');
 }
 
 include('../adm_program/system/constants.php');
@@ -35,7 +35,7 @@ include('../adm_program/system/string.php');
 // import of demo data must be enabled in config.php
 if(!isset($gImportDemoData) || $gImportDemoData != 1)
 {
-    die('<p style="color: #cc0000;">Error: Demo data could not be imported because you have
+    exit('<p style="color: #cc0000;">Error: Demo data could not be imported because you have
     not set the preference <strong>gImportDemoData</strong> in your configuration file.</p>
     <p style="color: #cc0000;">Please add the following line to your config.php :<br /><i>$gImportDemoData = 1;</i></p>');
 }
@@ -111,7 +111,7 @@ $getLanguage = admFuncVariableIsValid($_GET, 'lang', 'string', array('defaultVal
 
 // set runtime of script to 2 minutes because of the many work to do
 // but no output of error message because of safe mode
-@set_time_limit(600);
+@set_time_limit(1000);
 
 echo 'Start with installation ...<br />';
 
@@ -139,9 +139,14 @@ if(!$b_return)
 echo 'Folder <strong>adm_my_files</strong> was successfully copied.<br />';
 
  // connect to database
-$db = Database::createDatabaseObject($gDbType);
-$connection = $db->connect($g_adm_srv, $g_adm_usr, $g_adm_pw, $g_adm_db);
-
+try
+{
+    $db = new Database($gDbType, $g_adm_srv, null, $g_adm_db, $g_adm_usr, $g_adm_pw);
+}
+catch(AdmException $e)
+{
+    die('<br />'.$gL10n->get('SYS_DATABASE_NO_LOGIN', $e->getText()));
+}
 
 if($gDbType === 'mysql')
 {
@@ -153,7 +158,7 @@ if($gDbType === 'mysql')
 
 $filename = 'db.sql';
 $file     = fopen($filename, 'r')
-            or die('<p style="color: #cc0000;">File <strong>db.sql</strong> could not be found in folder <strong>demo_data</strong>.</p>');
+            or exit('<p style="color: #cc0000;">File <strong>db.sql</strong> could not be found in folder <strong>demo_data</strong>.</p>');
 $content  = fread($file, filesize($filename));
 $sql_arr  = explode(';', $content);
 fclose($file);
@@ -173,7 +178,7 @@ foreach($sql_arr as $sql)
 
 $filename = 'data.sql';
 $file     = fopen($filename, 'r')
-            or die('<p style="color: #cc0000;">File <strong>db.sql</strong> could not be found in folder <strong>demo_data</strong>.</p>');
+            or exit('<p style="color: #cc0000;">File <strong>db.sql</strong> could not be found in folder <strong>demo_data</strong>.</p>');
 $content  = fread($file, filesize($filename));
 $sql_arr  = explode(';', $content);
 fclose($file);
@@ -205,7 +210,7 @@ foreach($sql_arr as $sql)
 
             // search for the exact value as a separate word and replace it with the translation
             // in l10n the single quote is transformed in html entity, but we need the original sql escaped
-            $sql = preg_replace('/\b'.$value.'\b/', $db->escape_string(str_replace('&rsquo;', '\'', $convertedText)), $sql);
+            $sql = preg_replace('/\b'.$value.'\b/', $db->escapeString(str_replace('&rsquo;', '\'', $convertedText)), $sql);
         }
 
         $db->query($sql);
@@ -260,8 +265,8 @@ if(!$db->query('SELECT 1 FROM '.TBL_COMPONENTS, false))
     $sql = 'SELECT prf_value FROM '.$g_tbl_praefix.'_preferences
              WHERE prf_name   = \'db_version\'
                AND prf_org_id = 1';
-    $db->query($sql);
-    $row  = $db->fetch_array();
+    $pdoStatement = $db->query($sql);
+    $row = $pdoStatement->fetch();
     $databaseVersion = $row['prf_value'];
 }
 else
@@ -275,5 +280,3 @@ echo '<p>Database and testdata have the Admidio version '.$databaseVersion.'.<br
  Your files have Admidio version '.ADMIDIO_VERSION.'.<br /><br />
  Please perform an <a href="../adm_program/installation/update.php">update of your database</a>.</p>
  <p style="font-size: 9pt;">&copy; 2004 - 2015&nbsp;&nbsp;The Admidio team</p>';
-
-?>

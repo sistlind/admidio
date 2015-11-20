@@ -3,7 +3,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *******************************************************************************/
 
@@ -166,7 +166,7 @@ class ModuleDates extends Modules
 
             if($objDate->isValid())
             {
-                return substr($objDate->getDateTimeString(), 0, 10);
+                return $objDate->format('Y-m-d');
             }
             else
             {
@@ -234,16 +234,13 @@ class ModuleDates extends Modules
             $sql .= ' OFFSET '.$startElement;
         }
 
-        $result = $gDb->query($sql);
+        $datesStatement = $gDb->query($sql);
 
         //array for results
-        $dates = array('numResults'=>$gDb->num_rows($result), 'limit' => $limit, 'totalCount'=>$this->getDataSetCount());
-
-        //push results to array
-        while($row = $gDb->fetch_array($result))
-        {
-            $dates['recordset'][] = $row;
-        }
+        $dates['recordset']  = $datesStatement->fetchAll();
+        $dates['numResults'] = $datesStatement->rowCount();
+        $dates['limit']      = $limit;
+        $dates['totalCount'] = $this->getDataSetCount();
 
         return $dates;
     }
@@ -518,8 +515,8 @@ class ModuleDates extends Modules
             }
 
             // add 1 second to end date because full time events to until next day
-            $sqlConditions .= ' AND dat_begin < \''.$this->getParameter('dateEndFormatEnglish')  .' 00:00:00\'
-                                AND dat_end   > \''.$this->getParameter('dateStartFormatEnglish').' 00:00:00\' ';
+            $sqlConditions .= ' AND dat_begin <= \''.$this->getParameter('dateEndFormatEnglish')  .' 23:59:59\'
+                                AND dat_end   >  \''.$this->getParameter('dateStartFormatEnglish').' 00:00:00\' ';
 
             // show all events from category
             if($this->getParameter('cat_id') > 0)
@@ -572,4 +569,3 @@ class ModuleDates extends Modules
         return $sqlConditions;
     }
 }
-?>

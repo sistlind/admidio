@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -54,10 +54,10 @@ function checkDatabaseVersion(&$db)
     $message = '';
 
     // check database version
-    if(version_compare($db->getVersion(), $db->getMinVersion()) === -1)
+    if(version_compare($db->getVersion(), $db->getMinimumRequiredVersion()) === -1)
     {
         $message = $gL10n->get('SYS_DATABASE_VERSION').': <strong>'.$db->getVersion().'</strong><br /><br />'.
-                   $gL10n->get('INS_WRONG_MYSQL_VERSION', ADMIDIO_VERSION_TEXT, $db->getMinVersion(),
+                   $gL10n->get('INS_WRONG_MYSQL_VERSION', ADMIDIO_VERSION_TEXT, $db->getMinimumRequiredVersion(),
                                '<a href="http://www.admidio.org/index.php?page=download">', '</a>');
     }
 
@@ -83,5 +83,3 @@ function checkPhpVersion()
 
     return $message;
 }
-
-?>

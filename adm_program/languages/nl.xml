@@ -86,7 +86,7 @@
         <text id="ORG_SHOW_ALL_USERS" development="new" translation="edited">Toon alle gebruikers</text>
         <text id="ORG_SHOW_ALL_USERS_DESC" development="new" translation="edited">Indien geactiveerd, zullen naast de actieve leden van de huidige organisatie ook de voormalige leden en leden van andere organisaties getoond worden. Anders worden alleen leden van de huidige organisatie weergegeven. Tijdens het aanmaken van nieuwe gebruikers of bij het toewijzen van nieuwe registraties, zullen alle organisaties gecontroleerd worden op bestaande gebruikers.</text>
         <text id="ORG_SYSTEM_MAIL_ADDRESS" development="changed" translation="edited">E-mail adres</text>
-        <text id="ORG_SYSTEM_MAIL_ADDRESS_DESC" development="changed" translation="edited">Dit veld dient een e-mailadres te bevatten van een administrator daar het gebruikt zal worden als afzender van de systeem meldingen, vb. voor bevestiging van registratie. (Standaard: webmaster@%VAR1%)</text>
+        <text id="ORG_SYSTEM_MAIL_ADDRESS_DESC" development="changed" translation="edited">Dit veld dient een e-mailadres te bevatten van een administrator daar het gebruikt zal worden als afzender van de systeem meldingen, vb. voor bevestiging van registratie.</text>
         <text id="ORG_SYSTEM_MAIL_NEW_ENTRIES" development="changed" translation="edited">Meldingen van nieuwe inzendingen</text>
         <text id="ORG_SYSTEM_MAIL_NEW_ENTRIES_DESC" development="changed" translation="edited">Hier kunnen systeem waarschuwingen worden ingeschakeld voor nieuwe vermeldingen in de modules. Het wordt gebruikt als een controlerende functie binnen Admidio. De beheerder heeft de mogelijkheid om te worden geïnformeerd over nieuwe vermeldingen in de modules via e-mail (alleen nieuwe items worden in aanmerking genomen). Een systeem waarschuwing zal worden verstuurd naar het e-mailadres %VAR1%. (Standaard: Nee)</text>
         <text id="ORG_SYSTEM_MAIL_TEXTS_DESC" development="changed" translation="edited">Hier kunnen alle systeem berichten aangepast worden. De berichten zijn onderverdeeld in 2 stukken (onderwerp en inhoud) en worden geïndentificeerd bij #subject# en #content#. Deze worden gevolgd door de inhoud van deze velden.\n\nDe volgende wildcards kunnen worden gebruikt in elke e-mail. Zij zullen worden vervangen door de desbetreffende inhoud bij het uitvoeren</text>
@@ -309,10 +309,8 @@
         <text id="DAT_VISIBLE_TO" development="new" translation="edited">Zichtbaar voor</text>
 
         <!-- Phrases only in Downloadsmodule - 50 items -->
-        <text id="DOW_ACCESS_ALLOWED" development="new" translation="edited">Toegang verleend</text>
         <text id="DOW_ADD_TO_DATABASE" development="new" translation="edited">Voeg toe in database</text>
         <text id="DOW_ADDITIONAL_FILES" development="new" translation="edited">Deze lijst geeft u een overzicht van alle bestanden en mappen die nog niet in de database zijn geimporteerd. Voeg ze hier toe. Toegangsrechten zullen van geselecteerde map gekopieerd worden.</text>
-        <text id="DOW_CHOOSE_FILE" development="new" translation="edited">Kies bestand</text>
         <text id="DOW_COUNTER" development="new" translation="edited">Teller</text>
         <text id="DOW_CREATE_FOLDER" development="new" translation="edited">Maak map</text>
         <text id="DOW_DOWNLOADS" development="new" translation="edited">Downloads</text>
@@ -329,7 +327,6 @@
         <text id="DOW_FILE_RENAME_ERROR" development="new" translation="edited">Foutmelding tijdens hernoemen van bestand %VAR1%.</text>
         <text id="DOW_FILE_TO_LARGE" development="new" translation="edited">De grootte van bestanden die geupload moeten worden is groter dan toegestaan (maximale grootte: %VAR1% MB).</text>
         <text id="DOW_FILE_TYPE" development="new" translation="edited">Type bestand</text>
-        <text id="DOW_FILE_UPLOAD_ERROR" development="new" translation="edited">Onbekende fout tijdens uploaden van bestand %VAR1%.</text>
         <text id="DOW_FILE_UPLOADED" development="new" translation="edited">Bestand %VAR1_BOLD% is geupload.</text>
         <text id="DOW_FOLDER_CREATED" development="new" translation="edited">Map %VAR1_BOLD% aangemaakt.</text>
         <text id="DOW_FOLDER_EXISTS" development="new" translation="edited">Map %VAR1% bestaat al!\n\nKies svp andere naam.</text>
@@ -343,18 +340,12 @@
         <text id="DOW_MAXIMUM_FILE_SIZE_DESC" development="new" translation="edited">Gebruikers mogen alleen bestanden uploaden die kleiner zijn dan hier staat. Als hier 0 staat, is uploaden gedeactiveerd. (standaard: 3MB)</text>
         <text id="DOW_NEW_FILE_NAME" development="new" translation="edited">Naam nieuw bestand</text>
         <text id="DOW_NEW_NAME" development="new" translation="edited">Nieuwe naam</text>
-        <text id="DOW_NO_ACCESS" development="new" translation="edited">Toegang afgewezen</text>
-        <text id="DOW_NO_PUBLIC_ACCESS" development="new" translation="edited">Openbare toegang afgewezen.</text>
-        <text id="DOW_PUBLIC_DOWNLOAD_FLAG" development="new" translation="edited">Als deze optie geactiveerd is, mogen alleen ingelogde gebruikers van toegestane rollen de inhoud van deze map bekijken.</text>
-        <text id="DOW_ROLE_ACCESS_PERMISSIONS" development="new" translation="edited">Toegangsrechten rol</text>
         <text id="DOW_ROLE_ACCESS_PERMISSIONS_DESC" development="new" translation="edited">Via dit panel kunt u toegangsrechten van mappen beheren. Toegangsrechten zijn van toepassing op sub-mappen en alle bestaande toegangsrechten worden overschreven. Toegestane rollen moeten toegang hebben tot hogere mappen.</text>
         <text id="DOW_SET_FOLDER_PERMISSIONS" development="new" translation="edited">Instellingen toegangsrechten map</text>
         <text id="DOW_UNMANAGED_FILES" development="new" translation="edited">Onbeheerde bestanden</text>
-        <text id="DOW_UPLOAD_FILE" development="new" translation="edited">Upload bestand</text>
         <text id="DOW_EDIT_FILE" development="new" translation="edited">Bewerk bestand</text>
         <text id="DOW_EDIT_FOLDER" development="new" translation="edited">Edit map</text>
         <text id="DOW_PREVIOUS_NAME" development="new" translation="edited">Vorige naam</text>
-        <text id="DOW_UPLOAD_FILE" development="new" translation="edited">Bestand uploaden</text>
         <text id="DOW_UPLOAD_FILE_TO_FOLDER" development="new" translation="edited">Upload naar map %VAR1_BOLD%</text>
         <text id="DOW_UPLOAD_POST_EMPTY" development="new" translation="edited">Onjuiste pagina weergave of bestand kon niet worden geupload.\nMogelijk is grootte van bestand overschreden. Toegestane upload groote is %VAR1%B!</text>
 
@@ -435,7 +426,6 @@
         <text id="INS_DATABASE_IS_UPDATED" development="new" translation="edited">Updating database</text>
         <text id="INS_DATABASE_LOGIN" development="new" translation="edited">Database informatie doorgeven</text>
         <text id="INS_DATABASE_LOGIN_DESC" development="new" translation="edited">Geef hier uw database informatie op. Table prefix kan aangepast worden, indien nodig. Aanpassing is niet nodig als meerdere Admidio installaties dezelfde database gebruiken.</text>
-        <text id="INS_DATABASE_NO_LOGIN" development="new" translation="edited">Opgegeven database toegangsinformatie is onjuist!\n\nCheck en update toegangsinformatie. Of check of database online is en of u toegang heeft.</text>
         <text id="INS_DATABASE_WILL_BE_ESTABLISHED" development="new" translation="edited">Database maken</text>
         <text id="INS_DESCRIPTION_BOARD" development="new" translation="edited">Bestuur van de organisatie</text>
         <text id="INS_DESCRIPTION_CONFERENCE_ROOM" development="new" translation="edited">Hier kunnen vergaderingen plaatsvinden. Zaal moet van tevoren gereserveerd worden.</text>
@@ -507,8 +497,7 @@
         <text id="LST_ACTIVE_FORMER_MEMBERS" development="new" translation="edited">Actieve en voormalige leden</text>
         <text id="LST_ACTIVE_MEMBERS" development="new" translation="edited">Actieve leden</text>
         <text id="LST_ACTIVE_ROLES" development="new" translation="edited">Overzicht actieve rollen</text>
-        <text id="LST_ADD_ANOTHER_COLUMN" development="new" translation="edited">Extra kolom</text>
-        <text id="LST_CHANGE_LIST" development="new" translation="edited">Wilt u standaard lijsten tonen/bewerken of nieuwe lijst maken?</text>
+        <text id="LST_ADD_COLUMN" development="new" translation="edited">Extra kolom</text>
         <text id="LST_CHOOSE_ROLE" development="new" translation="edited">Kies rol voor geselecteerde lijst</text>
         <text id="LST_COLUMN" development="new" translation="edited">Kolom</text>
         <text id="LST_CONFIGURATION" development="new" translation="edited">Instellingen</text>
@@ -519,8 +508,6 @@
         <text id="LST_CONFIGURATION_SAVE" development="new" translation="edited">Geef deze instellingen een naam</text>
         <text id="LST_CREATE_NEW_CONFIGURATION" development="new" translation="edited">Nieuwe instellingen maken</text>
         <text id="LST_CREATE_OWN_LIST" development="new" translation="edited">Maak eigen lijst</text>
-        <text id="LST_DEFAULT_CONFIGURATION" development="new" translation="edited">Standaard instellingen</text>
-        <text id="LST_DEFAULT_CONFIGURATION_DESC" development="new" translation="edited">Maak een keuze voor de standaard instellingen. Selecteer de instellingen van uw keuze en klik op: %VAR1%. Geselecteerde instellingen worden actief voor alle leden.</text>
         <text id="LST_DEFAULT_LIST_NOT_SET_UP" development="new" translation="edited">Geen standaard lijst-instellingen gedefinieerd door beheerder!\n\nNeem voor hulp contact met beheerder op.</text>
         <text id="LST_DELETE_CONFIGURATION" development="new" translation="edited">Verwijder instellingen</text>
         <text id="LST_EMAIL_TO_MEMBERS" development="new" translation="edited">E-mail leden</text>
@@ -553,11 +540,10 @@
         <text id="LST_NUMBER_OF_ROLES_PER_PAGE" development="new" translation="edited">Aantal rollen per pagina</text>
         <text id="LST_PERIOD" development="new" translation="edited">Periode</text>
         <text id="LST_PRESET_CONFIGURATION" development="new" translation="edited">Vooraf bepaalde instellingen</text>
-        <text id="LST_PRESET_CONFIGURATION_DESC" development="new" translation="edited">Als beheerder kunt u de standaard instellingen voor alle leden bepalen. Maak rijen en kolommen en sla dit op door het een naam te geven. Selecteer de nieuwe instellingen en klik op: %VAR1%</text>
+        <text id="LST_PRESET_CONFIGURATION_DESC" development="new" translation="edited">Als beheerder kunt u de standaard instellingen voor alle leden bepalen. Maak rijen en kolommen en sla dit op door het een naam te geven.</text>
         <text id="LST_PRINT_PREVIEW" development="new" translation="edited">Print</text>
         <text id="LST_ROLE_INFORMATION" development="new" translation="edited">Rol informatie</text>
         <text id="LST_SAVE_CONFIGURATION" development="new" translation="edited">Instellingen opslaan</text>
-        <text id="LST_SAVE_CONFIGURATION_OTHER_NAME" development="new" translation="edited">Instellingen met andere naam opslaan</text>
         <text id="LST_SEARCH_AGE_EXAMPLE" development="new" translation="edited">18y</text>
         <text id="LST_SEARCH_AGE_DESC" development="new" translation="edited">Leden zoeken die ouder zijn dan 18 jaar</text>
         <text id="LST_SEARCH_DATE_EXAMPLE" development="new" translation="edited">01.03.1986</text>
@@ -574,7 +560,6 @@
         <text id="LST_SEARCH_TELEFON_DESC" development="new" translation="edited">Leden zoeken met telefoonnummer waarin 241 voorkomt en die eindigt met 54</text>
         <text id="LST_SEARCH_YES_NO_FIELD" development="new" translation="edited">Ja/nee veld</text>
         <text id="LST_SEARCH_YES_NO_FIELD_DESC" development="new" translation="edited">Leden zoeken waarbij Ja aangevinkt is</text>
-        <text id="LST_SET_COLUMNS" development="new" translation="edited">Maak kolommen die in de lijst komen</text>
         <text id="LST_SHOW_LIST" development="new" translation="edited">Toon lijst</text>
         <text id="LST_SHOW_LISTS" development="new" translation="edited">Toon lijsten</text>
         <text id="LST_YOUR_CONFIGURATION" development="new" translation="edited">Eigen instellingen</text>
@@ -724,7 +709,7 @@
         <text id="ORG_NO_FIELD_CREATED" development="new" translation="edited">Er zijn nog geen specifieke velden voor deze organistaie aangemaakt!</text>
         <text id="ORG_NOTIFY_WEBMASTER" development="new" translation="edited">Beheerder informeren over nieuwe registraties</text>
         <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE" development="new" translation="edited">Aantal items per pagina</text>
-        <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE_DESC" development="new" translation="edited">Bepaal het aantal die per pagina getoond wordt. Er ontstaat pagina-nummering wanneer er meer geplaatst wordt. Print voorbeeld en export functie worden niet beinvloed. Als aantal 0 is, zal alles getoond worden zonder pagina-nummering. (standaard: 0)</text>
+        <text id="ORG_NUMBER_OF_ENTRIES_PER_PAGE_DESC" development="new" translation="edited">Bepaal het aantal die per pagina getoond wordt. Er ontstaat pagina-nummering wanneer er meer geplaatst wordt. Print voorbeeld en export functie worden niet beinvloed. Als aantal 0 is, zal alles getoond worden zonder pagina-nummering. (standaard: 10)</text>
         <text id="ORG_ONLY_FOR_REGISTERED_USER" development="new" translation="edited">Alleen voor ingelogde gebruikers</text>
         <text id="ORG_ORGANIZATION_PROPERTIES_DESC" development="new" translation="edited">Hier kunt u algemene voorkeuren en voorkeuren per module beheren.</text>
         <text id="ORG_PARENT_ORGANIZATION" development="new" translation="edited">Hoofd organisatie</text>
@@ -739,10 +724,8 @@
         <text id="ORG_SEND_PASSWORD" development="new" translation="edited">Stuur wachtwoord</text>
         <text id="ORG_SEND_PASSWORD_DESC" development="new" translation="edited">Vergeten en opnieuw aangemaakte wachtwoorden kunnen op verzoek van gebruiker naar eigen e-mail adres gestuurd worden. Bij deactivatie, kunnen gebruikers dit verzoek alleen bij de beheerder doen. (standaard: ja)</text>
         <text id="ORG_SEND_NEW_PASSWORD" development="new" translation="edited">Stuur nieuw wachtwoord</text>
-        <text id="ORG_SYSTEM_INFOS" development="new" translation="edited">Systeeminfo</text>
         <text id="ORG_SYSTEM_INFORMATIONS" development="new" translation="edited">Systeem informatie</text>
         <text id="ORG_SYSTEM_MAIL_ADDRESS" development="new" translation="edited">Systeem e-mail adres</text>
-        <text id="ORG_SYSTEM_MAIL_ADDRESS_DESC" development="new" translation="edited">Vul e-mail adres van beheerder in. Dit adres wordt gebruikt als afzender van systeemberichten en bevestiging van registratie. (standaard: webmaster@%VAR1%)</text>
         <text id="ORG_SYSTEM_MAIL_NEW_ENTRIES" development="new" translation="edited">Notificatie voor nieuwe berichten</text>
         <text id="ORG_SYSTEM_MAIL_NEW_ENTRIES_DESC" development="new" translation="edited">U kunt hier e-mail notificatie voor nieuwe module berichten activeren. De beheerder zal via e-mail geinformeerd worden. Het notificatie bericht zal gestuurd worden naar %VAR1%. (standaard: nee)</text>
         <text id="ORG_TIME_FORMAT" development="new" translation="edited">Formaat tijd</text>
@@ -805,12 +788,6 @@
         <text id="PHO_POPUP_WINDOW" development="new" translation="edited">Popup venster</text>
         <text id="PHO_PREVIOUS_PHOTO" development="new" translation="edited">vorige foto</text>
         <text id="PHO_RESOLUTION_MORE_THAN" development="new" translation="edited">Resolutie groter dan</text>
-        <text id="PHO_RESTRICTIONS_HELP_1" development="new" translation="edited">Foto's moeten als JPG of PNG opgeslagen worden.</text>
-        <text id="PHO_RESTRICTIONS_HELP_2" development="new" translation="edited">De server kan foto's bewerken die maximaal %VAR1% megapixels groot zijn.</text>
-        <text id="PHO_RESTRICTIONS_HELP_3" development="new" translation="edited">De upload moet niet groter dan %VAR1% MB zijn.</text>
-        <text id="PHO_RESTRICTIONS_HELP_4" development="new" translation="edited">Foto's worden automatisch verkleind naar %VAR1% pixels aan de lange zijde (andere zijde proportioneel) voordat ze opgeslagen worden.</text>
-        <text id="PHO_RESTRICTIONS_HELP_5" development="new" translation="edited">De naam van de foto is niet relevant aangezien alle foto's achtereenvolgens worden genoemd.</text>
-        <text id="PHO_RESTRICTIONS_HELP_6" development="new" translation="edited">Uploaden van bestand kan ook lang duren met een snelle internetverbinding. Het is aan te raden alle foto's in een map te kopieren en ze te verkleinen naar %VAR1% pixels (lange zijde). Kwaliteit van JPG moet minimaal 90% (lage compressie) zijn, voor een goed resultaat.</text>
         <text id="PHO_SAME_WINDOW" development="new" translation="edited">Hetzelfde venster</text>
         <text id="PHO_SCALE_AT_UPLOAD" development="new" translation="edited">Upload schalen</text>
         <text id="PHO_SCALE_AT_UPLOAD_DESC" development="new" translation="edited">Foto's worden herschaald tijdens upload. Opgegeven pixels betreft de lange zijde van de foto. De korte zijde blijft in verhouding gelijk aan de lange zijde. (standaard: 640 pixels)</text>
@@ -819,9 +796,6 @@
         <text id="PHO_SHOW_CAPTION" development="new" translation="edited">Toon watermerk</text>
         <text id="PHO_SHOW_CAPTION_DESC" development="new" translation="edited">Tekst wordt getoond in alle foto's die breder zijn dan 200 pixels. (standaard: &#169; %VAR1%)</text>
         <text id="PHO_SHOWN_ON_READY"  development="new" translation="edited">Foto's zijn succesvol toegevoegd aan album als ze op deze pagina getoond worden. </text>
-        <text id="PHO_UPLOAD_HELP_1" development="new" translation="edited">Klik op de knop %VAR1_BOLD% om foto's te selecteren die u vanaf uw harde schijf wilt uploaden.</text>
-        <text id="PHO_UPLOAD_HELP_2" development="new" translation="edited">Als u foto's per stuk gaat uploaden via de functie HTML-upload moet u dit tot maximaal 5 keer herhalen totdat alle velden gevuld zijn.</text>
-        <text id="PHO_UPLOAD_HELP_3" development="new" translation="edited">Klik dan op %VAR1_BOLD% en wacht rustig af.</text>
         <text id="PHO_UPLOAD_MORE" development="new" translation="edited">Meer foto's uploaden</text>
         <text id="PHO_UPLOAD_PHOTOS" development="new" translation="edited">Upload foto's</text>
         <text id="PHO_WANT_DELETE_PHOTO" development="new" translation="edited">Geselecteerde foto wordt verwijderd. Doorgaan?</text>
@@ -967,7 +941,6 @@
         <text id="SYS_ABR_NO" development="new" translation="edited" description="Abbreviation for Number">Nr.</text>
         <text id="SYS_ACTIVE" development="new" translation="edited">Actief</text>
         <text id="SYS_ACTIVATED" development="new" translation="edited">Geactiveerd</text>
-        <text id="SYS_ADD_ROLE" development="new" translation="edited">Voeg rol toe</text>
         <text id="SYS_ADD_RECIPIENTS" development="new" translation="edited">Ontvanger toevoegen</text>
         <text id="SYS_ADDRESS" development="new" translation="edited">Adres</text>
         <text id="SYS_ADMIDIO_SHORT_DESC" development="new" translation="edited">Het online management systeem voor Verenigingen, Groepen en Organisaties</text>
@@ -983,8 +956,6 @@
         <text id="SYS_BACK_TO_MODULE_OVERVIEW" development="new" translation="edited">Terug naar beginpagina</text>
         <text id="SYS_BETA_VERSION" development="new" translation="edited">U gebruikt een BETA versie van Admidio.\n\nProblemen zoals instabiliteit en verlies van gegevens kunnen voorkomen. Gebruik deze versie svp alleen voor testdoeleinden!</text>
         <text id="SYS_BIRTHDAY" development="new" translation="edited">Geboortedatum</text>
-        <text id="SYS_BROWSE" development="new" translation="edited">Bladeren</text>
-        <text id="SYS_BROWSE_ERROR" development="new" translation="edited">Zoeken van bestanden kan niet plaatsvinden.</text>
         <text id="SYS_CAPTCHA" development="new" translation="edited">Captcha</text>
         <text id="SYS_CAPTCHA_CALC" development="new" translation="edited">Resultaat van berekening</text>
         <text id="SYS_CAPTCHA_CALC_CODE_INVALID" development="new" translation="edited">Resultaat van berekening is onjuist.</text>
@@ -1177,7 +1148,6 @@
         <text id="SYS_REGISTRATION" development="new" translation="edited">Registratie</text>
         <text id="SYS_REMEMBER_ME" development="new" translation="edited">Blijf ingelogd</text>
         <text id="SYS_REMOVE" development="new" translation="edited">Verwijder</text>
-        <text id="SYS_REMOVE_ROLE" development="new" translation="edited">Verwijder rol</text>
         <text id="SYS_REPEAT" development="new" translation="edited">Herhaal</text>
         <text id="SYS_RESTRICTIONS" development="new" translation="edited">Voorwaarden</text>
         <text id="SYS_ROLE" development="new" translation="edited">Rol</text>
@@ -1232,8 +1202,6 @@
         <text id="SYS_UNLIMITED" development="new" translation="edited">Onbeperkt</text>
         <text id="SYS_UNLOCK" development="new" translation="edited">Heropen</text>
         <text id="SYS_UPDATE" development="new" translation="edited">Update</text>
-        <text id="SYS_UPLOAD" development="new" translation="edited">Upload</text>
-        <text id="SYS_UPLOAD_ERROR" development="new" translation="edited">Bestand(en) kon(den) niet geupload worden.</text>
         <text id="SYS_UPLOAD_MAX_FILESIZE" development="new" translation="edited">Max. upload grootte bestand</text>
         <text id="SYS_UPLOAD_NAME_ERROR" development="new" translation="edited">Bestandsnaam kan niet "Submit" heten.</text>
         <text id="SYS_USER" development="new" translation="edited">gebruiker</text>

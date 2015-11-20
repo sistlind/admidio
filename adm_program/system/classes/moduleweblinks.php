@@ -1,4 +1,4 @@
-<?php 
+<?php
 /*****************************************************************************/
 /** @class ModuleWeblinks
  *  @brief Class manages weblinks viewable for user
@@ -37,10 +37,10 @@
  *                      [cat_usr_id_create] => 1
  *                      [10] => 2012-01-08 11:12:05
  *                      [cat_timestamp_create] => 2012-01-08 11:12:05
- *                      [11] => 
- *                      [cat_usr_id_change] => 
- *                      [12] => 
- *                      [cat_timestamp_change] => 
+ *                      [11] =>
+ *                      [cat_usr_id_change] =>
+ *                      [12] =>
+ *                      [cat_timestamp_change] =>
  *                      [13] => 1
  *                      [lnk_id] => 1
  *                      [14] => 7
@@ -68,7 +68,7 @@
  *              [calendar-selection] => 1
  *              [cat_id] => 0
  *              [category-selection] => 1
- *              [date] => 
+ *              [date] =>
  *              [daterange] => Array
  *                                  (
  *                                      [english] => Array
@@ -76,7 +76,7 @@
  *                                                          [start_date] => 2013-09-25
  *                                                          [end_date] => 9999-12-31
  *                                                       )
- *  
+ *
  *                                      [system] => Array
  *                                                      (
  *                                                          [start_date] => 25.09.2013
@@ -97,10 +97,10 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
-  
+
 class ModuleWeblinks extends Modules
 {
     protected $getConditions;       ///< String with SQL condition
@@ -112,17 +112,17 @@ class ModuleWeblinks extends Modules
     {
         global $gValidLogin;
         global $gL10n;
-        
+
         // get parent instance with all parameters from $_GET Array
         parent::__construct();
     }
-    
+
     /** Function returns a set of links with corresponding informations
      *  @param $startElement Start element of result. First (and default) is 0.
      *  @param $limit Number of elements returned max. Default NULL will take number from peferences.
      *  @return array with links and corresponding informations
      */
-    
+
     public function getDataSet($startElement=0, $limit=NULL)
     {
         global $gCurrentOrganization, $gPreferences, $gProfileFields, $gDb, $gValidLogin;
@@ -132,7 +132,7 @@ class ModuleWeblinks extends Modules
         {
             $limit = $gPreferences['weblinks_per_page'];
         }
-        
+
         //Bedingungen
         if($this->getParameter('id') > 0)
         {
@@ -147,9 +147,8 @@ class ModuleWeblinks extends Modules
             // if user isn't logged in, then don't show hidden categories
             $this->getConditions .= ' AND cat_hidden = 0 ';
         }
-        
 
-        //Ankuendigungen aus der DB fischen...
+        //Weblinks aus der DB fischen...
         $sql = 'SELECT cat.*, lnk.*
                   FROM '. TBL_CATEGORIES .' cat, '. TBL_LINKS. ' lnk
                  WHERE lnk_cat_id = cat_id
@@ -166,23 +165,20 @@ class ModuleWeblinks extends Modules
             $sql .= ' OFFSET '.$startElement;
         }
 
-        $result = $gDb->query($sql);
+        $weblinksStatement = $gDb->query($sql);
 
-        //array für Ergbenisse
-        $weblinks= array('numResults'=>$gDb->num_rows($result), 'limit' => $limit, 'totalCount'=>$this->getDataSetCount());
-
-        //Ergebnisse auf Array pushen
-        while($row = $gDb->fetch_array($result))
-        {
-            $weblinks['recordset'][] = $row;
-        }
+        //array for results
+        $weblinks['recordset']  = $weblinksStatement->fetchAll();
+        $weblinks['numResults'] = $weblinksStatement->rowCount();
+        $weblinks['limit']      = $limit;
+        $weblinks['totalCount'] = $this->getDataSetCount();
 
         // Push parameter to array
         $weblinks['parameter'] = $this->getParameters();
 
         return $weblinks;
     }
-    
+
     /** Function to get total number of links filtered by current conditions.
      *  @return int Number of links.
      */
@@ -190,25 +186,25 @@ class ModuleWeblinks extends Modules
     {
         global $gCurrentOrganization;
         global $gDb;
-        
+
         $sql = 'SELECT COUNT(*) AS count FROM '. TBL_LINKS. ', '. TBL_CATEGORIES .'
                 WHERE lnk_cat_id = cat_id
                 AND cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
                 AND cat_type = \'LNK\'
-        '.$this->getConditions.'';
+        '.$this->getConditions;
         $result = $gDb->query($sql);
         $row    = $gDb->fetch_array($result);
         return $row['count'];
     }
-    
+
     /** Returns a module specific headline
-     *  @param $headline  The initiale headline of the module. 
+     *  @param $headline  The initiale headline of the module.
      *  @return Returns the full headline of the module
      */
     public function getHeadline($headline)
     {
         global $gDb;
-        
+
         // set headline with category name
         if($this->getParameter('cat_id') > 0)
         {
@@ -218,4 +214,3 @@ class ModuleWeblinks extends Modules
         return $headline;
     }
 }
-?>

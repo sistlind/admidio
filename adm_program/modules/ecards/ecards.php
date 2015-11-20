@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -44,7 +44,7 @@ $gNavigation->addUrl(CURRENT_URL, $headline);
 if(isset($_SESSION['photo_album']) && $_SESSION['photo_album']->getValue('pho_id') == $getPhotoId)
 {
     $photo_album =& $_SESSION['photo_album'];
-    $photo_album->db =& $gDb;
+    $photo_album->setDatabase($gDb);
 }
 else
 {
@@ -55,11 +55,11 @@ else
         $photo_album->readDataById($getPhotoId);
     }
 
-    $_SESSION['photo_album'] =& $photo_album;
+    $_SESSION['photo_album'] = $photo_album;
 }
 
 // pruefen, ob Album zur aktuellen Organisation gehoert
-if($getPhotoId > 0 && $photo_album->getValue('pho_org_shortname') != $gCurrentOrganization->getValue('org_shortname'))
+if($getPhotoId > 0 && $photo_album->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
 {
     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
 }
@@ -221,7 +221,7 @@ $form->openGroupBox('gb_contact_details', $gL10n->get('SYS_CONTACT_DETAILS'));
     }
 
     $form->addSelectBox('ecard_recipients', $gL10n->get('SYS_TO'), $list, array('property' => FIELD_REQUIRED,
-                        'defaultValue' => $recipients, 'showContextDependentFirstEntry' => false, 'multiselect' => true));
+                        'defaultValue' => $recipients, 'multiselect' => true));
     $form->addLine();
     $form->addInput('name_from', $gL10n->get('MAI_YOUR_NAME'), $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME'), array('maxLength' => 50, 'property' => FIELD_DISABLED));
     $form->addInput('mail_from', $gL10n->get('MAI_YOUR_EMAIL'), $gCurrentUser->getValue('EMAIL'), array('maxLength' => 50, 'property' => FIELD_DISABLED));
@@ -237,5 +237,3 @@ $form->closeButtonGroup();
 // add form to html page and show page
 $page->addHtml($form->show(false));
 $page->show();
-
-?>

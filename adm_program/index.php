@@ -169,5 +169,3 @@ if($gCurrentUser->isWebmaster() || $gCurrentUser->manageRoles()
 }
 
 $page->show();
-
-?>

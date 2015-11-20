@@ -7,7 +7,7 @@ require_once(SERVER_PATH.'/adm_program/system/classes/passwordhashing.php');
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Diese Klasse dient dazu ein Userobjekt zu erstellen.
  * Ein User kann ueber diese Klasse in der Datenbank verwaltet werden
@@ -41,26 +41,30 @@ class User extends TableUsers
     protected $role_mail_rights = array();      ///< Array with all roles and a flag if the user could write a mail to this role e.g. array('role_id_1' => '1', 'role_id_2' => '0' ...)
     protected $rolesMembership  = array();      ///< Array with all roles who the user is assigned
     protected $rolesMembershipLeader = array(); ///< Array with all roles who the user is assigned and is leader (key = role_id; value = rol_leader_rights)
+    protected $rolesMembershipNoLeader = array(); ///< Array with all roles who the user is assigned and is not a leader of the role
     protected $organizationId;                  ///< the organization for which the rights are read, could be changed with method @b setOrganization
     protected $assignRoles;                     ///< Flag if the user has the right to assign at least one role
     protected $saveChangesWithoutRights;        ///< If this flag is set then a user can save changes to the user if he hasn't the necessary rights
+    protected $usersEditAllowed = array();      ///< Array with all user ids where the current user is allowed to edit the profile.
 
     /**
      * Constructor that will create an object of a recordset of the users table.
      * If the id is set than this recordset will be loaded.
-     * @param object $db         Object of the class database. This could be the default object @b $gDb.
+     * @param object $database   Object of the class Database. This should be the default global object @b $gDb.
      * @param object $userFields An object of the ProfileFields class with the profile field structure
      *                           of the current organization. This could be the default object @b $gProfileFields.
      * @param int    $userId     The id of the user who should be loaded. If id isn't set than an empty object with
      *                           no specific user is created.
      */
-    public function __construct(&$db, $userFields, $userId = 0)
+    public function __construct(&$database, $userFields, $userId = 0)
     {
         global $gCurrentOrganization;
 
         $this->mProfileFieldsData = clone $userFields; // create explicit a copy of the object (param is in PHP5 a reference)
+        $this->mProfileFieldsData->setDatabase($database);
+
         $this->organizationId = $gCurrentOrganization->getValue('org_id');
-        parent::__construct($db, $userId);
+        parent::__construct($database, $userId);
     }
 
     /**
@@ -79,14 +83,14 @@ class User extends TableUsers
                  WHERE rol_cat_id = cat_id
                    AND cat_org_id = '.$this->organizationId.'
                    AND rol_default_registration = 1 ';
-        $result = $this->db->query($sql);
+        $defaultRolesStatement = $this->db->query($sql);
 
-        if($this->db->num_rows() === 0)
+        if($defaultRolesStatement->rowCount() === 0)
         {
             $gMessage->show($gL10n->get('PRO_NO_DEFAULT_ROLE'));
         }
 
-        while($row = $this->db->fetch_array($result))
+        while($row = $defaultRolesStatement->fetch())
         {
             // starts a membership for role from now
             $this->setRoleMembership($row['rol_id']);
@@ -134,27 +138,31 @@ class User extends TableUsers
                            AND rol_cat_id  = cat_id
                            AND (  cat_org_id = '.$this->organizationId.'
                                OR cat_org_id IS NULL ) ';
-                $this->db->query($sql);
+                $rolesStatement = $this->db->query($sql);
 
-                while($row = $this->db->fetch_array())
+                while($row = $rolesStatement->fetch())
                 {
-                    if($row['mem_leader'] == 1)
-                    {
-                        // if user is leader in this role than add role id and leader rights to array
-                        $this->rolesMembershipLeader[$row['rol_id']] = $row['rol_leader_rights'];
-
-                        // if role leader could assign new members then remember this setting
-                        // roles for confirmation of dates should be ignored
-                        if($row['cat_name_intern'] != 'CONFIRMATION_OF_PARTICIPATION'
-                        && ($row['rol_leader_rights'] == ROLE_LEADER_MEMBERS_ASSIGN || $row['rol_leader_rights'] == ROLE_LEADER_MEMBERS_ASSIGN_EDIT))
-                        {
-                            $this->assignRoles = true;
-                        }
-                    }
-
-                    // Rechte nur beruecksichtigen, wenn auch Rollenmitglied
                     if($row['mem_usr_id'] > 0)
                     {
+                        // Sql selects all roles. Only consider roles where user is a member.
+                        if($row['mem_leader'] == 1)
+                        {
+                            // if user is leader in this role than add role id and leader rights to array
+                            $this->rolesMembershipLeader[$row['rol_id']] = $row['rol_leader_rights'];
+
+                            // if role leader could assign new members then remember this setting
+                            // roles for confirmation of dates should be ignored
+                            if($row['cat_name_intern'] != 'CONFIRMATION_OF_PARTICIPATION'
+                            && ($row['rol_leader_rights'] == ROLE_LEADER_MEMBERS_ASSIGN || $row['rol_leader_rights'] == ROLE_LEADER_MEMBERS_ASSIGN_EDIT))
+                            {
+                                $this->assignRoles = true;
+                            }
+                        }
+                        else
+                        {
+                            $this->rolesMembershipNoLeader[] = $row['rol_id'];
+                        }
+
                         // add role to membership array
                         $this->rolesMembership[] = $row['rol_id'];
 
@@ -173,12 +181,12 @@ class User extends TableUsers
                         {
                             $this->assignRoles = true;
                         }
-                    }
 
-                    // Webmasterflag setzen
-                    if($row['mem_usr_id'] > 0 && $row['rol_webmaster'] == 1)
-                    {
-                        $this->webmaster = 1;
+                        // Webmasterflag setzen
+                        if($row['rol_webmaster'] == 1)
+                        {
+                            $this->webmaster = 1;
+                        }
                     }
 
                     // Listenansichtseinstellung merken
@@ -370,6 +378,7 @@ class User extends TableUsers
         $this->webmaster = 0;
 
         // initialize rights arrays
+        $this->usersEditAllowed = array();
         $this->renewRoleData();
         $this->saveChangesWithoutRights = false;
     }
@@ -440,12 +449,12 @@ class User extends TableUsers
                    AND mem_begin <= \''.$endDate.'\'
                    AND mem_end   >= \''.$startDate.'\'
                  ORDER BY mem_begin ASC ';
-        $this->db->query($sql);
+        $membershipStatement = $this->db->query($sql);
 
-        if($this->db->num_rows() === 1)
+        if($membershipStatement->rowCount() === 1)
         {
             // one record found than update this record
-            $row = $this->db->fetch_array();
+            $row = $membershipStatement->fetch();
             $member->setArray($row);
 
             // save new start date if an earlier date exists
@@ -460,10 +469,10 @@ class User extends TableUsers
                 $maxEndDate = $member->getValue('mem_end', 'Y-m-d');
             }
         }
-        elseif($this->db->num_rows() > 1)
+        elseif($membershipStatement->rowCount() > 1)
         {
             // several records found then read min and max date and delete all records
-            while($row = $this->db->fetch_array())
+            while($row = $membershipStatement->fetch())
             {
                 $member->clear();
                 $member->setArray($row);
@@ -568,13 +577,25 @@ class User extends TableUsers
     }
 
     /**
-     * returns an array with all role ids where the user is a member
-     * @return array
+     * Returns an array with all role ids where the user is a member.
+     * @return Returns an array with all role ids where the user is a member.
      */
     public function getRoleMemberships()
     {
         $this->checkRolesRight();
         return $this->rolesMembership;
+    }
+
+    /**
+     * Returns an array with all role ids where the user is a member
+     * and not a leader of the role.
+     * @return Returns an array with all role ids where the user is a member
+     *         and not a leader of the role.
+     */
+    public function getRoleMembershipsNoLeader()
+    {
+        $this->checkRolesRight();
+        return $this->rolesMembershipNoLeader;
     }
 
     /**
@@ -588,9 +609,9 @@ class User extends TableUsers
      *                           If the value was manipulated before with @b setValue than the manipulated value is returned.
      * @par Examples
      * @code  // reads data of adm_users column
-     *                           $loginname = $gCurrentUser->getValue('usr_login_name');
-     *                           // reads data of adm_user_fields
-     *                           $email = $gCurrentUser->getValue('EMAIL'); @endcode
+     * $loginname = $gCurrentUser->getValue('usr_login_name');
+     * // reads data of adm_user_fields
+     * $email = $gCurrentUser->getValue('EMAIL'); @endcode
      */
     public function getValue($columnName, $format = '')
     {
@@ -629,7 +650,7 @@ class User extends TableUsers
         $vcard .= 'VERSION:2.1'."\r\n";
         if($allowedToEditProfile || (!$allowedToEditProfile && $this->mProfileFieldsData->getProperty('FIRST_NAME', 'usf_hidden') == 0))
         {
-            $vcard .= 'N;CHARSET=ISO-8859-1:' . utf8_decode($this->getValue('LAST_NAME')). ';'. utf8_decode($this->getValue('FIRST_NAME')) . ";;;\r\n";
+            $vcard .= 'N;CHARSET=ISO-8859-1:' . utf8_decode($this->getValue('LAST_NAME', 'database')). ';'. utf8_decode($this->getValue('FIRST_NAME', 'database')) . ";;;\r\n";
         }
         if($allowedToEditProfile || (!$allowedToEditProfile && $this->mProfileFieldsData->getProperty('LAST_NAME', 'usf_hidden') == 0))
         {
@@ -657,7 +678,7 @@ class User extends TableUsers
         if($allowedToEditProfile || (!$allowedToEditProfile && $this->mProfileFieldsData->getProperty('ADDRESS', 'usf_hidden') == 0 && $this->mProfileFieldsData->getProperty('CITY', 'usf_hidden') == 0
         && $this->mProfileFieldsData->getProperty('POSTCODE', 'usf_hidden') == 0  && $this->mProfileFieldsData->getProperty('COUNTRY', 'usf_hidden') == 0))
         {
-            $vcard .= 'ADR;CHARSET=ISO-8859-1;HOME:;;' . utf8_decode($this->getValue('ADDRESS')). ';' . utf8_decode($this->getValue('CITY')). ';;' . utf8_decode($this->getValue('POSTCODE')). ';' . utf8_decode($this->getValue('COUNTRY')). "\r\n";
+            $vcard .= 'ADR;CHARSET=ISO-8859-1;HOME:;;' . utf8_decode($this->getValue('ADDRESS', 'database')). ';' . utf8_decode($this->getValue('CITY', 'database')). ';;' . utf8_decode($this->getValue('POSTCODE', 'database')). ';' . utf8_decode($this->getValue('COUNTRY', 'database')). "\r\n";
         }
         if (strlen($this->getValue('WEBSITE')) > 0
         && ($allowedToEditProfile || (!$allowedToEditProfile && $this->mProfileFieldsData->getProperty('WEBSITE', 'usf_hidden') == 0)))
@@ -711,15 +732,20 @@ class User extends TableUsers
      * Checks if the current user is allowed to edit the profile of the user of the parameter.
      * If will check if user can generally edit all users or if he is a group leader and can edit users
      * of a special role where @b $user is a member or if it's the own profile and he could edit this.
-     * @param  object $user User object of the user that should be checked if the current user can edit his profile.
+     * @param  object $user            User object of the user that should be checked if the current user can edit his profile.
+     * @param  bool   $checkOwnProfile If set to @b false than this method don't check the role right to edit the own profile.
      * @return bool   Return @b true if the current user is allowed to edit the profile of the user from @b $user.
      */
-     public function hasRightEditProfile(&$user)
+     public function hasRightEditProfile(&$user, $checkOwnProfile = true)
     {
+        $returnValue = false;
+
         if(is_object($user))
         {
             // edit own profile ?
-            if($user->getValue('usr_id') === $this->getValue('usr_id') && $this->getValue('usr_id') > 0)
+            if($user->getValue('usr_id') === $this->getValue('usr_id')
+            && $this->getValue('usr_id') > 0
+            && $checkOwnProfile)
             {
                 $edit_profile = $this->checkRolesRight('rol_profile');
 
@@ -729,29 +755,48 @@ class User extends TableUsers
                 }
             }
 
+            // first check if user is in cache
+            if(array_key_exists($user->getValue('usr_id'), $this->usersEditAllowed))
+            {
+                return $this->usersEditAllowed[$user->getValue('usr_id')];
+            }
+
             if($this->editUsers())
             {
-                return true;
+                $returnValue = true;
             }
             else
             {
                 if(count($this->rolesMembershipLeader) > 0)
                 {
-                    // check if current user is a group leader of a role where $user is a member
-                    $rolesMembership = $user->getRoleMemberships();
+                    // leaders are not allowed to edit profiles of other leaders but to edit their own profile
+                    if($user->getValue('usr_id') == $this->getValue('usr_id'))
+                    {
+                        // check if current user is a group leader of a role where $user is only a member
+                        $rolesMembership = $user->getRoleMemberships();
+                    }
+                    else
+                    {
+                        // check if current user is a group leader of a role where $user is only a member and not a leader
+                        $rolesMembership = $user->getRoleMembershipsNoLeader();
+                    }
+
                     foreach($this->rolesMembershipLeader as $roleId => $leaderRights)
                     {
                         // is group leader of role and has the right to edit users ?
                         if(in_array($roleId, $rolesMembership) && $leaderRights > 1)
                         {
-                            return true;
+                            $returnValue = true;
                         }
                     }
                 }
             }
+
+            // add result into cache
+            $this->usersEditAllowed[$user->getValue('usr_id')] = $returnValue;
         }
 
-        return false;
+        return $returnValue;
     }
 
     /**
@@ -816,11 +861,11 @@ class User extends TableUsers
                                AND rol_cat_id = cat_id
                                AND (  cat_org_id = '.$this->organizationId.'
                                    OR cat_org_id IS NULL ) ';
-                    $this->db->query($sql);
+                    $listViewStatement = $this->db->query($sql);
 
-                    if($this->db->num_rows() > 0)
+                    if($listViewStatement->rowCount() > 0)
                     {
-                        while($row = $this->db->fetch_array())
+                        while($row = $listViewStatement->fetch())
                         {
                             if($row['rol_this_list_view'] == 2)
                             {
@@ -947,11 +992,12 @@ class User extends TableUsers
     public function renewRoleData()
     {
         // initialize rights arrays
-        $this->roles_rights          = array();
-        $this->list_view_rights      = array();
-        $this->role_mail_rights      = array();
-        $this->rolesMembership       = array();
-        $this->rolesMembershipLeader = array();
+        $this->roles_rights     = array();
+        $this->list_view_rights = array();
+        $this->role_mail_rights = array();
+        $this->rolesMembership  = array();
+        $this->rolesMembershipLeader   = array();
+        $this->rolesMembershipNoLeader = array();
     }
 
     /**
@@ -1085,12 +1131,12 @@ class User extends TableUsers
                    AND mem_begin <= \''.$endDate.'\'
                    AND mem_end   >= \''.$startDate.'\'
                  ORDER BY mem_begin ASC ';
-        $this->db->query($sql);
+        $membershipStatement = $this->db->query($sql);
 
-        if($this->db->num_rows() === 1)
+        if($membershipStatement->rowCount() === 1)
         {
             // one record found than update this record
-            $row = $this->db->fetch_array();
+            $row = $membershipStatement->fetch();
             $member->setArray($row);
 
             // save new start date if an earlier date exists
@@ -1107,10 +1153,10 @@ class User extends TableUsers
                 $maxEndDate = $member->getValue('mem_end', 'Y-m-d');
             }
         }
-        elseif($this->db->num_rows() > 1)
+        elseif($membershipStatement->rowCount() > 1)
         {
             // several records found then read min and max date and delete all records
-            while($row = $this->db->fetch_array())
+            while($row = $membershipStatement->fetch())
             {
                 $member->clear();
                 $member->setArray($row);
@@ -1196,9 +1242,9 @@ class User extends TableUsers
                 // Disabled fields can only be edited by users with the right "edit_users" except on registration.
                 // Here is no need to check hidden fields because we check on save() method that only users who
                 // can edit the profile are allowed to save and change data.
-                if(($this->mProfileFieldsData->getProperty($columnName, 'usf_disabled') == 1
-                   && $gCurrentUser->editUsers() == true)
-                || $this->mProfileFieldsData->getProperty($columnName, 'usf_disabled') == 0
+                if($this->mProfileFieldsData->getProperty($columnName, 'usf_disabled') == 0
+                || ($this->mProfileFieldsData->getProperty($columnName, 'usf_disabled') == 1
+                   && $gCurrentUser->hasRightEditProfile($this, false))
                 || ($gCurrentUser->getValue('usr_id') == 0 && $this->getValue('usr_id') == 0))
                 {
                     $returnCode = $this->mProfileFieldsData->setValue($columnName, $newValue);
@@ -1342,4 +1388,3 @@ class User extends TableUsers
         return $this->checkRolesRight('rol_inventory');
     }
 }
-?>

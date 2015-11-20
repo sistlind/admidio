@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -53,11 +53,11 @@ if($roleCount == 0)
 {
     if($getInline == 0)
     {
-        die($gMessage->show($gL10n->get('PRO_ROLE_NOT_ASSIGNED')));
+        exit($gMessage->show($gL10n->get('PRO_ROLE_NOT_ASSIGNED')));
     }
     else
     {
-        die($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
+        exit($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
     }
 }
 
@@ -101,13 +101,14 @@ else
                       OR cat_org_id IS NULL )
                 ORDER BY cat_sequence, rol_name';
 }
-$result_rol = $gDb->query($sql);
+$rolesStatement = $gDb->query($sql);
+$rolesList      = $rolesStatement->fetchAll();
 
 $count_assigned = 0;
 $parentRoles = array();
 
 // Ergebnisse durchlaufen und kontrollieren ob maximale Teilnehmerzahl ueberschritten wuerde
-while($row = $gDb->fetch_array($result_rol))
+foreach($rolesList as $row)
 {
     if($row['rol_max_members'] > 0)
     {
@@ -119,9 +120,9 @@ while($row = $gDb->fetch_array($result_rol))
                    AND mem_leader = 0
                    AND mem_begin <= \''.DATE_NOW.'\'
                    AND mem_end    > \''.DATE_NOW.'\'';
-        $gDb->query($sql);
+        $pdoStatement = $gDb->query($sql);
 
-        $row_usr = $gDb->fetch_array();
+        $row_usr = $pdoStatement->fetch();
 
         if($row_usr[0] == 0)
         {
@@ -132,9 +133,9 @@ while($row = $gDb->fetch_array($result_rol))
                        AND mem_leader = 0
                        AND mem_begin <= \''.DATE_NOW.'\'
                        AND mem_end    > \''.DATE_NOW.'\'';
-            $gDb->query($sql);
+            $pdoStatement = $gDb->query($sql);
 
-            $row_members = $gDb->fetch_array();
+            $row_members = $pdoStatement->fetch();
 
             //Bedingungen fuer Abbruch und Abbruch
             if($row_members[0] >= $row['rol_max_members']
@@ -154,16 +155,10 @@ while($row = $gDb->fetch_array($result_rol))
     }
 }
 
-//Dateizeiger auf erstes Element zurueck setzen
-if($gDb->num_rows($result_rol)>0)
-{
-    $gDb->data_seek($result_rol, 0);
-}
-
 $user = new User($gDb, $gProfileFields, $getUserId);
 
 // Ergebnisse durchlaufen und Datenbankupdate durchfuehren
-while($row = $gDb->fetch_array($result_rol))
+foreach($rolesList as $row)
 {
     // if role is webmaster than only webmaster can add new user,
     // but don't change their own membership, because there must be at least one webmaster

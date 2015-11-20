@@ -4,13 +4,13 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
 if (basename($_SERVER['SCRIPT_FILENAME']) === 'constants.php')
 {
-    die('This page may not be called directly!');
+    exit('This page may not be called directly!');
 }
 
 // !!! Please do not edit these version numbers !!!
@@ -92,5 +92,3 @@ define('ROLE_LEADER_NO_RIGHTS', 0);
 define('ROLE_LEADER_MEMBERS_ASSIGN', 1);
 define('ROLE_LEADER_MEMBERS_EDIT', 2);
 define('ROLE_LEADER_MEMBERS_ASSIGN_EDIT', 3);
-
-?>

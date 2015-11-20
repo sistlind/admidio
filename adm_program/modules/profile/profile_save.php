@@ -4,7 +4,7 @@
  *
  * Copyright    : (c) 2004 - 2015 The Admidio Team
  * Homepage     : http://www.admidio.org
- * License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Parameters:
  *
@@ -117,7 +117,9 @@ foreach($gProfileFields->mProfileFields as $field)
     $post_id = 'usf-'. $field->getValue('usf_id');
 
     // check and save only fields that aren't disabled
-    if($gCurrentUser->editUsers() == true || $field->getValue('usf_disabled') == 0 || ($field->getValue('usf_disabled') == 1 && $getNewUser > 0))
+    if($field->getValue('usf_disabled') == 0
+    || ($field->getValue('usf_disabled') == 1 && $gCurrentUser->hasRightEditProfile($user, false))
+    || ($field->getValue('usf_disabled') == 1 && $getNewUser > 0))
     {
         if(isset($_POST[$post_id]))
         {
@@ -216,11 +218,11 @@ if($gCurrentUser->isWebmaster() || $getNewUser > 0)
             // pruefen, ob der Benutzername bereits vergeben ist
             $sql = 'SELECT usr_id FROM '. TBL_USERS. '
                      WHERE usr_login_name LIKE \''. $_POST['usr_login_name']. '\'';
-            $gDb->query($sql);
+            $pdoStatement = $gDb->query($sql);
 
-            if($gDb->num_rows() > 0)
+            if($pdoStatement->rowCount() > 0)
             {
-                $row = $gDb->fetch_array();
+                $row = $pdoStatement->fetch();
 
                 if(strcmp($row['usr_id'], $getUserId) != 0)
                 {
@@ -342,4 +344,3 @@ else
     $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
     $gMessage->show($gL10n->get('SYS_SAVE_DATA'));
 }
-?>

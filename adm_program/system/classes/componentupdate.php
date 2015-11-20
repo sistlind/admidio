@@ -3,7 +3,7 @@
  *
  *  Copyright    : (c) 2004 - 2015 The Admidio Team
  *  Homepage     : http://www.admidio.org
- *  License      : GNU Public License 2 http://www.gnu.org/licenses/gpl-2.0.html
+ *  License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  *****************************************************************************/
 
@@ -27,7 +27,7 @@
  */
 class ComponentUpdate extends Component
 {
-    private $updateFinished;        ///< Flag that will store if the update prozess of this version was successfully finished
+    private $updateFinished;        ///< Flag that will store if the update process of this version was successfully finished
     private $xmlObject;             ///< The SimpleXML object with all the update steps
     private $currentVersionArray;   ///< This is the version the component has actually before update. Each array element contains one part of the version.
     private $targetVersionArray;    ///< This is the version that is stored in the files of the component. Each array element contains one part of the version.
@@ -62,7 +62,7 @@ class ComponentUpdate extends Component
      * so if the whole update crashs later we know that this step was successfully executed.
      * When the node has an attribute @b database than this sql statement will only executed
      * if the value of the attribute is equal to your current @b $gDbType .
-     * @param $xmlNode A SimpleXML node of the current update step.
+     * @param object $xmlNode A SimpleXML node of the current update step.
      */
     private function executeStep($xmlNode)
     {
@@ -125,7 +125,7 @@ class ComponentUpdate extends Component
             // go step by step through the SQL statements until the last one is found
             foreach($this->xmlObject->children() as $updateStep)
             {
-                if($updateStep[0] != 'stop')
+                if($updateStep[0] !== 'stop')
                 {
                     $maxUpdateStep = $updateStep['id'];
                 }
@@ -239,13 +239,38 @@ class ComponentUpdate extends Component
                  where cat_name_intern LIKE \'CONFIRMATION_OF_PARTICIPATION\'
                    and rol_cat_id = cat_id
                    and not exists (select 1 from '.TBL_DATES.' where dat_rol_id = rol_id)';
-        $result = $this->db->query($sql);
+        $rolesStatement = $this->db->query($sql);
 
-        while($row = $this->db->fetch_array($result))
+        while($row = $rolesStatement->fetch())
         {
             $role = new TableRoles($this->db, $row['rol_id']);
             $role->delete();
         }
     }
+
+    /**
+     * This method set the default configuration for all organizations
+     */
+    public function updateStepSetDefaultConfiguration()
+    {
+        $sql = 'SELECT org_id FROM '.TBL_ORGANIZATIONS;
+        $organizationsStatement = $this->db->query($sql);
+        $organizationsArray     = $organizationsStatement->fetchAll();
+
+        foreach($organizationsArray as $organization)
+        {
+            $sql = 'SELECT lst_id FROM '. TBL_LISTS. '
+                     WHERE lst_org_id  = '. $organization['org_id'].'
+                       AND lst_default = 1 ';
+            $defaultListStatement = $this->db->query($sql);
+            $defaultListId = $defaultListStatement->fetch();
+
+            // save default list to preferences
+            $sql = 'UPDATE '. TBL_PREFERENCES. ' SET prf_value = \''.$defaultListId['lst_id'].'\'
+                     WHERE prf_org_id = '.$organization['org_id'].'
+                       AND prf_name   = \'lists_default_configuation\' ';
+            $this->db->query($sql);
+        }
+    }
+
 }
-?>
