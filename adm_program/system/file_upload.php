@@ -195,8 +195,8 @@ if($getMode == 'choose_files')
         <div class="modal-body">
             <p class="lead">'.$textUploadDescription.'</p>
 
-            <span class="btn btn-primary fileinput-button"><img
-                src="'. $iconUploadPath .'" alt="'.$textSelectFiles.'" />'.$textSelectFiles.'
+            <span class="btn btn-primary fileinput-button">
+                <span class="fa fa-upload fa-fw fa-gap-right" aria-hidden="true"></span>'.$textSelectFiles.'
                 <input id="fileupload" type="file" name="files[]" multiple>
             </span>
             <br>

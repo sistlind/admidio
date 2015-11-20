@@ -251,7 +251,7 @@ class HtmlPage
                 $this->menu->addItem('menu_item_backup', '/adm_program/modules/backup/backup.php',
                                     $gL10n->get('BAC_DATABASE_BACKUP'), 'backup.png', 'right', 'menu_item_administration', 'admidio-default-menu-item');
                 $this->menu->addItem('menu_item_options', '/adm_program/modules/preferences/preferences.php',
-                                    $gL10n->get('SYS_SETTINGS'), 'options.png', 'right', 'menu_item_administration', 'admidio-default-menu-item');
+                                    $gL10n->get('SYS_SETTINGS'), 'cog', 'right', 'menu_item_administration', 'admidio-default-menu-item');
             }
         }
 

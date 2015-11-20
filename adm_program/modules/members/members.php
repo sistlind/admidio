@@ -169,7 +169,7 @@ if($gCurrentUser->isWebmaster())
 
     // show link to system preferences of weblinks
     $membersAdministrationMenu->addItem('menu_item_preferences_links', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=user_management',
-                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right', 'menu_item_extras');
+                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right', 'menu_item_extras');
 }
 
 //Create table object

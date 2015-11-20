@@ -69,7 +69,7 @@ if ($gPreferences['enable_chat_module'] == 1)
 if($gCurrentUser->isWebmaster())
 {
     $EmailMenu->addItem('admMenuItemPreferences', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=messages',
-                    $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                    $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 $table = new HtmlTable('adm_lists_table', $page, true, true);

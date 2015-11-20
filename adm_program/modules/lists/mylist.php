@@ -516,7 +516,7 @@ $myListMenu = $page->getMenu();
 if($gCurrentUser->isWebmaster())
 {
     $myListMenu->addItem('admMenuItemPreferencesLists', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=lists',
-                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 // if mylist was not called directly then show link to navigate to previous page

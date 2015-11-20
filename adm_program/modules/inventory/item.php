@@ -167,7 +167,7 @@ if($gCurrentUser->isWebmaster())
 
     // show link to system preferences of weblinks
     $profileMenu->addItem('menu_item_preferences_links', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=profile',
-                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right', 'menu_item_extras');
+                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right', 'menu_item_extras');
 }
 
 // *******************************************************************************

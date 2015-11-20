@@ -144,7 +144,7 @@ if($gCurrentUser->isWebmaster())
 {
     // show link to system preferences of announcements
     $ecardMenu->addItem('menu_item_preferences', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=ecards',
-                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 // show form

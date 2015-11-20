@@ -218,7 +218,7 @@ if($getViewMode === 'html' || $getViewMode === 'compact')
                 // show link to system preferences of weblinks
                 $DatesMenu->addItem('admMenuItemPreferencesLinks',
                                     $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=events',
-                                    $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                                    $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
             }
             elseif($gCurrentUser->editDates())
             {

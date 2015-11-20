@@ -192,7 +192,7 @@ if($gCurrentUser->isWebmaster())
 {
     // show link to system preferences of announcements
     $guestbookMenu->addItem('admMenuItemPreferencesGuestbook', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=guestbook',
-                            $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                            $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 $guestbook = new TableGuestbook($gDb);

@@ -199,7 +199,7 @@ if($gCurrentUser->isWebmaster())
 {
     // show link to system preferences of photos
     $photosMenu->addItem('menu_item_preferences_photos', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=photos',
-                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 //Breadcrump bauen

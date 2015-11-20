@@ -72,7 +72,7 @@ if($gCurrentUser->isWebmaster())
     // show link to system preferences of announcements
     $registrationMenu->addItem('menu_item_preferences',
                                $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=registration',
-                               $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                               $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 $table = new HtmlTable('new_user_table', $page, true);
