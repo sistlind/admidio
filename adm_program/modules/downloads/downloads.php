@@ -86,21 +86,21 @@ if ($gCurrentUser->editDownloadRight())
     {
         // show links for upload, create folder and folder configuration
         $DownloadsMenu->addItem('menu_item_create_folder', $g_root_path.'/adm_program/modules/downloads/folder_new.php?folder_id='.$getFolderId,
-                            $gL10n->get('DOW_CREATE_FOLDER'), 'folder_create.png');
+                            $gL10n->get('DOW_CREATE_FOLDER'), 'plus');
 
         $DownloadsMenu->addItem('menu_item_upload_files', $g_root_path.'/adm_program/system/file_upload.php?module=downloads&id='.$getFolderId,
-                            $gL10n->get('DOW_UPLOAD_FILES'), 'page_white_upload.png');
+                            $gL10n->get('DOW_UPLOAD_FILES'), 'upload');
     }
 
     $DownloadsMenu->addItem('menu_item_config_folder', $g_root_path.'/adm_program/modules/downloads/folder_config.php?folder_id='.$getFolderId,
-                        $gL10n->get('SYS_AUTHORIZATION'), 'lock.png');
+                        $gL10n->get('SYS_AUTHORIZATION'), 'unlock-alt');
 };
 
 if($gCurrentUser->isWebmaster())
 {
     // show link to system preferences of weblinks
     $DownloadsMenu->addItem('admMenuItemPreferencesLinks', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=downloads',
-                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 //Create table object
@@ -109,7 +109,7 @@ $downloadOverview = new HtmlTable('tbl_downloads', $page, true, true);
 // create array with all column heading values
 $columnHeading = array(
     $gL10n->get('SYS_TYPE'),
-    '<img class="admidio-icon-info" src="'. THEME_PATH. '/icons/download.png" alt="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" title="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" />',
+    '<span class="fa fa-folder-open fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" /></span>',
     $gL10n->get('SYS_NAME'),
     $gL10n->get('SYS_DATE_MODIFIED'),
     $gL10n->get('SYS_SIZE'),
@@ -142,7 +142,7 @@ if (isset($folderContent['folders']))
         $columnValues = array(
             1, // Type folder
             '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/downloads.php?folder_id='. $nextFolder['fol_id']. '">
-                <img src="'. THEME_PATH. '/icons/download.png" alt="'.$gL10n->get('SYS_FOLDER').'" title="'.$gL10n->get('SYS_FOLDER').'" /></a>',
+                <span class="fa fa-folder fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_FOLDER').'"></span></a>',
             '<a href="'.$g_root_path.'/adm_program/modules/downloads/downloads.php?folder_id='. $nextFolder['fol_id']. '">'. $nextFolder['fol_name']. '</a>'.$folderDescription,
             '',
             '',
@@ -163,11 +163,11 @@ if (isset($folderContent['folders']))
             }
 
             $columnValues[] = ' <a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/rename.php?folder_id='. $nextFolder['fol_id']. '">
-                                    <img src="'. THEME_PATH. '/icons/edit.png" alt="'.$gL10n->get('SYS_EDIT').'" title="'.$gL10n->get('SYS_EDIT').'" /></a>
+                                    <span class="fa fa-edit fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_EDIT').'"></span></a>
                                 <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
                                     href="'.$g_root_path.'/adm_program/system/popup_message.php?type=fol&amp;element_id=row_folder_'.
-                                    $nextFolder['fol_id'].'&amp;name='.urlencode($nextFolder['fol_name']).'&amp;database_id='.$nextFolder['fol_id'].'"><img
-                                    src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('SYS_DELETE').'" title="'.$gL10n->get('SYS_DELETE').'" /></a>'.
+                                    $nextFolder['fol_id'].'&amp;name='.urlencode($nextFolder['fol_name']).'&amp;database_id='.$nextFolder['fol_id'].'">
+                                    <span class="fa fa-remove fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_DELETE').'"></span></a>'.
                                     $noteFolderNotExists;
         }
         $downloadOverview->addRowByArray($columnValues, 'row_folder_'.$nextFolder['fol_id']);
@@ -185,7 +185,7 @@ if (isset($folderContent['files']))
         $fileExtension  = admStrToLower(substr($nextFile['fil_name'], strrpos($nextFile['fil_name'], '.')+1));
 
         // Choose icon for the file
-        $iconFile = 'page_white_question.png';
+        $iconFile = 'file-o';
         if(array_key_exists($fileExtension, $icon_file_extension))
         {
             $iconFile = $icon_file_extension[$fileExtension];
@@ -204,7 +204,7 @@ if (isset($folderContent['files']))
         $columnValues = array(
             2, // Type file
             '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/get_file.php?file_id='. $nextFile['fil_id']. '">
-                <img src="'. THEME_PATH. '/icons/'.$iconFile.'" alt="'.$gL10n->get('SYS_FILE').'" title="'.$gL10n->get('SYS_FILE').'" /></a>',
+                <span class="fa fa-'.$iconFile.' fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_FLIE').'"></span></a>',
             '<a href="'.$g_root_path.'/adm_program/modules/downloads/get_file.php?file_id='. $nextFile['fil_id']. '">'. $nextFile['fil_name']. '</a>'.$fileDescription,
             $timestamp->format($gPreferences['system_date'].' '.$gPreferences['system_time']),
             $nextFile['fil_size']. ' kB&nbsp;',
@@ -225,11 +225,11 @@ if (isset($folderContent['files']))
             }
             $columnValues[] = '
             <a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/rename.php?file_id='. $nextFile['fil_id']. '">
-                <img src="'. THEME_PATH. '/icons/edit.png" alt="'.$gL10n->get('SYS_EDIT').'" title="'.$gL10n->get('SYS_EDIT').'" /></a>
+                <span class="fa fa-edit fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_EDIT').'"></span></a>
             <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
                 href="'.$g_root_path.'/adm_program/system/popup_message.php?type=fil&amp;element_id=row_file_'.
-                $nextFile['fil_id'].'&amp;name='.urlencode($nextFile['fil_name']).'&amp;database_id='.$nextFile['fil_id'].'"><img
-                src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('SYS_DELETE').'" title="'.$gL10n->get('SYS_DELETE').'" /></a>'.
+                $nextFile['fil_id'].'&amp;name='.urlencode($nextFile['fil_name']).'&amp;database_id='.$nextFile['fil_id'].'">
+                <span class="fa fa-remove fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_DELETE').'"></span></a>'.
             $noteFileNotExists;
         }
         $downloadOverview->addRowByArray($columnValues, 'row_file_'.$nextFile['fil_id']);
@@ -256,15 +256,15 @@ if ($gCurrentUser->editDownloadRight())
         $htmlAdminTableHeadline = '<h2>
                                     '.$gL10n->get('DOW_UNMANAGED_FILES').'
                                     <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
-                                        href="'. $g_root_path. '/adm_program/system/msg_window.php?message_id=DOW_ADDITIONAL_FILES&amp;inline=true"><img
-                                        src="'. THEME_PATH. '/icons/help.png" alt="Help" /></a>
+                                        href="'. $g_root_path. '/adm_program/system/msg_window.php?message_id=DOW_ADDITIONAL_FILES&amp;inline=true">
+                                        <span class="fa fa-question-circle fa-fw" aria-hidden="true" /></span></a>
                                 </h2>';
 
         //Create table object
         $adminTable = new HtmlTable('tbl_downloads', $page, true);
 
         // create array with all column heading values
-        $columnHeading = array('<img class="admidio-icon-info" src="'. THEME_PATH. '/icons/download.png" alt="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" title="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" />',
+        $columnHeading = array('<span class="fa fa-folder-open fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_FOLDER').' / '.$gL10n->get('DOW_FILE_TYPE').'" /></span>',
                                $gL10n->get('SYS_NAME'),
                                $gL10n->get('SYS_SIZE'),
                                $gL10n->get('SYS_FEATURES'));
@@ -281,7 +281,7 @@ if ($gCurrentUser->editDownloadRight())
                 $columnValues = array('<img src="'. THEME_PATH. '/icons/download.png" alt="'.$gL10n->get('SYS_FOLDER').'" title="'.$gL10n->get('SYS_FOLDER').'" />',
                                       $nextFolder['fol_name'],
                                       '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/download_function.php?mode=6&amp;folder_id='.$getFolderId.'&amp;name='. urlencode($nextFolder['fol_name']). '">
-                                          <img src="'. THEME_PATH. '/icons/database_in.png" alt="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" title="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" /></a>');
+                                        <span class="fa fa-upload fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" /></span></a>');
                 $adminTable->addRowByArray($columnValues);
             }
         }
@@ -298,17 +298,17 @@ if ($gCurrentUser->editDownloadRight())
                 $fileExtension  = admStrToLower(substr($nextFile['fil_name'], strrpos($nextFile['fil_name'], '.')+1));
 
                 // Choose icon for the file
-                $iconFile = 'page_white_question.png';
+                $iconFile = 'file-o';
                 if(array_key_exists($fileExtension, $icon_file_extension))
                 {
                     $iconFile = $icon_file_extension[$fileExtension];
                 }
 
-                $columnValues = array('<img src="'. THEME_PATH. '/icons/'.$iconFile.'" alt="'.$gL10n->get('SYS_FILE').'" title="'.$gL10n->get('SYS_FILE').'" /></a>',
+                $columnValues = array('<span class="fa fa-'.$iconFile.' fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_FLIE').'"></span></a>',
                                       $nextFile['fil_name'],
                                       $nextFile['fil_size']. ' kB&nbsp;',
                                       '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/downloads/download_function.php?mode=6&amp;folder_id='.$getFolderId.'&amp;name='. urlencode($nextFile['fil_name']). '">
-                                          <img src="'. THEME_PATH. '/icons/database_in.png" alt="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" title="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" /></a>');
+                                          <span class="fa fa-upload fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('DOW_ADD_TO_DATABASE').'" /></span></a>');
                 $adminTable->addRowByArray($columnValues);
             }
         }
