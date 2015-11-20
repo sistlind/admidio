@@ -79,14 +79,14 @@ if($gCurrentUser->editAnnouncements())
 {
     // show link to create new announcement
     $announcementsMenu->addItem('menu_item_new_announcement', $g_root_path.'/adm_program/modules/announcements/announcements_new.php?headline='.$getHeadline,
-                                $gL10n->get('SYS_CREATE_VAR', $getHeadline), 'add.png');
+                                $gL10n->get('SYS_CREATE_VAR', $getHeadline), 'plus');
 }
 
 if($gCurrentUser->isWebmaster())
 {
     // show link to system preferences of announcements
     $announcementsMenu->addItem('menu_item_preferences', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=announcements',
-                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'cog', 'right');
 }
 
 if($announcementsCount == 0)
@@ -116,8 +116,7 @@ else
         <div class="panel panel-primary" id="ann_'.$announcement->getValue('ann_id').'">
             <div class="panel-heading">
                 <div class="pull-left">
-                    <img class="admidio-panel-heading-icon" src="'. THEME_PATH. '/icons/announcements.png" alt="'. $announcement->getValue('ann_headline'). '" />'.
-                    $announcement->getValue('ann_headline'). '
+                    <span class="fa fa-newspaper-o fa-fw fa-gap-right" aria-hidden="true"></span>'.$announcement->getValue('ann_headline'). '
                 </div>
                 <div class="pull-right text-right">'.$announcement->getValue('ann_timestamp_create', $gPreferences['system_date']));
 
@@ -127,8 +126,8 @@ else
                         if($announcement->editRight() == true)
                         {
                             $page->addHtml('
-                            <a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/announcements/announcements_new.php?ann_id='. $announcement->getValue('ann_id'). '&amp;headline='.$getHeadline.'"><img
-                                src="'. THEME_PATH. '/icons/edit.png" alt="'.$gL10n->get('SYS_EDIT').'" title="'.$gL10n->get('SYS_EDIT').'" /></a>');
+                            <a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/announcements/announcements_new.php?ann_id='. $announcement->getValue('ann_id'). '&amp;headline='.$getHeadline.'">
+                                <span class="fa fa-edit fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_EDIT').'"></span></a>');
                         }
 
                         // Loeschen darf man nur Ankuendigungen der eigenen Gliedgemeinschaft
@@ -136,9 +135,8 @@ else
                         {
                             $page->addHtml('
                             <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal"
-                                href="'.$g_root_path.'/adm_program/system/popup_message.php?type=ann&amp;element_id=ann_'.
-                                $announcement->getValue('ann_id').'&amp;name='.urlencode($announcement->getValue('ann_headline')).'&amp;database_id='.$announcement->getValue('ann_id').'"><img
-                                src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('SYS_DELETE').'" title="'.$gL10n->get('SYS_DELETE').'" /></a>');
+                                href="'.$g_root_path.'/adm_program/system/popup_message.php?type=ann&amp;element_id=ann_'.$announcement->getValue('ann_id').'&amp;name='.urlencode($announcement->getValue('ann_headline')).'&amp;database_id='.$announcement->getValue('ann_id').'">
+                                <span class="fa fa-remove fa-fw" aria-hidden="true" data-toggle="tooltip" title="'.$gL10n->get('SYS_DELETE').'"></span></a>');
                         }
                     }
                 $page->addHtml('</div>
