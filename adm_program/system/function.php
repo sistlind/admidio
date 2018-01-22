@@ -3,35 +3,15 @@
  ***********************************************************************************************
  * Various common functions
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
-
-/**
- * Autoloading function of class files. This function will be later registered
- * for default autoload implementation. Therefore the class name must be the same
- * as the file name except for case sensitive.
- * @param $className Name of the class for which the file should be loaded.
- * @return Return @b false if the file for the class wasn't found.
- */
-function admFuncAutoload($className)
+if (basename($_SERVER['SCRIPT_FILENAME']) === 'function.php')
 {
-    $fileName = SERVER_PATH. '/adm_program/system/classes/'.strtolower($className).'.php';
-
-    if(file_exists($fileName))
-    {
-        include($fileName);
-    }
-    else
-    {
-        return false;
-    }
+    exit('This page may not be called directly!');
 }
-
-// now register this function in this script so only function.php must be included for autoload
-spl_autoload_register('admFuncAutoload');
 
 /**
  * Function checks if the user is a member of the role.
@@ -39,115 +19,107 @@ spl_autoload_register('admFuncAutoload');
  * @param string $roleName The name of the role where the membership of the user should be checked
  * @param int    $userId   The id of the user who should be checked if he is a member of the role.
  *                         If @userId is not set than this will be checked for the current user
- * @return int|bool Returns @b true if the user is a member of the role
+ * @return bool Returns @b true if the user is a member of the role
  */
 function hasRole($roleName, $userId = 0)
 {
-    global $gCurrentUser, $gCurrentOrganization, $gDb;
+    global $gDb, $gCurrentUser, $gCurrentOrganization;
 
-    if($userId === 0)
+    if ($userId === 0)
     {
-        $userId = $gCurrentUser->getValue('usr_id');
-    }
-    elseif(!is_numeric($userId))
-    {
-        return -1;
+        $userId = (int) $gCurrentUser->getValue('usr_id');
     }
 
     $sql = 'SELECT mem_id
-              FROM '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-             WHERE mem_usr_id = '.$userId.'
-               AND mem_begin <= \''.DATE_NOW.'\'
-               AND mem_end    > \''.DATE_NOW.'\'
-               AND mem_rol_id = rol_id
-               AND rol_name   = \''.$roleName.'\'
+              FROM '.TBL_MEMBERS.'
+        INNER JOIN '.TBL_ROLES.'
+                ON rol_id = mem_rol_id
+        INNER JOIN '.TBL_CATEGORIES.'
+                ON cat_id = rol_cat_id
+             WHERE mem_usr_id = ? -- $userId
+               AND mem_begin <= ? -- DATE_NOW
+               AND mem_end    > ? -- DATE_NOW
+               AND rol_name   = ? -- $roleName
                AND rol_valid  = 1
-               AND rol_cat_id = cat_id
-               AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
+               AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
                    OR cat_org_id IS NULL )';
-    $statement = $gDb->query($sql);
+    $statement = $gDb->queryPrepared($sql, array($userId, DATE_NOW, DATE_NOW, $roleName, (int) $gCurrentOrganization->getValue('org_id')));
 
-    if($statement->rowCount() === 1)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    return $statement->rowCount() === 1;
 }
 
 /**
  * Function checks if the user is a member in a role of the current organization.
- * @param  int  $userId The id of the user who should be checked if he is a member of the current organization
+ * @param int $userId The id of the user who should be checked if he is a member of the current organization
  * @return bool Returns @b true if the user is a member
  */
 function isMember($userId)
 {
-    global $gCurrentOrganization, $gDb;
+    global $gDb, $gCurrentOrganization;
 
-    if(is_numeric($userId) && $userId > 0)
+    if ($userId === 0)
     {
-        $sql = 'SELECT COUNT(*)
-                  FROM '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                 WHERE mem_usr_id = '.$userId.'
-                   AND mem_begin <= \''.DATE_NOW.'\'
-                   AND mem_end    > \''.DATE_NOW.'\'
-                   AND mem_rol_id = rol_id
-                   AND rol_valid  = 1
-                   AND rol_cat_id = cat_id
-                   AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                       OR cat_org_id IS NULL )';
-        $statement = $gDb->query($sql);
-
-        $row = $statement->fetch();
-        $rowCount = $row[0];
-
-        if($rowCount > 0)
-        {
-            return true;
-        }
+        return false;
     }
-    return false;
+
+    $sql = 'SELECT COUNT(*) AS count
+              FROM '.TBL_MEMBERS.'
+        INNER JOIN '.TBL_ROLES.'
+                ON rol_id = mem_rol_id
+        INNER JOIN '.TBL_CATEGORIES.'
+                ON cat_id = rol_cat_id
+             WHERE mem_usr_id = ? -- $userId
+               AND mem_begin <= ? -- DATE_NOW
+               AND mem_end    > ? -- DATE_NOW
+               AND rol_valid  = 1
+               AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
+                   OR cat_org_id IS NULL )';
+    $statement = $gDb->queryPrepared($sql, array($userId, DATE_NOW, DATE_NOW, (int) $gCurrentOrganization->getValue('org_id')));
+
+    return $statement->fetchColumn() > 0;
 }
 
 /**
  * Function checks if the user is a group leader in a role of the current organization.
  * If you use the @b roleId parameter you can check if the user is group leader of that role.
- * @param int $userId  The id of the user who should be checked if he is a group leader
- * @param int $roleId  (optional) If set <> 0 than the function checks if the user is group leader of this role
- *                     otherwise it checks if the user is group leader in one role of the current organization
+ * @param int $userId The id of the user who should be checked if he is a group leader
+ * @param int $roleId (optional) If set <> 0 than the function checks if the user is group leader of this role
+ *                    otherwise it checks if the user is group leader in one role of the current organization
  * @return bool Returns @b true if the user is a group leader
  */
 function isGroupLeader($userId, $roleId = 0)
 {
-    global $gCurrentOrganization, $gDb;
+    global $gDb, $gCurrentOrganization;
 
-    if(is_numeric($userId) && $userId > 0 && is_numeric($roleId))
+    if ($userId === 0)
     {
-        $sql = 'SELECT mem_id
-                  FROM '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                 WHERE mem_usr_id = '.$userId.'
-                   AND mem_begin <= \''.DATE_NOW.'\'
-                   AND mem_end    > \''.DATE_NOW.'\'
-                   AND mem_leader = 1
-                   AND mem_rol_id = rol_id
-                   AND rol_valid  = 1
-                   AND rol_cat_id = cat_id
-                   AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
-                       OR cat_org_id IS NULL )';
-        if ($roleId > 0)
-        {
-            $sql .= ' AND mem_rol_id = '.$roleId;
-        }
-        $statement = $gDb->query($sql);
-
-        if($statement->rowCount() > 0)
-        {
-            return true;
-        }
+        return false;
     }
-    return false;
+
+    $sql = 'SELECT mem_id
+              FROM '.TBL_MEMBERS.'
+        INNER JOIN '.TBL_ROLES.'
+                ON rol_id = mem_rol_id
+        INNER JOIN '.TBL_CATEGORIES.'
+                ON cat_id = rol_cat_id
+             WHERE mem_usr_id = ? -- $userId
+               AND mem_begin <= ? -- DATE_NOW
+               AND mem_end    > ? -- DATE_NOW
+               AND mem_leader = 1
+               AND rol_valid  = 1
+               AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
+                   OR cat_org_id IS NULL )';
+    $queryParams = array($userId, DATE_NOW, DATE_NOW, (int) $gCurrentOrganization->getValue('org_id'));
+
+    if ($roleId > 0)
+    {
+        $sql .= ' AND mem_rol_id = ? -- $roleId';
+        $queryParams[] = $roleId;
+    }
+
+    $statement = $gDb->queryPrepared($sql, $queryParams);
+
+    return $statement->rowCount() > 0;
 }
 
 /**
@@ -156,165 +128,144 @@ function isGroupLeader($userId, $roleId = 0)
  * Beispiel:
  *     Seite: < Vorherige 1  2  3 ... 9  10  11 Naechste >
  *
- * @param string $base_url                 Basislink zum Modul (auch schon mit notwendigen Uebergabevariablen)
- * @param int    $num_items                Gesamtanzahl an Elementen
- * @param int    $per_page                 Anzahl Elemente pro Seite
- * @param int    $start_item               Mit dieser Elementnummer beginnt die aktuelle Seite
- * @param bool   $add_prevnext_text        Links mit "Vorherige" "Naechste" anzeigen
- * @param string $scriptParameterNameStart (optional) You can set a new name for the parameter that should be used as start parameter.
+ * @param string $baseUrl                  Basislink zum Modul (auch schon mit notwendigen Uebergabevariablen)
+ * @param int    $itemsCount               Gesamtanzahl an Elementen
+ * @param int    $itemsPerPage             Anzahl Elemente pro Seite
+ * @param int    $pageStartItem            Mit dieser Elementnummer beginnt die aktuelle Seite
+ * @param bool   $addPrevNextText          Links mit "Vorherige" "Naechste" anzeigen
+ * @param string $queryParamName (optional) You can set a new name for the parameter that should be used as start parameter.
  * @return string
  */
-function admFuncGeneratePagination($base_url, $num_items, $per_page, $start_item, $add_prevnext_text = true, $scriptParameterNameStart = 'start')
+function admFuncGeneratePagination($baseUrl, $itemsCount, $itemsPerPage, $pageStartItem, $addPrevNextText = true, $queryParamName = 'start')
 {
     global $gL10n;
 
-    if ($num_items === 0 || $per_page === 0)
+    if ($itemsCount === 0 || $itemsPerPage === 0)
     {
         return '';
     }
 
-    $total_pages = ceil($num_items / $per_page);
+    $totalPagesCount = ceil($itemsCount / $itemsPerPage);
 
-    if ($total_pages <= 1)
+    if ($totalPagesCount <= 1)
     {
         return '';
     }
 
-    $on_page = floor($start_item / $per_page) + 1;
-
-    $page_string = '';
-    if ($total_pages > 7)
+    /**
+     * @param int    $start
+     * @param int    $end
+     * @param int    $page
+     * @param string $url
+     * @param string $paramName
+     * @param int    $itemsPerPage
+     * @return string
+     */
+    function getListElementsFromTo($start, $end, $page, $url, $paramName, $itemsPerPage)
     {
-        $init_page_max = ($total_pages > 3) ? 3 : $total_pages;
+        $pageNavString = '';
 
-        for($i = 1; $i < $init_page_max + 1; ++$i)
+        for ($i = $start; $i < $end; ++$i)
         {
-            if ($i === $on_page)
+            if ($i === $page)
             {
-                $page_string .= '<li class="active"><a href="#">'.$i.'</a></li>';
+                $pageNavString .= getListElementString($i, 'active');
             }
             else
             {
-                $page_string .= '<li><a href="'.$base_url.'&amp;'.$scriptParameterNameStart.'='.(($i - 1) * $per_page).'">'.$i.'</a></li>';
+                $pageNavString .= getListElementString($i, '', $url, $paramName, ($i - 1) * $itemsPerPage);
             }
         }
 
-        if ($total_pages > 3)
+        return $pageNavString;
+    }
+
+    /**
+     * @param string $linkText
+     * @param string $className
+     * @param string $url
+     * @param string $paramName
+     * @param string $paramValue
+     * @return string
+     */
+    function getListElementString($linkText, $className = '', $url = '', $paramName = '', $paramValue = '')
+    {
+        $classString = '';
+        if ($className !== '')
         {
-            if ($on_page > 1 && $on_page < $total_pages)
+            $classString = ' class="'.$className.'"';
+        }
+
+        $urlString = '#';
+        if ($url !== '' && $className === '')
+        {
+            $urlString = $url.'&'.$paramName.'='.$paramValue;
+        }
+
+        return '<li'.$classString.'><a href="'.$urlString.'">'.$linkText.'</a></li>';
+    }
+
+    $onPage = (int) floor($pageStartItem / $itemsPerPage) + 1;
+
+    $pageNavigationString = '';
+
+    if ($totalPagesCount > 7)
+    {
+        $initPageMax = ($totalPagesCount > 3) ? 3 : $totalPagesCount;
+
+        $pageNavigationString .= getListElementsFromTo(1, $initPageMax + 1, $onPage, $baseUrl, $queryParamName, $itemsPerPage);
+
+        if ($totalPagesCount > 3)
+        {
+            $disabledLink = '<li class="disabled"><a>...</a></li>';
+
+            if ($onPage > 1 && $onPage < $totalPagesCount)
             {
-                $page_string .= ($on_page > 5) ? ' ... ' : '&nbsp;&nbsp;';
+                $pageNavigationString .= ($onPage > 5) ? $disabledLink : '&nbsp;&nbsp;';
 
-                $init_page_min = ($on_page > 4) ? $on_page : 5;
-                $init_page_max = ($on_page < $total_pages - 4) ? $on_page : $total_pages - 4;
+                $initPageMin = ($onPage > 4) ? $onPage : 5;
+                $initPageMax = ($onPage < $totalPagesCount - 4) ? $onPage : $totalPagesCount - 4;
 
-                for($i = $init_page_min - 1; $i < $init_page_max + 2; ++$i)
-                {
-                    if ($i === $on_page)
-                    {
-                        $page_string .= '<li class="active"><a href="#">'.$i.'</a></li>';
-                    }
-                    else
-                    {
-                        $page_string .= '<li><a href="'.$base_url.'&amp;'.$scriptParameterNameStart.'='.(($i - 1) * $per_page).'">'.$i.'</a></li>';
-                    }
-                }
+                $pageNavigationString .= getListElementsFromTo($initPageMin - 1, $initPageMax + 2, $onPage, $baseUrl, $queryParamName, $itemsPerPage);
 
-                $page_string .= ($on_page < $total_pages - 4) ? ' ... ' : '&nbsp;&nbsp;';
+                $pageNavigationString .= ($onPage < $totalPagesCount - 4) ? $disabledLink : '&nbsp;&nbsp;';
             }
             else
             {
-                $page_string .= ' ... ';
+                $pageNavigationString .= $disabledLink;
             }
 
-            for($i = $total_pages - 2; $i < $total_pages + 1; ++$i)
-            {
-                if ($i === $on_page)
-                {
-                    $page_string .= '<li class="active"><a href="#">'.$i.'</a></li>';
-                }
-                else
-                {
-                    $page_string .= '<li><a href="'.$base_url.'&amp;'.$scriptParameterNameStart.'='.(($i - 1) * $per_page).'">'.$i.'</a></li>';
-                }
-            }
+            $pageNavigationString .= getListElementsFromTo($totalPagesCount - 2, $totalPagesCount + 1, $onPage, $baseUrl, $queryParamName, $itemsPerPage);
         }
     }
     else
     {
-        for($i = 1; $i < $total_pages + 1; ++$i)
-        {
-            if ($i === $on_page)
-            {
-                $page_string .= '<li class="active"><a href="#">'.$i.'</a></li>';
-            }
-            else
-            {
-                $page_string .= '<li><a href="'.$base_url.'&amp;'.$scriptParameterNameStart.'='.(($i - 1) * $per_page).'">'.$i.'</a></li>';
-            }
-        }
+        $pageNavigationString .= getListElementsFromTo(1, $totalPagesCount + 1, $onPage, $baseUrl, $queryParamName, $itemsPerPage);
     }
 
-    if ($add_prevnext_text)
+    if ($addPrevNextText)
     {
-        if ($on_page > 1)
+        $pageNavClassPrev = '';
+        if ($onPage === 1)
         {
-            $page_string = '<li><a href="' . $base_url . '&amp;'.$scriptParameterNameStart.'=' . (($on_page - 2) * $per_page) . '">'.$gL10n->get('SYS_BACK').'</a></li>' . $page_string;
-        }
-        else
-        {
-            $page_string = '<li class="disabled"><a href="' . $base_url . '&amp;'.$scriptParameterNameStart.'=' . (($on_page - 2) * $per_page) . '">'.$gL10n->get('SYS_BACK').'</a></li>' . $page_string;
+            $pageNavClassPrev = 'disabled';
         }
 
-        if ($on_page < $total_pages)
+        $pageNavClassNext = '';
+        if ($onPage === $totalPagesCount)
         {
-            $page_string .= '<li><a href="' . $base_url . '&amp;'.$scriptParameterNameStart.'=' . ($on_page * $per_page) . '">'.$gL10n->get('SYS_PAGE_NEXT').'</a></li>';
+            $pageNavClassNext = 'disabled';
         }
-        else
-        {
-            $page_string .= '<li class="disabled"><a href="' . $base_url . '&amp;'.$scriptParameterNameStart.'='. ($on_page * $per_page) . '">'.$gL10n->get('SYS_PAGE_NEXT').'</a></li>';
-        }
+
+        $pageNavigationPrevText = getListElementString($gL10n->get('SYS_BACK'),      $pageNavClassPrev, $baseUrl, $queryParamName, ($onPage - 2) * $itemsPerPage);
+        $pageNavigationNextText = getListElementString($gL10n->get('SYS_PAGE_NEXT'), $pageNavClassNext, $baseUrl, $queryParamName, $onPage * $itemsPerPage);
+
+        $pageNavigationString = $pageNavigationPrevText.$pageNavigationString.$pageNavigationNextText;
     }
 
-    $page_string = '<ul class="pagination">' . $page_string . '</ul>';
+    $pageNavigationString = '<ul class="pagination">'.$pageNavigationString.'</ul>';
 
-    return $page_string;
-}
-
-/**
- * Berechnung der Maximalerlaubten Dateiuploadgröße in Byte
- * @return int
- */
-function admFuncMaxUploadSize()
-{
-    $post_max_size = trim(ini_get('post_max_size'));
-    switch(admStrToLower(substr($post_max_size, strlen($post_max_size/1), 1)))
-    {
-        case 'g':
-            $post_max_size *= 1024;
-        case 'm':
-            $post_max_size *= 1024;
-        case 'k':
-            $post_max_size *= 1024;
-    }
-    $upload_max_filesize = trim(ini_get('upload_max_filesize'));
-    switch(admStrToLower(substr($upload_max_filesize, strlen($upload_max_filesize/1), 1)))
-    {
-        case 'g':
-            $upload_max_filesize *= 1024;
-        case 'm':
-            $upload_max_filesize *= 1024;
-        case 'k':
-            $upload_max_filesize *= 1024;
-    }
-    if($upload_max_filesize < $post_max_size)
-    {
-        return $upload_max_filesize;
-    }
-    else
-    {
-        return $post_max_size;
-    }
+    return $pageNavigationString;
 }
 
 /**
@@ -323,30 +274,20 @@ function admFuncMaxUploadSize()
  */
 function admFuncProcessableImageSize()
 {
-    $memory_limit = trim(ini_get('memory_limit'));
-    // falls in php.ini nicht gesetzt
-    if(!$memory_limit || $memory_limit === '')
+    $memoryLimit = PhpIniUtils::getMemoryLimit();
+    // if memory_limit is disabled in php.ini
+    if ($memoryLimit === -1)
     {
-        $memory_limit = '8M';
+        $memoryLimit = 128 * 1024 * 1024; // 128MB
     }
-    // falls in php.ini abgeschaltet
-    if($memory_limit === '-1')
-    {
-        $memory_limit = '128M';
-    }
-    switch(admStrToLower(substr($memory_limit, strlen($memory_limit/1), 1)))
-    {
-        case 'g':
-            $memory_limit *= 1024;
-        case 'm':
-            $memory_limit *= 1024;
-        case 'k':
-            $memory_limit *= 1024;
-    }
-    // Für jeden Pixel werden 3Byte benötigt (RGB)
+
+    // For each Pixel 3 Bytes are necessary (RGB)
+    $bytesPerPixel = 3;
     // der Speicher muss doppelt zur Verfügung stehen
-    // nach ein paar tests hat sich 2,5Fach als sichrer herausgestellt
-    return $memory_limit / (3*2.5);
+    // nach ein paar tests hat sich 2.5x als sicher herausgestellt
+    $factor = 2.5;
+
+    return (int) round($memoryLimit / ($bytesPerPixel * $factor));
 }
 
 // Verify the content of an array element if it's the expected datatype
@@ -356,91 +297,94 @@ function admFuncProcessableImageSize()
  * value was set then the parameter will be initialized. The function can be used with every array and their elements.
  * You can set several flags (like required value, datatype …) that should be checked.
  *
- * @param array $array         The array with the element that should be checked
- * @param string $variableName Name of the array element that should be checked
- * @param string $datatype     The datatype like @b string, @b numeric, @b boolean, @b html, @b date or @b file that
- *                             is expected and which will be checked.
- *                             Datatype @b date expects a date that has the Admidio default format from the
- *                             preferences or the english date format @b Y-m-d
- * @param array $options       (optional) An array with the following possible entries:
- *                             - @b defaultValue : A value that will be set if the variable has no value
- *                             - @b requireValue : If set to @b true than a value is required otherwise the function
- *                                                 returns an error
- *                             - @b validValues :  An array with all values that the variable could have. If another
- *                                                 value is found than the function returns an error
- *                             - @b directOutput : If set to @b true the function returns only the error string, if set
- *                                                 to false a html message with the error will be returned
+ * @param array<string,mixed> $array        The array with the element that should be checked
+ * @param string              $variableName Name of the array element that should be checked
+ * @param string              $datatype     The datatype like @b string, @b numeric, @b int, @b float, @b bool, @b boolean, @b html,
+ *                                          @b date or @b file that is expected and which will be checked.
+ *                                          Datatype @b date expects a date that has the Admidio default format from the
+ *                                          preferences or the english date format @b Y-m-d
+ * @param array<string,mixed> $options      (optional) An array with the following possible entries:
+ *                                          - @b defaultValue : A value that will be set if the variable has no value
+ *                                          - @b requireValue : If set to @b true than a value is required otherwise the function
+ *                                                              returns an error
+ *                                          - @b validValues :  An array with all values that the variable could have. If another
+ *                                                              value is found than the function returns an error
+ *                                          - @b directOutput : If set to @b true the function returns only the error string, if set
+ *                                                              to false a html message with the error will be returned
  * @return mixed|null Returns the value of the element or the error message if a test failed
  *
  * @par Examples
- * @code   // numeric value that would get a default value 0 if not set
+ * @code
+ * // numeric value that would get a default value 0 if not set
  * $getDateId = admFuncVariableIsValid($_GET, 'dat_id', 'numeric', array('defaultValue' => 0));
  *
  * // string that will be initialized with text of id DAT_DATES
- * $getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string', array('defaultValue' => $g_l10n->get('DAT_DATES')));
+ * $getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string', array('defaultValue' => $gL10n->get('DAT_DATES')));
  *
  * // string initialized with actual and the only allowed values are actual and old
- * $getMode = admFuncVariableIsValid($_GET, 'mode', 'string', array('defaultValue' => 'actual', 'validValues' => array('actual', 'old'))); @endcode
+ * $getMode = admFuncVariableIsValid($_GET, 'mode', 'string', array('defaultValue' => 'actual', 'validValues' => array('actual', 'old')));
+ * @endcode
  */
-function admFuncVariableIsValid($array, $variableName, $datatype, $options = array())
+function admFuncVariableIsValid(array $array, $variableName, $datatype, array $options = array())
 {
-    global $gL10n, $gMessage, $gPreferences;
+    global $gL10n, $gMessage, $gSettingsManager;
 
     // create array with all options
     $optionsDefault = array('defaultValue' => null, 'requireValue' => false, 'validValues' => null, 'directOutput' => null);
     $optionsAll     = array_replace($optionsDefault, $options);
 
     $errorMessage = '';
-    $datatype = admStrToLower($datatype);
+    $datatype = strtolower($datatype);
+    $value = null;
 
     // set default value for each datatype if no value is given and no value was required
-    if(!isset($array[$variableName]) || $array[$variableName] === '')
+    if (array_key_exists($variableName, $array) && $array[$variableName] !== '')
     {
-        if($optionsAll['requireValue'])
+        $value = $array[$variableName];
+    }
+    else
+    {
+        if ($optionsAll['requireValue'])
         {
             // if value is required an no value is given then show error
             $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
         }
-        elseif($optionsAll['defaultValue'] !== null)
+        elseif ($optionsAll['defaultValue'] !== null)
         {
             // if a default value was set then take this value
-            $array[$variableName] = $optionsAll['defaultValue'];
+            $value = $optionsAll['defaultValue'];
         }
         else
         {
             // no value set then initialize the parameter
-            if($datatype === 'boolean' || $datatype === 'numeric')
+            if ($datatype === 'bool' || $datatype === 'boolean')
             {
-                $array[$variableName] = 0;
+                $value = false;
+            }
+            elseif ($datatype === 'numeric' || $datatype === 'int')
+            {
+                $value = 0;
+            }
+            elseif ($datatype === 'float')
+            {
+                $value = 0.0;
             }
             else
             {
-                $array[$variableName] = '';
+                $value = '';
             }
 
-            return $array[$variableName];
+            return $value;
         }
     }
 
-    if($datatype === 'boolean')
+    // check if parameter has a valid value
+    // do a strict check with in_array because the function don't work properly
+    if ($optionsAll['validValues'] !== null
+    && !in_array(admStrToUpper($value), $optionsAll['validValues'], true)
+    && !in_array(admStrToLower($value), $optionsAll['validValues'], true))
     {
-        // boolean type must be 0 or 1 otherwise throw error
-        // do not check with in_array because this function don't work properly
-        if($array[$variableName] != '0'     && $array[$variableName] != '1'
-        && $array[$variableName] != 'false' && $array[$variableName] != 'true')
-        {
-            $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
-        }
-    }
-    elseif($optionsAll['validValues'] !== null)
-    {
-        // check if parameter has a valid value
-        // do a strict check with in_array because the function don't work properly
-        if(!in_array(admStrToUpper($array[$variableName]), $optionsAll['validValues'], true)
-        && !in_array(admStrToLower($array[$variableName]), $optionsAll['validValues'], true))
-        {
-            $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
-        }
+        $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
     }
 
     switch ($datatype)
@@ -448,12 +392,12 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
         case 'file':
             try
             {
-                if($array[$variableName] !== '')
+                if ($value !== '')
                 {
-                    admStrIsValidFileName($array[$variableName]);
+                    admStrIsValidFileName($value);
                 }
             }
-            catch(AdmException $e)
+            catch (AdmException $e)
             {
                 $errorMessage = $e->getText();
             }
@@ -461,63 +405,92 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
 
         case 'date':
             // check if date is a valid Admidio date format
-            $objAdmidioDate = DateTime::createFromFormat($gPreferences['system_date'], $array[$variableName]);
+            $objAdmidioDate = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $value);
 
-            if(!$objAdmidioDate)
+            if (!$objAdmidioDate)
             {
                 // check if date has english format
-                $objEnglishDate = DateTime::createFromFormat('Y-m-d', $array[$variableName]);
+                $objEnglishDate = \DateTime::createFromFormat('Y-m-d', $value);
 
-                if(!$objEnglishDate)
+                if (!$objEnglishDate)
                 {
-                    $errorMessage = $gL10n->get('LST_NOT_VALID_DATE_FORMAT', $variableName);
+                    $errorMessage = $gL10n->get('LST_NOT_VALID_DATE_FORMAT', array($variableName));
                 }
             }
             break;
 
+        case 'bool':
+        case 'boolean':
+            $valid = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            // Bug workaround PHP <5.4.8
+            // https://bugs.php.net/bug.php?id=49510
+            if ($valid === null && ($value === null || $value === false || $value === ''))
+            {
+                $valid = false;
+            }
+            if ($valid === null)
+            {
+                $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
+            }
+            $value = $valid;
+            break;
+
+        case 'int':
+        case 'float':
         case 'numeric':
             // numeric datatype should only contain numbers
-            if (!is_numeric($array[$variableName]))
+            if (!is_numeric($value))
             {
                 $errorMessage = $gL10n->get('SYS_INVALID_PAGE_VIEW');
             }
             else
             {
-                $array[$variableName] = (int) $array[$variableName];
+                if ($datatype === 'int')
+                {
+                    $value = filter_var($value, FILTER_VALIDATE_INT);
+                }
+                elseif ($datatype === 'float')
+                {
+                    $value = filter_var($value, FILTER_VALIDATE_FLOAT);
+                }
+                else
+                {
+                    // https://secure.php.net/manual/en/function.is-numeric.php#107326
+                    $value += 0;
+                }
             }
             break;
 
         case 'string':
-            $array[$variableName] = strStripTags(htmlspecialchars($array[$variableName], ENT_COMPAT, 'UTF-8'));
+            $value = strStripTags(htmlspecialchars($value, ENT_COMPAT, 'UTF-8'));
             break;
 
         case 'html':
             // check html string vor invalid tags and scripts
-            $array[$variableName] = htmLawed(stripslashes($array[$variableName]), array('safe' => 1));
+            $value = htmLawed(stripslashes($value), array('safe' => 1));
             break;
     }
 
     // wurde kein Fehler entdeckt, dann den Inhalt der Variablen zurueckgeben
-    if($errorMessage === '')
+    if ($errorMessage === '')
     {
-        return $array[$variableName];
+        return $value;
+    }
+
+    if (isset($gMessage) && $gMessage instanceof Message)
+    {
+        if ($optionsAll['directOutput'])
+        {
+            $gMessage->showTextOnly(true);
+        }
+
+        $gMessage->show($errorMessage);
+        // => EXIT
     }
     else
     {
-        if(isset($gMessage))
-        {
-            if($optionsAll['directOutput'])
-            {
-                $gMessage->showTextOnly(true);
-            }
-
-            $gMessage->show($errorMessage);
-        }
-        else
-        {
-            echo $errorMessage;
-            exit();
-        }
+        echo $errorMessage;
+        exit();
     }
 
     return null;
@@ -526,76 +499,80 @@ function admFuncVariableIsValid($array, $variableName, $datatype, $options = arr
 /**
  * Creates a html fragment with information about user and time when the recordset was created
  * and when it was at last edited. Therefore all necessary data must be set in the function
- * parameters. If userid is not set then the function will show @b deleted @b user.
- * @param int     $userIdCreated   Id of the user who create the recordset.
- * @param string  $timestampCreate Date and time of the moment when the user create the recordset.
- * @param int     $userIdEdited    Id of the user last changed the recordset.
- * @param string  $timestampEdited Date and time of the moment when the user last changed the recordset
+ * parameters. If userId is not set then the function will show @b deleted @b user.
+ * @param int    $userIdCreated   Id of the user who create the recordset.
+ * @param string $timestampCreate Date and time of the moment when the user create the recordset.
+ * @param int    $userIdEdited    Id of the user last changed the recordset.
+ * @param string $timestampEdited Date and time of the moment when the user last changed the recordset
  * @return string Returns a html string with usernames who creates item and edit item the last time
  */
-function admFuncShowCreateChangeInfoById($userIdCreated, $timestampCreate, $userIdEdited, $timestampEdited)
+function admFuncShowCreateChangeInfoById($userIdCreated, $timestampCreate, $userIdEdited = 0, $timestampEdited = '')
 {
-    global $gDb, $gProfileFields, $gL10n, $gPreferences;
+    global $gDb, $gProfileFields, $gL10n, $gSettingsManager;
 
     // only show info if system setting is activated
-    if($gPreferences['system_show_create_edit'] > 0)
+    if ((int) $gSettingsManager->get('system_show_create_edit') === 0)
     {
-        $htmlCreateName = '';
-        $htmlEditName   = '';
+        return '';
+    }
 
-        // compose name of user who create the recordset
-        if(strlen($timestampCreate) > 0)
+    // compose name of user who create the recordset
+    $htmlCreateName = '';
+    if ($timestampCreate)
+    {
+        if ($userIdCreated > 0)
         {
-            if($userIdCreated > 0)
-            {
-                $userCreate = new User($gDb, $gProfileFields, $userIdCreated);
+            $userCreate = new User($gDb, $gProfileFields, $userIdCreated);
 
-                if($gPreferences['system_show_create_edit'] == 1)
-                {
-                    $htmlCreateName = $userCreate->getValue('FIRST_NAME'). ' '. $userCreate->getValue('LAST_NAME');
-                }
-                else
-                {
-                    $htmlCreateName = $userCreate->getValue('usr_login_name');
-                }
+            if ((int) $gSettingsManager->get('system_show_create_edit') === 1)
+            {
+                $htmlCreateName = $userCreate->getValue('FIRST_NAME') . ' ' . $userCreate->getValue('LAST_NAME');
             }
             else
             {
-                $htmlCreateName = $gL10n->get('SYS_DELETED_USER');
+                $htmlCreateName = $userCreate->getValue('usr_login_name');
             }
         }
-
-        // compose name of user who edit the recordset
-        if(strlen($timestampEdited) > 0)
+        else
         {
-            if($userIdEdited > 0)
-            {
-                $userEdit = new User($gDb, $gProfileFields, $userIdEdited);
-
-                if($gPreferences['system_show_create_edit'] == 1)
-                {
-                    $htmlEditName = $userEdit->getValue('FIRST_NAME') . ' ' . $userEdit->getValue('LAST_NAME');
-                }
-                else
-                {
-                    $htmlEditName = $userEdit->getValue('usr_login_name');
-                }
-            }
-            else
-            {
-                $htmlEditName = $gL10n->get('SYS_DELETED_USER');
-            }
-        }
-
-        if($htmlCreateName !== '' || $htmlEditName !== '')
-        {
-            // get html output from other function
-            return admFuncShowCreateChangeInfoByName($htmlCreateName, $timestampCreate, $htmlEditName,
-                                                     $timestampEdited, $userIdCreated, $userIdEdited);
+            $htmlCreateName = $gL10n->get('SYS_DELETED_USER');
         }
     }
 
-    return '';
+    // compose name of user who edit the recordset
+    $htmlEditName = '';
+    if ($timestampEdited)
+    {
+        if ($userIdEdited > 0)
+        {
+            $userEdit = new User($gDb, $gProfileFields, $userIdEdited);
+
+            if ((int) $gSettingsManager->get('system_show_create_edit') === 1)
+            {
+                $htmlEditName = $userEdit->getValue('FIRST_NAME') . ' ' . $userEdit->getValue('LAST_NAME');
+            }
+            else
+            {
+                $htmlEditName = $userEdit->getValue('usr_login_name');
+            }
+        }
+        else
+        {
+            $htmlEditName = $gL10n->get('SYS_DELETED_USER');
+        }
+    }
+
+    if ($htmlCreateName === '' && $htmlEditName === '')
+    {
+        return '';
+    }
+
+    // get html output from other function
+    return admFuncShowCreateChangeInfoByName(
+        $htmlCreateName, $timestampCreate,
+        $htmlEditName, $timestampEdited,
+        $userIdCreated, $userIdEdited
+    );
 }
 
 /**
@@ -614,109 +591,299 @@ function admFuncShowCreateChangeInfoById($userIdCreated, $timestampCreate, $user
  */
 function admFuncShowCreateChangeInfoByName($userNameCreated, $timestampCreate, $userNameEdited, $timestampEdited, $userIdCreated = 0, $userIdEdited = 0)
 {
-    global $gL10n, $gValidLogin, $g_root_path, $gPreferences;
+    global $gL10n, $gValidLogin, $gSettingsManager;
+
+    // only show info if system setting is activated
+    if ((int) $gSettingsManager->get('system_show_create_edit') === 0)
+    {
+        return '';
+    }
 
     $html = '';
 
-    // only show info if system setting is activated
-    if($gPreferences['system_show_create_edit'] > 0)
+    // compose name of user who create the recordset
+    if ($timestampCreate)
     {
-        // compose name of user who create the recordset
-        if(strlen($timestampCreate) > 0)
+        $userNameCreated = trim($userNameCreated);
+
+        if ($userNameCreated === '')
         {
-            $userNameCreated = trim($userNameCreated);
-
-            if(strlen($userNameCreated) === 0)
-            {
-                $userNameCreated = $gL10n->get('SYS_DELETED_USER');
-            }
-
-            // if valid login and a user id is given than create a link to the profile of this user
-            if($gValidLogin && $userIdCreated > 0 && $userNameCreated != $gL10n->get('SYS_SYSTEM'))
-            {
-                $userNameCreated = '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='.
-                                    $userIdCreated.'">'.$userNameCreated.'</a>';
-            }
-
-            $html .= '<span class="admidio-info-created">'.$gL10n->get('SYS_CREATED_BY', $userNameCreated, $timestampCreate).'</span>';
+            $userNameCreated = $gL10n->get('SYS_DELETED_USER');
         }
 
-        // compose name of user who edit the recordset
-        if(strlen($timestampEdited) > 0)
+        // if valid login and a user id is given than create a link to the profile of this user
+        if ($gValidLogin && $userIdCreated > 0 && $userNameCreated !== $gL10n->get('SYS_SYSTEM'))
         {
-            $userNameEdited = trim($userNameEdited);
-
-            if(strlen($userNameEdited) === 0)
-            {
-                $userNameEdited = $gL10n->get('SYS_DELETED_USER');
-            }
-
-            // if valid login and a user id is given than create a link to the profile of this user
-            if($gValidLogin && $userIdEdited > 0 && $userNameEdited != $gL10n->get('SYS_SYSTEM'))
-            {
-                $userNameEdited = '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='.
-                                   $userIdEdited.'">'.$userNameEdited.'</a>';
-            }
-
-            $html .= '<span class="info-edited">'.$gL10n->get('SYS_LAST_EDITED_BY', $userNameEdited, $timestampEdited).'</span>';
+            $userNameCreated = '<a href="' . safeUrl(ADMIDIO_URL . FOLDER_MODULES . '/profile/profile.php', array('user_id' => $userIdCreated)) .
+                               '">' . $userNameCreated . '</a>';
         }
 
-        if($html !== '')
-        {
-            $html = '<div class="admidio-admidio-info-created-edited">'.$html.'</div>';
-        }
+        $html .= '<span class="admidio-info-created">' . $gL10n->get('SYS_CREATED_BY', array($userNameCreated, $timestampCreate)) . '</span>';
     }
 
-    return $html;
+    // compose name of user who edit the recordset
+    if ($timestampEdited)
+    {
+        $userNameEdited = trim($userNameEdited);
+
+        if ($userNameEdited === '')
+        {
+            $userNameEdited = $gL10n->get('SYS_DELETED_USER');
+        }
+
+        // if valid login and a user id is given than create a link to the profile of this user
+        if ($gValidLogin && $userIdEdited > 0 && $userNameEdited !== $gL10n->get('SYS_SYSTEM'))
+        {
+            $userNameEdited = '<a href="' . safeUrl(ADMIDIO_URL . FOLDER_MODULES . '/profile/profile.php', array('user_id' => $userIdEdited)) .
+                              '">' . $userNameEdited . '</a>';
+        }
+
+        $html .= '<span class="info-edited">' . $gL10n->get('SYS_LAST_EDITED_BY', array($userNameEdited, $timestampEdited)) . '</span>';
+    }
+
+    if ($html === '')
+    {
+        return '';
+    }
+
+    return '<div class="admidio-info-created-edited">' . $html . '</div>';
 }
 
 /**
- * Returns the extension of a given filename
- * @param string $filename given filename
- * @return string Returns the extension including "."
- */
-function admFuncGetFilenameExtension($filename)
-{
-    return strtolower(strrchr($filename, '.'));
-}
-
-/**
- * Returns the name of a given filename without extension
- * @param string $filename given filename
- * @return string Returns name without extension
- */
-function admFuncGetFilenameWithoutExtension($filename)
-{
-    return str_replace(strrchr($filename, '.'), '', $filename);
-}
-
-/**
- * Search all files or directories in the specified directory.
+ * Search all visible files or directories in the specified directory.
  * @param string $directory  The directory where the files or directories should be searched.
- * @param string $searchType This could be @b file or @b dir and represent the type of entries that should be searched.
- * @return string[] Returns an array with all found entries.
+ * @param string $searchType This could be @b file, @b dir, @b both or @b all and represent
+ *                           the type of entries that should be searched.
+ * @return false|array<string,string> Returns an array with all found entries or false if an error occurs.
  */
 function admFuncGetDirectoryEntries($directory, $searchType = 'file')
 {
-    $array_files = array();
-
-    $curdir = opendir($directory);
-    if($curdir)
+    if (!is_dir($directory))
     {
-        while($filename = readdir($curdir))
+        return false;
+    }
+
+    $dirHandle = @opendir($directory);
+    if ($dirHandle === false)
+    {
+        return false;
+    }
+
+    $entries = array();
+
+    while (($entry = readdir($dirHandle)) !== false)
+    {
+        if ($searchType === 'all')
         {
-            if(strpos($filename, '.') !== 0)
+            $entries[$entry] = $entry; // $entries[] = $entry;
+        }
+        elseif (strpos($entry, '.') !== 0)
+        {
+            $resource = $directory . '/' . $entry;
+
+            if ($searchType === 'both'
+            || ($searchType === 'file' && is_file($resource))
+            || ($searchType === 'dir'  && is_dir($resource)))
             {
-                if(($searchType === 'file' && is_file($directory.'/'.$filename))
-                || ($searchType === 'dir'  && is_dir($directory.'/'.$filename)))
-                {
-                    $array_files[$filename] = $filename;
-                }
+                $entries[$entry] = $entry; // $entries[] = $entry;
             }
         }
     }
-    closedir($curdir);
-    asort($array_files);
+    closedir($dirHandle);
 
-    return $array_files;
+    asort($entries); // sort($entries);
+
+    return $entries;
+}
+
+/**
+ * Prefix url with "http://" if no protocol is defined and check if is valid url
+ * @param $url string
+ * @return false|string
+ */
+function admFuncCheckUrl($url)
+{
+    // Homepage url have to start with "http://"
+    if (strpos(admStrToLower($url), 'http://')  !== 0
+    &&  strpos(admStrToLower($url), 'https://') !== 0)
+    {
+        $url = 'http://' . $url;
+    }
+
+    // For Homepage only valid url chars are allowed
+    if (!strValidCharacters($url, 'url'))
+    {
+        return false;
+    }
+
+    return $url;
+}
+
+/**
+ * Escape all HTML, JavaScript, and CSS
+ * @param string $input    The input string
+ * @param string $encoding Define character encoding tue use
+ * @return string Escaped string
+ */
+function noHTML($input, $encoding = 'UTF-8')
+{
+    // backwards compatibility for PHP-Version < 5.4
+    if (!defined('ENT_HTML5'))
+    {
+        return htmlentities($input, ENT_QUOTES, $encoding);
+    }
+
+    return htmlentities($input, ENT_QUOTES | ENT_HTML5, $encoding);
+}
+
+/**
+ * @param string              $path
+ * @param array<string,mixed> $params
+ * @param string              $anchor
+ * @param bool                $escape
+ * @return string
+ */
+function safeUrl($path, array $params = array(), $anchor = '', $escape = false)
+{
+    $paramsText = '';
+    if (count($params) > 0)
+    {
+        // backwards compatibility for PHP-Version < 5.4
+        if (defined('PHP_QUERY_RFC3986'))
+        {
+            $paramsText = '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+        }
+        else
+        {
+            $paramsText = '?' . http_build_query($params, '', '&');
+        }
+    }
+
+    $anchorText = '';
+    if ($anchor !== '')
+    {
+        $anchorText = '#' . rawurlencode($anchor);
+    }
+
+    $url = $path . $paramsText . $anchorText;
+
+    if ($escape)
+    {
+        return noHTML($url);
+    }
+
+    return $url;
+}
+
+/**
+ * This is a safe method for redirecting.
+ * @param string $url        The URL where redirecting to. Must be a absolute URL. (www.example.org)
+ * @param int    $statusCode The status-code which should be send. (301, 302, 303 (default), 307)
+ * @see https://www.owasp.org/index.php/Open_redirect
+ */
+function admRedirect($url, $statusCode = 303)
+{
+    global $gLogger, $gMessage, $gL10n;
+
+    $loggerObject = array('url' => $url, 'statusCode' => $statusCode);
+
+    if (headers_sent())
+    {
+        $gLogger->error('REDIRECT: Header already sent!', $loggerObject);
+
+        $gMessage->show($gL10n->get('SYS_HEADER_ALREADY_SENT'));
+        // => EXIT
+    }
+    if (filter_var($url, FILTER_VALIDATE_URL) === false)
+    {
+        $gLogger->error('REDIRECT: URL is not a valid URL!', $loggerObject);
+
+        $gMessage->show($gL10n->get('SYS_REDIRECT_URL_INVALID'));
+        // => EXIT
+    }
+    if (!in_array($statusCode, array(301, 302, 303, 307), true))
+    {
+        $gLogger->error('REDIRECT: Status Code is not allowed!', $loggerObject);
+
+        $gMessage->show($gL10n->get('SYS_STATUS_CODE_INVALID'));
+        // => EXIT
+    }
+
+    // Check if $url starts with the Admidio URL
+    if (strpos($url, ADMIDIO_URL) === 0)
+    {
+        $gLogger->info('REDIRECT: Redirecting to internal URL!', $loggerObject);
+
+        // TODO check if user is authorized for url
+        $redirectUrl = $url;
+    }
+    else
+    {
+        $gLogger->notice('REDIRECT: Redirecting to external URL!', $loggerObject);
+
+        $redirectUrl = safeUrl(ADMIDIO_URL . '/adm_program/system/redirect.php', array('url' => $url));
+    }
+
+    header('Location: ' . $redirectUrl, true, $statusCode);
+    exit();
+}
+
+/**
+ * Get an string with question marks that are comma separated.
+ * @param array<int,mixed> $valuesArray An array with the values that should be replaced with question marks
+ * @return string Question marks string
+ */
+function replaceValuesArrWithQM(array $valuesArray)
+{
+    return implode(',', array_fill(0, count($valuesArray), '?'));
+}
+
+/**
+ * Berechnung der Maximalerlaubten Dateiuploadgröße in Byte
+ * @deprecated 3.3.0:4.0.0 "admFuncMaxUploadSize()" is a typo. Use "PhpIniUtils::getUploadMaxSize()" instead.
+ * @return int
+ */
+function admFuncMaxUploadSize()
+{
+    global $gLogger;
+
+    $gLogger->warning('DEPRECATED: "admFuncMaxUploadSize()" is deprecated, use "PhpIniUtils::getUploadMaxSize()" instead!');
+
+    return PhpIniUtils::getUploadMaxSize();
+}
+
+/**
+ * @deprecated 3.3.0:4.0.0 "admFuncGetBytesFromSize()" is deprecated, there is no replacement.
+ * @param string $data
+ * @param bool   $decimalMulti
+ * @return int
+ */
+function admFuncGetBytesFromSize($data, $decimalMulti = false)
+{
+    global $gLogger;
+
+    $gLogger->warning('DEPRECATED: "admFuncGetBytesFromSize()" is deprecated, there is no replacement!');
+
+    $value = (float) substr(trim($data), 0, -1);
+    $unit  = strtoupper(substr(trim($data), -1));
+
+    $multi = 1024;
+    if ($decimalMulti)
+    {
+        $multi = 1000;
+    }
+
+    switch ($unit)
+    {
+        case 'T':
+            $value *= $multi;
+        case 'G':
+            $value *= $multi;
+        case 'M':
+            $value *= $multi;
+        case 'K':
+            $value *= $multi;
+    }
+
+    return (int) $value;
 }

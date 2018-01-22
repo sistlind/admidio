@@ -3,39 +3,34 @@
  ***********************************************************************************************
  * Show and manage all members of the organization
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
  *
- * members - 1 : (Default) Show only active members of the current organization
- *           0 : Show active and inactive members of all organizations in database
+ * members - true : (Default) Show only active members of the current organization
+ *           false  : Show active and inactive members of all organizations in database
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 unset($_SESSION['import_request']);
 
-// if search field was used then transform the POST parameter into a GET parameter
-if (isset($_POST['admSearchMembers']) && strlen($_POST['admSearchMembers']) > 0)
-{
-    $_GET['search'] = $_POST['admSearchMembers'];
-}
-
 // Initialize and check the parameters
-$getMembers = admFuncVariableIsValid($_GET, 'members', 'boolean', array('defaultValue' => 1));
+$getMembers = admFuncVariableIsValid($_GET, 'members', 'bool', array('defaultValue' => true));
 
 // if only active members should be shown then set parameter
-if($gPreferences['members_show_all_users'] == 0)
+if(!$gSettingsManager->getBool('members_show_all_users'))
 {
-    $getMembers = 1;
+    $getMembers = true;
 }
 
 // only legitimate users are allowed to call the user management
 if (!$gCurrentUser->editUsers())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
 // set headline of the script
@@ -44,84 +39,8 @@ $headline = $gL10n->get('MEM_USER_MANAGEMENT');
 // Navigation of the module starts here
 $gNavigation->addStartUrl(CURRENT_URL, $headline);
 
-$memberCondition = '';
-
-// Create condition if only active members should be shown
-if($getMembers == 1)
-{
-    $memberCondition = ' AND EXISTS
-        (SELECT 1
-           FROM '. TBL_MEMBERS. ', '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-          WHERE mem_usr_id = usr_id
-            AND mem_rol_id = rol_id
-            AND mem_begin <= \''.DATE_NOW.'\'
-            AND mem_end    > \''.DATE_NOW.'\'
-            AND rol_valid  = 1
-            AND rol_cat_id = cat_id
-            AND cat_name_intern <> \'CONFIRMATION_OF_PARTICIPATION\'
-            AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                OR cat_org_id IS NULL )) ';
-}
-
-// alle Mitglieder zur Auswahl selektieren
-// unbestaetigte User werden dabei nicht angezeigt
-$sql    = 'SELECT usr_id, last_name.usd_value as last_name, first_name.usd_value as first_name,
-                  email.usd_value as email, gender.usd_value as gender, birthday.usd_value as birthday,
-                  usr_login_name, COALESCE(usr_timestamp_change, usr_timestamp_create) as timestamp,
-                  (SELECT count(*)
-                     FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. ', '. TBL_MEMBERS. '
-                    WHERE rol_valid   = 1
-                      AND rol_cat_id  = cat_id
-                      AND cat_name_intern <> \'CONFIRMATION_OF_PARTICIPATION\'
-                      AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                          OR cat_org_id IS NULL )
-                      AND mem_rol_id  = rol_id
-                      AND mem_begin  <= \''.DATE_NOW.'\'
-                      AND mem_end     > \''.DATE_NOW.'\'
-                      AND mem_usr_id  = usr_id) as member_this_orga,
-                  (SELECT count(*)
-                     FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. ', '. TBL_MEMBERS. '
-                    WHERE rol_valid   = 1
-                      AND rol_cat_id  = cat_id
-                      AND cat_name_intern <> \'CONFIRMATION_OF_PARTICIPATION\'
-                      AND cat_org_id <> '. $gCurrentOrganization->getValue('org_id'). '
-                      AND mem_rol_id  = rol_id
-                      AND mem_begin  <= \''.DATE_NOW.'\'
-                      AND mem_end     > \''.DATE_NOW.'\'
-                      AND mem_usr_id  = usr_id) as member_other_orga
-             FROM '. TBL_USERS. '
-             JOIN '. TBL_USER_DATA. ' as last_name
-               ON last_name.usd_usr_id = usr_id
-              AND last_name.usd_usf_id = '. $gProfileFields->getProperty('LAST_NAME', 'usf_id'). '
-             JOIN '. TBL_USER_DATA. ' as first_name
-               ON first_name.usd_usr_id = usr_id
-              AND first_name.usd_usf_id = '. $gProfileFields->getProperty('FIRST_NAME', 'usf_id'). '
-             LEFT JOIN '. TBL_USER_DATA. ' as email
-               ON email.usd_usr_id = usr_id
-              AND email.usd_usf_id = '. $gProfileFields->getProperty('EMAIL', 'usf_id'). '
-             LEFT JOIN '. TBL_USER_DATA. ' as gender
-               ON gender.usd_usr_id = usr_id
-              AND gender.usd_usf_id = '. $gProfileFields->getProperty('GENDER', 'usf_id'). '
-             LEFT JOIN '. TBL_USER_DATA. ' as birthday
-               ON birthday.usd_usr_id = usr_id
-              AND birthday.usd_usf_id = '. $gProfileFields->getProperty('BIRTHDAY', 'usf_id'). '
-            WHERE usr_valid = 1
-                  '.$memberCondition.'
-            ORDER BY last_name.usd_value, first_name.usd_value ';
-$mglStatement = $gDb->query($sql);
-
 // Link mit dem alle Benutzer oder nur Mitglieder angezeigt werden setzen
-if($getMembers == 1)
-{
-    $flagShowMembers = 0;
-    $htmlShowMembers = '';
-
-}
-else
-{
-    $flagShowMembers = 1;
-    $htmlShowMembers = 'checked';
-}
+$flagShowMembers = !$getMembers;
 
 // create html page object
 $page = new HtmlPage($headline);
@@ -133,45 +52,67 @@ $page->addJavascript('
 
     // change mode of users that should be shown
     $("#mem_show_all").click(function() {
-        window.location.replace("'.$g_root_path.'/adm_program/modules/members/members.php?members='.$flagShowMembers.'");
+        window.location.replace("'.safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/members/members.php', array('members' => $flagShowMembers)).'");
     });', true);
 
 // get module menu
 $membersAdministrationMenu = $page->getMenu();
 
-$membersAdministrationMenu->addItem('menu_item_create_user', $g_root_path.'/adm_program/modules/members/members_new.php', $gL10n->get('MEM_CREATE_USER'), 'add.png');
+$membersAdministrationMenu->addItem(
+    'menu_item_create_user', ADMIDIO_URL.FOLDER_MODULES.'/members/members_new.php',
+    $gL10n->get('MEM_CREATE_USER'), 'add.png'
+);
 
-if($gPreferences['profile_log_edit_fields'] == 1)
+if($gSettingsManager->getBool('profile_log_edit_fields'))
 {
     // show link to view profile field change history
-    $membersAdministrationMenu->addItem('menu_item_change_history', $g_root_path.'/adm_program/modules/members/profile_field_history.php',
-                                $gL10n->get('MEM_CHANGE_HISTORY'), 'clock.png');
+    $membersAdministrationMenu->addItem(
+        'menu_item_change_history', ADMIDIO_URL.FOLDER_MODULES.'/members/profile_field_history.php',
+        $gL10n->get('MEM_CHANGE_HISTORY'), 'clock.png'
+    );
 }
 
 // show checkbox to select all users or only active members
-if($gPreferences['members_show_all_users'] == 1)
+if($gSettingsManager->getBool('members_show_all_users'))
 {
     $navbarForm = new HtmlForm('navbar_show_all_users_form', '', $page, array('type' => 'navbar', 'setFocus' => false));
     $navbarForm->addCheckbox('mem_show_all', $gL10n->get('MEM_SHOW_ALL_USERS'), $flagShowMembers, array('helpTextIdLabel' => 'MEM_SHOW_USERS_DESC'));
     $membersAdministrationMenu->addForm($navbarForm->show(false));
 }
 
-$membersAdministrationMenu->addItem('menu_item_extras', null, $gL10n->get('SYS_MORE_FEATURES'), null, 'right');
+$membersAdministrationMenu->addItem('menu_item_extras', '', $gL10n->get('SYS_MORE_FEATURES'), '', 'right');
 
 // show link to import users
-$membersAdministrationMenu->addItem('menu_item_import_users', $g_root_path.'/adm_program/modules/members/import.php',
-                            $gL10n->get('MEM_IMPORT_USERS'), 'database_in.png', 'right', 'menu_item_extras');
+$membersAdministrationMenu->addItem(
+    'menu_item_import_users', ADMIDIO_URL.FOLDER_MODULES.'/members/import.php',
+    $gL10n->get('MEM_IMPORT_USERS'), 'database_in.png', 'right', 'menu_item_extras'
+);
 
-if($gCurrentUser->isWebmaster())
+if($gCurrentUser->isAdministrator())
 {
     // show link to maintain profile fields
-    $membersAdministrationMenu->addItem('menu_item_maintain_profile_fields', $g_root_path. '/adm_program/modules/preferences/fields.php',
-                                $gL10n->get('PRO_MAINTAIN_PROFILE_FIELDS'), 'application_form_edit.png', 'right', 'menu_item_extras');
+    $membersAdministrationMenu->addItem(
+        'menu_item_maintain_profile_fields', ADMIDIO_URL.FOLDER_MODULES.'/preferences/fields.php',
+        $gL10n->get('PRO_MAINTAIN_PROFILE_FIELDS'), 'application_form_edit.png', 'right', 'menu_item_extras'
+    );
+
+    if($gSettingsManager->getBool('members_enable_user_relations'))
+    {
+        // show link to relation types
+        $membersAdministrationMenu->addItem(
+            'menu_item_maintain_user_relation_types', ADMIDIO_URL.FOLDER_MODULES.'/userrelations/relationtypes.php',
+            $gL10n->get('SYS_MAINTAIN_USER_RELATION_TYPES'), 'user_administration.png', 'right', 'menu_item_extras'
+        );
+    }
 
     // show link to system preferences of weblinks
-    $membersAdministrationMenu->addItem('menu_item_preferences_links', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=user_management',
-                        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right', 'menu_item_extras');
+    $membersAdministrationMenu->addItem(
+        'menu_item_preferences_links', safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/preferences/preferences.php', array('show_option' => 'user_management')),
+        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right', 'menu_item_extras'
+    );
 }
+
+$orgName = $gCurrentOrganization->getValue('org_longname');
 
 // Create table object
 $membersTable = new HtmlTable('tbl_members', $page, true, true, 'table table-condensed');
@@ -179,156 +120,25 @@ $membersTable = new HtmlTable('tbl_members', $page, true, true, 'table table-con
 // create array with all column heading values
 $columnHeading = array(
     $gL10n->get('SYS_ABR_NO'),
-    '<img class="admidio-icon-info" src="'. THEME_PATH. '/icons/profile.png"
-        alt="'.$gL10n->get('SYS_MEMBER_OF_ORGANIZATION', $gCurrentOrganization->getValue('org_longname')).'"
-        title="'.$gL10n->get('SYS_MEMBER_OF_ORGANIZATION', $gCurrentOrganization->getValue('org_longname')).'" />',
+    '<img class="admidio-icon-info" src="'.THEME_URL.'/icons/profile.png"
+        alt="'.$gL10n->get('SYS_MEMBER_OF_ORGANIZATION', array($orgName)).'"
+        title="'.$gL10n->get('SYS_MEMBER_OF_ORGANIZATION', array($orgName)).'" />',
     $gL10n->get('SYS_NAME'),
     $gL10n->get('SYS_USER'),
-    '<img class="admidio-icon-info" alt="'.$gL10n->get('SYS_GENDER').'" title="" src="'.THEME_PATH.'/icons/gender.png" data-original-title="'.$gL10n->get('SYS_GENDER').'">',
+    '<img class="admidio-icon-info" alt="'.$gL10n->get('SYS_GENDER').'" title="" src="'.THEME_URL.'/icons/gender.png" data-original-title="'.$gL10n->get('SYS_GENDER').'">',
     $gL10n->get('SYS_BIRTHDAY'),
     $gL10n->get('MEM_UPDATED_ON'),
     '&nbsp;'
 );
 
+$membersTable->setServerSideProcessing(safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/members/members_data.php', array('members' => $getMembers)));
 $membersTable->setColumnAlignByArray(array('left', 'left', 'left', 'left', 'left', 'left', 'left', 'right'));
-$membersTable->disableDatatablesColumnsSort(8);
+$membersTable->disableDatatablesColumnsSort(array(1, count($columnHeading))); // disable sort in last column
 $membersTable->addRowHeadingByArray($columnHeading);
-$membersTable->setDatatablesRowsPerPage($gPreferences['members_users_per_page']);
+$membersTable->setDatatablesRowsPerPage($gSettingsManager->getInt('members_users_per_page'));
 $membersTable->setMessageIfNoRowsFound('SYS_NO_ENTRIES');
 
-$irow = 1;  // Zahler fuer die jeweilige Zeile
-
-while($row = $mglStatement->fetch())
-{
-    $timestampChange = new DateTimeExtended($row['timestamp'], 'Y-m-d H:i:s');
-
-    // Icon fuer Orgamitglied und Nichtmitglied auswaehlen
-    if($row['member_this_orga'] > 0)
-    {
-        $icon = 'profile.png';
-        $iconText = $gL10n->get('SYS_MEMBER_OF_ORGANIZATION', $gCurrentOrganization->getValue('org_longname'));
-    }
-    else
-    {
-        $icon = 'no_profile.png';
-        $iconText = $gL10n->get('SYS_NOT_MEMBER_OF_ORGANIZATION', $gCurrentOrganization->getValue('org_longname'));
-    }
-
-    if($row['member_this_orga'] > 0)
-    {
-        $memberOfThisOrganization = '1';
-    }
-    else
-    {
-        $memberOfThisOrganization = '0';
-    }
-
-    // create array with all column values
-    $columnValues = array(
-        $irow,
-        array('value' => '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='. $row['usr_id']. '"><img
-             src="'. THEME_PATH. '/icons/'.$icon.'" alt="'.$iconText.'" title="'.$iconText.'" />',
-              'order' => $memberOfThisOrganization),
-        '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='. $row['usr_id']. '">'. $row['last_name']. ',&nbsp;'. $row['first_name']. '</a>',
-    );
-
-    if(strlen($row['usr_login_name']) > 0)
-    {
-        $columnValues[] = $row['usr_login_name'];
-    }
-    else
-    {
-        $columnValues[] = '';
-    }
-
-    if(strlen($row['gender']) > 0)
-    {
-        // show selected text of optionfield or combobox
-        $arrListValues  = $gProfileFields->getProperty('GENDER', 'usf_value_list');
-        $columnValues[] = array('value' => $arrListValues[$row['gender']], 'order' => $row['gender']);
-    }
-    else
-    {
-        $columnValues[] = array('value' => '', 'order' => '0');
-    }
-
-    if(strlen($row['birthday']) > 0)
-    {
-        // date must be formated
-        $date = new DateTimeExtended($row['birthday'], 'Y-m-d');
-        $columnValues[] = $date->format($gPreferences['system_date']);
-    }
-    else
-    {
-        $columnValues[] = '';
-    }
-
-    $columnValues[] = $timestampChange->format($gPreferences['system_date'].' '.$gPreferences['system_time']);
-
-    $userAdministration = '';
-
-    // Webmasters can change or send password if login is configured and user is member of current organization
-    if($row['member_this_orga'] > 0
-    && $gCurrentUser->isWebmaster()
-    && strlen($row['usr_login_name']) > 0
-    && $row['usr_id'] != $gCurrentUser->getValue('usr_id'))
-    {
-        if(strlen($row['email']) > 0 && $gPreferences['enable_system_mails'] == 1)
-        {
-            // if email is set and systemmails are activated then webmaster can send a new password to user
-            $userAdministration = '
-            <a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/members/members_function.php?usr_id='. $row['usr_id']. '&amp;mode=5"><img
-                src="'. THEME_PATH. '/icons/key.png" alt="'.$gL10n->get('MEM_SEND_USERNAME_PASSWORD').'" title="'.$gL10n->get('MEM_SEND_USERNAME_PASSWORD').'" /></a>';
-        }
-        else
-        {
-            // if user has no email or send email is disabled then webmaster could set a new password
-            $userAdministration = '
-            <a class="admidio-icon-link" data-toggle="modal" data-target="#admidio_modal" href="'.$g_root_path. '/adm_program/modules/profile/password.php?usr_id='. $row['usr_id']. '"><img
-                src="'. THEME_PATH. '/icons/key.png" alt="'.$gL10n->get('SYS_CHANGE_PASSWORD').'" title="'.$gL10n->get('SYS_CHANGE_PASSWORD').'" /></a>';
-        }
-    }
-
-    if(strlen($row['email']) > 0)
-    {
-        if($gPreferences['enable_mail_module'] != 1)
-        {
-            $mail_link = 'mailto:'. $row['email'];
-        }
-        else
-        {
-            $mail_link = $g_root_path.'/adm_program/modules/messages/messages_write.php?usr_id='. $row['usr_id'];
-        }
-
-        $userAdministration .= '<a class="admidio-icon-link" href="'.$mail_link.'"><img src="'. THEME_PATH. '/icons/email.png"
-                                alt="'.$gL10n->get('SYS_SEND_EMAIL_TO', $row['email']).'" title="'.$gL10n->get('SYS_SEND_EMAIL_TO', $row['email']).'" /></a>';
-    }
-
-    // Link um User zu editieren
-    // es duerfen keine Nicht-Mitglieder editiert werden, die Mitglied in einer anderen Orga sind
-    if($row['member_this_orga'] > 0 || $row['member_other_orga'] == 0)
-    {
-        $userAdministration .= '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/profile/profile_new.php?user_id='. $row['usr_id']. '"><img
-                                    src="'. THEME_PATH. '/icons/edit.png" alt="'.$gL10n->get('MEM_EDIT_USER').'" title="'.$gL10n->get('MEM_EDIT_USER').'" /></a>';
-    }
-
-    // Mitglieder entfernen
-    if((($row['member_other_orga'] == 0 && $gCurrentUser->isWebmaster()) // kein Mitglied einer anderen Orga, dann duerfen Webmaster loeschen
-        || $row['member_this_orga'] > 0)                              // aktive Mitglieder duerfen von berechtigten Usern entfernt werden
-        && $row['usr_id'] != $gCurrentUser->getValue('usr_id'))       // das eigene Profil darf keiner entfernen
-    {
-        $userAdministration .= '<a class="admidio-icon-link" href="'.$g_root_path.'/adm_program/modules/members/members_function.php?usr_id='.$row['usr_id'].'&amp;mode=6"><img
-                                    src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('MEM_REMOVE_USER').'" title="'.$gL10n->get('MEM_REMOVE_USER').'" /></a>';
-    }
-
-    $columnValues[] = $userAdministration;
-
-    $membersTable->addRowByArray($columnValues);
-
-    ++$irow;
-}
-
-$page->addHtml($membersTable->show(false));
+$page->addHtml($membersTable->show());
 
 // show html of complete page
 $page->show();

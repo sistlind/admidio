@@ -3,11 +3,15 @@
  ***********************************************************************************************
  * Common functions that manipulate strings
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
+if (basename($_SERVER['SCRIPT_FILENAME']) === 'string.php')
+{
+    exit('This page may not be called directly!');
+}
 
 /**
  * In case the multibyte functions are not supported, we fallback to a no-multibyte function
@@ -22,10 +26,8 @@ function admStrToLower($string)
     {
         return mb_strtolower($string, 'UTF-8');
     }
-    else
-    {
-        return strtolower($string);
-    }
+
+    return strtolower($string);
 }
 
 /**
@@ -40,33 +42,27 @@ function admStrToUpper($string)
     {
         return mb_strtoupper($string, 'UTF-8');
     }
-    else
-    {
-        return strtoupper($string);
-    }
+
+    return strtoupper($string);
 }
 
 /**
  * removes html, php code and blancs at beginning and end
  * of string or all elements of array without ckeditor variables !!!
- * @param string[] $srcArray
- * @return string[]
+ * @param array<string,string|array<mixed,string>> $srcArray
+ * @return array<string,string|array<mixed,string>>
  */
-function admStrStripTagsSpecial($srcArray)
+function admStrStripTagsSpecial(array $srcArray)
 {
-    foreach($srcArray as $key => $value)
+    // "ecard_message" => ckeditor-variable
+    $specialKeys = array(
+        'ecard_message', 'ann_description', 'dat_description', 'gbc_text', 'gbo_text', 'lnk_description',
+        'msg_body', 'plugin_CKEditor', 'room_description', 'usf_description', 'mail_smtp_password'
+    );
+
+    foreach ($srcArray as $key => $value)
     {
-        if($key !== 'ecard_message' // ckeditor-variable
-        && $key !== 'ann_description'
-        && $key !== 'dat_description'
-        && $key !== 'gbc_text'
-        && $key !== 'gbo_text'
-        && $key !== 'lnk_description'
-        && $key !== 'msg_body'
-        && $key !== 'plugin_CKEditor'
-        && $key !== 'room_description'
-        && $key !== 'usf_description'
-        && $key !== 'mail_smtp_password')
+        if (!in_array($key, $specialKeys, true))
         {
             $srcArray[$key] = strStripTags($value);
         }
@@ -77,8 +73,8 @@ function admStrStripTagsSpecial($srcArray)
 
 /**
  * removes html, php code and whitespaces at beginning and end of string or all elements of array
- * @param string|string[] $value
- * @return string|string[]
+ * @param string|array<mixed,string> $value
+ * @return string|array<mixed,string>
  */
 function strStripTags($value)
 {
@@ -100,8 +96,8 @@ function strStripTags($value)
 
 /**
  * fuegt Quotes einem mittels addslashes() gequoteten Array und String hinzu
- * @param string|string[] $value
- * @return string|string[]
+ * @param string|array<mixed,string|array> $value
+ * @return string|array<mixed,string|array>
  */
 function strAddSlashesDeep($value)
 {
@@ -120,8 +116,8 @@ function strAddSlashesDeep($value)
 
 /**
  * Entfernt Quotes aus einem mittels addslashes() gequoteten Array und String
- * @param string|string[] $value
- * @return string|string[]
+ * @param string|array<mixed,string|array> $value
+ * @return string|array<mixed,string|array>
  */
 function strStripSlashesDeep($value)
 {
@@ -188,51 +184,96 @@ function strNextLetter($letter, $reverse = false)
  * Check if a string contains only valid characters. Therefore the string is
  * compared with a hard coded list of valid characters for each datatype.
  * @param string $string    The string that should be checked.
- * @param string $checkType The type @b email, @b file, @b noSpecialChar, @b phone or @b url that will be checked.
+ * @param string $checkType The type @b noSpecialChar, @b email, @b file, @b url or @b phone that will be checked.
  *                          Each type has a different valid character list.
  * @return bool Returns @b true if all characters of @b string match the internal character list.
  */
 function strValidCharacters($string, $checkType)
 {
-    if(trim($string) !== '')
+    if (trim($string) === '')
     {
-        switch ($checkType)
-        {
-            case 'email':
-                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.@+-]+$/';
-                break;
-            case 'file':
-                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.@$&!?() +-]+$/';
-                break;
-            case 'noSpecialChar': // eine einfache E-Mail-Adresse sollte dennoch moeglich sein (Benutzername)
-                $validRegex = '/^[\w\.@+-]+$/';
-                break;
-            case 'phone':
-                $validRegex = '/^[\d\/() +-]+$/';
-                break;
-            case 'url':
-                $validRegex = '/^[áàâåäæcccçéèeênnñóòôöõøœúùûüß\w\.\/@$&!?%=#:() +-]+$/';
-                break;
-            default:
-                return false;
-        }
-
-        // check if string contains only valid characters
-        if(preg_match($validRegex, admStrToLower($string)))
-        {
-            switch ($checkType)
-            {
-                case 'email':
-                    return filter_var(trim($string), FILTER_VALIDATE_EMAIL) !== false
-                        && preg_match('/^[^@]+@[^@]+\.[^@]{2,}$/', trim($string));
-                case 'url':
-                    return filter_var(trim($string), FILTER_VALIDATE_URL) !== false;
-                default:
-                    return true;
-            }
-        }
+        return false;
     }
-    return false;
+
+    switch ($checkType)
+    {
+        case 'noSpecialChar': // a simple e-mail address should still be possible (like username)
+            $validRegex = '/^[\w.@+-]+$/';
+            break;
+        case 'email':
+            $validRegex = '/^[\wáàâåäæçéèêîñóòôöõøœúùûüß.@+-]+$/';
+            break;
+        case 'file':
+            $validRegex = '/^[\wáàâåäæçéèêîñóòôöõøœúùûüß$&!?() .@+-]+$/';
+            break;
+        case 'url':
+            $validRegex = '/^[\wáàâåäæçéèêîñóòôöõøœúùûüß$&!?() \/%=#:~.@+-]+$/';
+            break;
+        case 'phone':
+            $validRegex = '/^[\d() \/+-]+$/';
+            break;
+        default:
+            return false;
+    }
+
+    // check if string contains only valid characters
+    if (!preg_match($validRegex, admStrToLower($string)))
+    {
+        return false;
+    }
+
+    switch ($checkType)
+    {
+        case 'email':
+            return filter_var(trim($string), FILTER_VALIDATE_EMAIL) !== false;
+        case 'url':
+            return filter_var(trim($string), FILTER_VALIDATE_URL) !== false;
+        default:
+            return true;
+    }
+}
+
+/**
+ * Checks if a string contains another given string
+ * @param string $string   The string to check
+ * @param string $contains The containing string pattern
+ * @return bool Returns true if the string contains the other string
+ */
+function admStrContains($string, $contains)
+{
+    return strpos($string, $contains) !== false;
+}
+
+/**
+ * Checks if a string starts with another given string
+ * @param string $string The string to check
+ * @param string $start  The starting string pattern
+ * @return bool Returns true if the string starts with the other string
+ */
+function admStrStartsWith($string, $start)
+{
+    return strpos($string, $start) === 0;
+}
+
+/**
+ * Checks if a string ends with another given string
+ * @param string $string The string to check
+ * @param string $end    The ending string pattern
+ * @return bool Returns true if the string ends with the other string
+ */
+function admStrEndsWith($string, $end)
+{
+    return strrpos($string, $end) === strlen($string) - strlen($end);
+}
+
+/**
+ * Checks if a given string is a translation-string-id
+ * @param string $string The string to check
+ * @return bool Returns true if the given string is a translation-string-id
+ */
+function admIsTranslationStrId($string)
+{
+    return (bool) preg_match('/^[A-Z]{3}_([A-Z]_?)*[A-Z]$/', $string);
 }
 
 /**
@@ -249,32 +290,29 @@ function strValidCharacters($string, $checkType)
 function admStrIsValidFileName($filename, $checkExtension = false)
 {
     // If the filename was not empty
-    if(trim($filename) !== '')
-    {
-        // filename should only contains valid characters and don't start with a dot
-        if(strValidCharacters($filename, 'file') && substr($filename, 0, 1) !== '.')
-        {
-            if($checkExtension)
-            {
-                // check if the extension is not blacklisted
-                $extensionBlacklist = array('php', 'php3', 'php4', 'php5', 'html', 'htm', 'htaccess', 'htpasswd', 'pl',
-                                            'js', 'vbs', 'asp', 'cgi', 'ssi');
-                $fileExtension = substr($filename, strrpos($filename, '.') + 1);
-
-                if(in_array(strtolower($fileExtension), $extensionBlacklist, true))
-                {
-                    throw new AdmException('DOW_FILE_EXTENSION_INVALID');
-                }
-            }
-            return true;
-        }
-        else
-        {
-            throw new AdmException('BAC_FILE_NAME_INVALID');
-        }
-    }
-    else
+    if (trim($filename) === '')
     {
         throw new AdmException('SYS_FILENAME_EMPTY');
     }
+
+    // filename should only contains valid characters and don't start with a dot
+    if (basename($filename) !== $filename || !strValidCharacters($filename, 'file') || admStrStartsWith($filename, '.'))
+    {
+        throw new AdmException('BAC_FILE_NAME_INVALID');
+    }
+
+    if ($checkExtension)
+    {
+        // check if the extension is not blacklisted
+        $extensionBlacklist = array('php', 'php3', 'php4', 'php5', 'html', 'htm', 'htaccess', 'htpasswd', 'pl',
+                                    'js', 'vbs', 'asp', 'cgi', 'ssi');
+        $fileExtension = substr($filename, strrpos($filename, '.') + 1);
+
+        if (in_array(strtolower($fileExtension), $extensionBlacklist, true))
+        {
+            throw new AdmException('DOW_FILE_EXTENSION_INVALID');
+        }
+    }
+
+    return true;
 }

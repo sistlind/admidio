@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -39,27 +39,65 @@
  */
 abstract class Modules
 {
-    const HEADLINE = '';            ///< Constant for language parameter set in module classes
-
-    protected $activeRole;          ///< Boolean 0/1 for active role
-    protected $headline;            ///< String with headline expression
-    protected $catId;               ///< ID as integer for chosen category
-    protected $id;                  ///< ID as integer to choose record
-    protected $daterange;           ///< Array with date settings in English format and system format
-    protected $mode;                ///< String with current mode ( Default: "Default" )
-    protected $order;               ///< String with order ASC/DESC ( Default: "ASC" )
-    protected $start;               ///< Integer for start element
-    protected $properties;          ///< Array Clone of $_GET Array
-    protected $validModes;          ///< Array with valid modes ( Default: "Default" )
-    protected $parameters;          ///< Array with all parameters of the module that were added to this class.
-    public $arrParameter;           ///< Array with validated parameters
+    /**
+     * @var bool Boolean false/true for active role
+     */
+    protected $activeRole = false;
+    /**
+     * @var string String with headline expression
+     */
+    protected $headline = '';
+    /**
+     * @var int ID as integer for chosen category
+     */
+    protected $catId = 0;
+    /**
+     * @var int ID as integer to choose record
+     */
+    protected $id = 0;
+    /**
+     * @var array Array with date settings in English format and system format
+     */
+    protected $daterange = array();
+    /**
+     * @var string String with current mode ( Default: "Default" )
+     */
+    protected $mode = 'Default';
+    /**
+     * @var string String with order ASC/DESC ( Default: "ASC" )
+     */
+    protected $order = '';
+    /**
+     * @var int Integer for start element
+     */
+    protected $start = 0;
+    /**
+     * @var array Array with valid modes ( Default: "Default" )
+     */
+    protected $validModes = array('Default');
+    /**
+     * @var array<string,mixed> Array with all parameters of the module that were added to this class.
+     */
+    protected $parameters = array();
+    /**
+     * @var array Array Clone of $_GET Array
+     */
+    protected $properties;
+    /**
+     * @var array Array with validated parameters
+     */
+    protected $arrParameter = array();
 
     /**
-     * @param  int   $startElement
-     * @param  int   $limit
+     * @param int $startElement
+     * @param int $limit
      * @return array
      */
     abstract public function getDataSet($startElement = 0, $limit = null);
+
+    /**
+     * @return mixed
+     */
     abstract public function getDataSetCount();
 
     /**
@@ -68,44 +106,13 @@ abstract class Modules
      */
     public function __construct()
     {
-        $this->activeRole    = '';
-        $this->headline      = '';
-        $this->catId         = 0;
-        $this->id            = 0;
-        $this->daterange     = array();
-        $this->mode          = 'Default';
-        $this->order         = '';
-        $this->start         = '';
-        $this->properties    = $_GET;
-        $this->validModes    = array('Default');
-        $this->parameters    = array();
-        $this->arrParameters = array();
+        $this->properties = $_GET;
 
         // Set parameters
-        $this->setActiveRole();
-        $this->setCatId();
         $this->setId();
         $this->setMode();
         $this->setOrder();
         $this->setStartElement();
-    }
-
-    /**
-     * Return boolean for active role
-     * @return bool Returns boolean for active role
-     */
-    public function getActiveRole()
-    {
-        return $this->activeRole;
-    }
-
-    /**
-     * Return category ID
-     * @return int Returns the category ID
-     */
-    public function getCatId()
-    {
-        return $this->catId;
     }
 
     /**
@@ -119,7 +126,7 @@ abstract class Modules
 
     /**
      * Return the daterange
-     * @return array Returns daterange as array with English format and system format
+     * @return array[] Returns daterange as array with English format and system format
      */
     public function getDaterange()
     {
@@ -155,12 +162,12 @@ abstract class Modules
 
     /**
      * Returns a module parameter from the class
-     * @param  string     $parameterName The name of the parameter whose value should be returned.
-     * @return array|null Returns the parameter value
+     * @param string $parameterName The name of the parameter whose value should be returned.
+     * @return mixed|null Returns the parameter value or null if parameter didn't exists
      */
     public function getParameter($parameterName)
     {
-        if($parameterName !== '' && is_array($this->parameters) && array_key_exists($parameterName, $this->parameters))
+        if ($parameterName !== '' && array_key_exists($parameterName, $this->parameters))
         {
             return $this->parameters[$parameterName];
         }
@@ -170,7 +177,7 @@ abstract class Modules
 
     /**
      * Return parameter set as Array
-     * @return array Returns an Array with all needed parameters as Key/Value pair
+     * @return array<string,bool|int|string|array> Returns an Array with all needed parameters as Key/Value pair
      */
     public function getParameters()
     {
@@ -188,32 +195,12 @@ abstract class Modules
     }
 
     /**
-     * Set active role
-     * Set boolean for active role. Default 1 for active
-     */
-    protected function setActiveRole()
-    {
-        $this->activeRole = admFuncVariableIsValid($this->properties, 'active_role', 'boolean', array('defaultValue' => 1));
-    }
-
-    /**
-     * Set category ID
-     * @par If user string is set in $_GET Array the string is validated by Admidio function
-     * and set as category ID in the modules. Otherwise the category is set default to "0"
-     */
-    protected function setCatId()
-    {
-        // check optional user parameter and make secure. Otherwise set default value
-        //$this->catId = admFuncVariableIsValid($this->properties, 'cat_id', 'numeric', 0);
-    }
-
-    /**
      * Set ID
      */
     protected function setId()
     {
         // check optional user parameter and make secure. Otherwise set default value
-        $this->id = admFuncVariableIsValid($this->properties, 'id', 'numeric');
+        $this->id = admFuncVariableIsValid($this->properties, 'id', 'int');
     }
 
     /**
@@ -247,25 +234,29 @@ abstract class Modules
     protected function setStartElement()
     {
         // check optional user parameter and make secure. Otherwise set default value
-        $this->start = admFuncVariableIsValid($this->properties, 'start', 'numeric');
+        $this->start = admFuncVariableIsValid($this->properties, 'start', 'int');
     }
 
     /**
      * add a module parameter to the class
      * @param string $parameterName  The name of the parameter that should be added.
-     * @param string $parameterValue The value of the parameter that should be added.
+     * @param mixed  $parameterValue The value of the parameter that should be added.
      */
     public function setParameter($parameterName, $parameterValue)
     {
-        if($parameterName !== '')
+        if ($parameterName !== '')
         {
             $this->parameters[$parameterName] = $parameterValue;
 
-            if($parameterName === 'cat_id')
+            if ($parameterName === 'cat_id')
             {
-                $this->catId = $parameterValue;
+                $this->catId = (int) $parameterValue;
             }
-            elseif($parameterName === 'mode')
+            elseif ($parameterName === 'active_role')
+            {
+                $this->activeRole = (bool) $parameterValue;
+            }
+            elseif ($parameterName === 'mode')
             {
                 $this->mode = $parameterValue;
             }

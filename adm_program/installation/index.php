@@ -3,14 +3,14 @@
  ***********************************************************************************************
  * Redirect the user to installation or update page
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
 // check if installation is necessary
-if(file_exists('../../adm_my_files/config.php'))
+if (is_file('../../adm_my_files/config.php'))
 {
     $page = 'update.php';
 }
@@ -20,5 +20,5 @@ else
 }
 
 // redirect to installation or update page
-header('Location: '.$page);
+header('Location: ' . $page);
 exit();

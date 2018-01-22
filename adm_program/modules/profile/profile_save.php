@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Save profile/registration data
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -20,11 +20,11 @@
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 // Initialize and check the parameters
-$getUserId  = admFuncVariableIsValid($_GET, 'user_id',  'numeric');
-$getNewUser = admFuncVariableIsValid($_GET, 'new_user', 'numeric');
+$getUserId  = admFuncVariableIsValid($_GET, 'user_id',  'int');
+$getNewUser = admFuncVariableIsValid($_GET, 'new_user', 'int');
 
 // if current user has no login then only show registration dialog
 if(!$gValidLogin)
@@ -45,11 +45,11 @@ if(!isset($_POST['reg_org_id']))
 }
 
 // read user data
-if($getNewUser == 2 || $getNewUser == 3)
+if($getNewUser === 2 || $getNewUser === 3)
 {
     // create user registration object and set requested organization
     $user = new UserRegistration($gDb, $gProfileFields, $getUserId);
-    $user->setOrganization($_POST['reg_org_id']);
+    $user->setOrganization((int) $_POST['reg_org_id']);
 }
 else
 {
@@ -64,6 +64,7 @@ switch($getNewUser)
         if(!$gCurrentUser->hasRightEditProfile($user))
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
         break;
 
@@ -72,15 +73,17 @@ switch($getNewUser)
         if(!$gCurrentUser->editUsers())
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
         break;
 
     case 2:
     case 3:
         // Registrierung deaktiviert, also auch diesen Modus sperren
-        if($gPreferences['registration_mode'] == 0)
+        if(!$gSettingsManager->getBool('registration_enable_module'))
         {
             $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+            // => EXIT
         }
         break;
 }
@@ -90,107 +93,133 @@ switch($getNewUser)
 /*------------------------------------------------------------*/
 
 // bei Registrierung muss Loginname und Pw geprueft werden
-if($getNewUser == 2)
+if($getNewUser === 2)
 {
     if($_POST['usr_login_name'] === '')
     {
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_USERNAME')));
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_USERNAME'))));
+        // => EXIT
+    }
+
+    if($_POST['usr_password'] === '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_PASSWORD'))));
+        // => EXIT
     }
 
     // Passwort muss mindestens 8 Zeichen lang sein
-    if(strlen($_POST['usr_password']) < 8)
+    if(strlen($_POST['usr_password']) < PASSWORD_MIN_LENGTH)
     {
         $gMessage->show($gL10n->get('PRO_PASSWORD_LENGTH'));
+        // => EXIT
     }
 
     // beide Passwortfelder muessen identisch sein
     if($_POST['usr_password'] !== $_POST['password_confirm'])
     {
         $gMessage->show($gL10n->get('PRO_PASSWORDS_NOT_EQUAL'));
+        // => EXIT
     }
 
-    if($_POST['usr_password'] === '')
+    if(PasswordHashing::passwordStrength($_POST['usr_password'], $user->getPasswordUserData()) < $gSettingsManager->getInt('password_min_strength'))
     {
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_PASSWORD')));
+        $gMessage->show($gL10n->get('PRO_PASSWORD_NOT_STRONG_ENOUGH'));
+        // => EXIT
     }
 }
 
-// nun alle Profilfelder pruefen
-foreach($gProfileFields->mProfileFields as $field)
+// now check all profile fields
+foreach($gProfileFields->getProfileFields() as $field)
 {
-    $post_id = 'usf-'. $field->getValue('usf_id');
+    $postId    = 'usf-'. $field->getValue('usf_id');
+    $showField = false;
+
+    // at registration check if the field is enabled for registration
+    if($getNewUser === 2 && $field->getValue('usf_registration') == 1)
+    {
+        $showField = true;
+    }
+    // only allow to edit viewable fields, check for edit profile was done before
+    elseif($getNewUser !== 2 && $gCurrentUser->allowedViewProfileField($user, $field->getValue('usf_name_intern')))
+    {
+        $showField = true;
+    }
 
     // check and save only fields that aren't disabled
-    if($field->getValue('usf_disabled') == 0
-    || ($field->getValue('usf_disabled') == 1 && $gCurrentUser->hasRightEditProfile($user, false))
-    || ($field->getValue('usf_disabled') == 1 && $getNewUser > 0))
+    if ($showField
+    && ($field->getValue('usf_disabled') == 0
+       || ($field->getValue('usf_disabled') == 1 && $gCurrentUser->hasRightEditProfile($user, false))
+       || ($field->getValue('usf_disabled') == 1 && $getNewUser > 0)))
     {
-        if(isset($_POST[$post_id]))
+        if(isset($_POST[$postId]))
         {
             // Pflichtfelder muessen gefuellt sein
             // E-Mail bei Registrierung immer !!!
-            if(($field->getValue('usf_mandatory') == 1 && strlen($_POST[$post_id]) === 0)
-            || ($getNewUser == 2 && $field->getValue('usf_name_intern') === 'EMAIL' && strlen($_POST[$post_id]) === 0))
+            if((strlen($_POST[$postId]) === 0 && $field->getValue('usf_mandatory') == 1)
+            || (strlen($_POST[$postId]) === 0 && $field->getValue('usf_name_intern') === 'EMAIL' && $getNewUser === 2))
             {
-                $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $field->getValue('usf_name')));
+                $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($field->getValue('usf_name'))));
+                // => EXIT
             }
 
             // if social network then extract username from url
-            if($field->getValue('usf_name_intern') === 'FACEBOOK'
-            || $field->getValue('usf_name_intern') === 'GOOGLE_PLUS'
-            || $field->getValue('usf_name_intern') === 'TWITTER'
-            || $field->getValue('usf_name_intern') === 'XING')
+            if(in_array($field->getValue('usf_name_intern'), array('FACEBOOK', 'GOOGLE_PLUS', 'TWITTER', 'XING'), true))
             {
-                if(strValidCharacters($_POST[$post_id], 'url')
-                && strpos($_POST[$post_id], '/') !== false)
+                if(strValidCharacters($_POST[$postId], 'url') && admStrContains($_POST[$postId], '/'))
                 {
-                    if(strrpos($_POST[$post_id], '/profile.php?id=') > 0)
+                    if(strrpos($_POST[$postId], '/profile.php?id=') > 0)
                     {
                         // extract facebook id (not facebook unique name) from url
-                        $_POST[$post_id] = substr($_POST[$post_id], strrpos($_POST[$post_id], '/profile.php?id=') + 16);
+                        $_POST[$postId] = substr($_POST[$postId], strrpos($_POST[$postId], '/profile.php?id=') + 16);
                     }
                     else
                     {
-                        if(strrpos($_POST[$post_id], '/posts') > 0)
+                        if(strrpos($_POST[$postId], '/posts') > 0)
                         {
-                            $_POST[$post_id] = substr($_POST[$post_id], 0, strrpos($_POST[$post_id], '/posts'));
+                            $_POST[$postId] = substr($_POST[$postId], 0, strrpos($_POST[$postId], '/posts'));
                         }
 
-                        $_POST[$post_id] = substr($_POST[$post_id], strrpos($_POST[$post_id], '/') + 1);
-                        if(strrpos($_POST[$post_id], '?') > 0)
+                        $_POST[$postId] = substr($_POST[$postId], strrpos($_POST[$postId], '/') + 1);
+                        if(strrpos($_POST[$postId], '?') > 0)
                         {
-                            $_POST[$post_id] = substr($_POST[$post_id], 0, strrpos($_POST[$post_id], '?'));
+                            $_POST[$postId] = substr($_POST[$postId], 0, strrpos($_POST[$postId], '?'));
                         }
                     }
                 }
             }
 
             // Wert aus Feld in das User-Klassenobjekt schreiben
-            $returnCode = $user->setValue($field->getValue('usf_name_intern'), $_POST[$post_id]);
+            $returnCode = $user->setValue($field->getValue('usf_name_intern'), $_POST[$postId]);
 
             // Ausgabe der Fehlermeldung je nach Datentyp
-            if($returnCode == false)
+            if(!$returnCode)
             {
                 switch ($field->getValue('usf_type'))
                 {
                     case 'CHECKBOX':
                         $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+                        // => EXIT
                         break;
                     case 'DATE':
-                        $gMessage->show($gL10n->get('SYS_DATE_INVALID', $field->getValue('usf_name'), $gPreferences['system_date']));
+                        $gMessage->show($gL10n->get('SYS_DATE_INVALID', array($field->getValue('usf_name'), $gSettingsManager->getString('system_date'))));
+                        // => EXIT
                         break;
                     case 'EMAIL':
-                        $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', $field->getValue('usf_name')));
+                        $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', array($field->getValue('usf_name'))));
+                        // => EXIT
                         break;
                     case 'NUMBER':
                     case 'DECIMAL':
-                        $gMessage->show($gL10n->get('PRO_FIELD_NUMERIC', $field->getValue('usf_name')));
+                        $gMessage->show($gL10n->get('PRO_FIELD_NUMERIC', array($field->getValue('usf_name'))));
+                        // => EXIT
                         break;
                     case 'PHONE':
-                        $gMessage->show($gL10n->get('SYS_PHONE_INVALID_CHAR', $field->getValue('usf_name')));
+                        $gMessage->show($gL10n->get('SYS_PHONE_INVALID_CHAR', array($field->getValue('usf_name'))));
+                        // => EXIT
                         break;
                     case 'URL':
-                        $gMessage->show($gL10n->get('SYS_URL_INVALID_CHAR', $field->getValue('usf_name')));
+                        $gMessage->show($gL10n->get('SYS_URL_INVALID_CHAR', array($field->getValue('usf_name'))));
+                        // => EXIT
                         break;
                 }
             }
@@ -204,61 +233,60 @@ foreach($gProfileFields->mProfileFields as $field)
             }
             elseif($field->getValue('usf_mandatory') == 1)
             {
-                $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $field->getValue('usf_name')));
+                $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($field->getValue('usf_name'))));
+                // => EXIT
             }
         }
     }
 }
 
-if($gCurrentUser->isWebmaster() || $getNewUser > 0)
+if($gCurrentUser->isAdministrator() || $getNewUser > 0)
 {
-    // Loginname darf nur vom Webmaster bzw. bei Neuanlage geaendert werden
-    if($_POST['usr_login_name'] != $user->getValue('usr_login_name'))
+    // Only administrators could change loginname or within a new registration
+    if($_POST['usr_login_name'] !== $user->getValue('usr_login_name'))
     {
         if(strlen($_POST['usr_login_name']) > 0)
         {
             // pruefen, ob der Benutzername bereits vergeben ist
-            $sql = 'SELECT usr_id FROM '. TBL_USERS. '
-                     WHERE usr_login_name LIKE \''. $_POST['usr_login_name']. '\'';
-            $pdoStatement = $gDb->query($sql);
+            $sql = 'SELECT usr_id
+                      FROM '.TBL_USERS.'
+                     WHERE usr_login_name = ?';
+            $pdoStatement = $gDb->queryPrepared($sql, array($_POST['usr_login_name']));
 
             if($pdoStatement->rowCount() > 0)
             {
-                $row = $pdoStatement->fetch();
-
-                if(strcmp($row['usr_id'], $getUserId) !== 0)
+                if(strcmp($pdoStatement->fetchColumn(), $getUserId) !== 0)
                 {
                     $gMessage->show($gL10n->get('PRO_LOGIN_NAME_EXIST'));
+                    // => EXIT
                 }
             }
         }
 
         if(!$user->setValue('usr_login_name', $_POST['usr_login_name']))
         {
-            $gMessage->show($gL10n->get('SYS_FIELD_INVALID_CHAR', $gL10n->get('SYS_USERNAME')));
+            $gMessage->show($gL10n->get('SYS_FIELD_INVALID_CHAR', array($gL10n->get('SYS_USERNAME'))));
+            // => EXIT
         }
     }
 }
 
 // falls Registrierung, dann die entsprechenden Felder noch besetzen
-if($getNewUser == 2)
+if($getNewUser === 2)
 {
     $user->setPassword($_POST['usr_password']);
-}
 
-// Falls der User sich registrieren wollte, aber ein Captcha geschaltet ist,
-// muss natuerlich der Code ueberprueft werden
-if ($getNewUser == 2 && $gPreferences['enable_registration_captcha'] == 1)
-{
-    if (!isset($_SESSION['captchacode']) || admStrToUpper($_SESSION['captchacode']) != admStrToUpper($_POST['captcha']))
+    // At user registration with activated captcha check the captcha input
+    if ($gSettingsManager->getBool('enable_registration_captcha'))
     {
-        if($gPreferences['captcha_type'] === 'pic')
+        try
         {
-            $gMessage->show($gL10n->get('SYS_CAPTCHA_CODE_INVALID'));
+            FormValidation::checkCaptcha($_POST['captcha_code']);
         }
-        elseif($gPreferences['captcha_type'] === 'calc')
+        catch(AdmException $e)
         {
-            $gMessage->show($gL10n->get('SYS_CAPTCHA_CALC_CODE_INVALID'));
+            $e->showHtml();
+            // => EXIT
         }
     }
 }
@@ -278,12 +306,13 @@ catch(AdmException $e)
     $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
     $gNavigation->deleteLastUrl();
     $e->showHtml();
+    // => EXIT
 }
 
 $gDb->endTransaction();
 
 // wenn Daten des eingeloggten Users geaendert werden, dann Session-Variablen aktualisieren
-if($user->getValue('usr_id') == $gCurrentUser->getValue('usr_id'))
+if((int) $user->getValue('usr_id') === (int) $gCurrentUser->getValue('usr_id'))
 {
     $gCurrentUser = $user;
 }
@@ -295,11 +324,11 @@ $gNavigation->deleteLastUrl();
 // je nach Aufrufmodus auf die richtige Seite weiterleiten
 /*------------------------------------------------------------*/
 
-if($getNewUser == 1 || $getNewUser == 3)
+if($getNewUser === 1 || $getNewUser === 3)
 {
     // assign a registration or create a new user
 
-    if($getNewUser == 3)
+    if($getNewUser === 3)
     {
         try
         {
@@ -311,6 +340,7 @@ if($getNewUser == 1 || $getNewUser == 3)
         {
             $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
             $e->showHtml();
+            // => EXIT
         }
     }
     else
@@ -325,30 +355,34 @@ if($getNewUser == 1 || $getNewUser == 3)
     // otherwise go to previous url (default roles are assigned automatically)
     if($gCurrentUser->assignRoles())
     {
-        header('Location: roles.php?usr_id='. $user->getValue('usr_id'). '&new_user='.$getNewUser);
-        exit();
+        admRedirect(safeUrl(ADMIDIO_URL . FOLDER_MODULES.'/profile/roles.php', array('usr_id' => $user->getValue('usr_id'), 'new_user' => $getNewUser)));
+        // => EXIT
     }
     else
     {
         $gMessage->setForwardUrl($gNavigation->getPreviousUrl(), 2000);
         $gMessage->show($gL10n->get($messageId));
+        // => EXIT
     }
 }
-elseif($getNewUser == 2)
+elseif($getNewUser === 2)
 {
     // registration was successful then go to homepage
     $gMessage->setForwardUrl($gHomepage);
     $gMessage->show($gL10n->get('SYS_REGISTRATION_SAVED'));
+    // => EXIT
 }
-elseif($getNewUser == 0 && $user->getValue('usr_valid') == 0)
+elseif($getNewUser === 0 && $user->getValue('usr_valid') == 0)
 {
     // a registration was edited then go back to profile view
     $gMessage->setForwardUrl($gNavigation->getPreviousUrl(), 2000);
     $gMessage->show($gL10n->get('SYS_SAVE_DATA'));
+    // => EXIT
 }
 else
 {
     // go back to profile view
     $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
     $gMessage->show($gL10n->get('SYS_SAVE_DATA'));
+    // => EXIT
 }

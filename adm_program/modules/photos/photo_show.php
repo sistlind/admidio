@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Photoresizer
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -16,40 +16,39 @@
  * photo_nr  : Nummer des Bildes, das angezeigt werden soll
  * max_width : maximale Breite auf die das Bild skaliert werden kann
  * max_height: maximale Hoehe auf die das Bild skaliert werden kann
- * thumb     : ist thumb == 1 wird ein Thumnail in der Größe der
+ * thumb     : ist thumb === true wird ein Thumbnail in der Größe der
  *             Voreinstellung zurückgegeben
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 // Initialize and check the parameters
-$getPhotoId   = admFuncVariableIsValid($_GET, 'pho_id',     'numeric', array('requireValue' => true));
-$getPhotoNr   = admFuncVariableIsValid($_GET, 'photo_nr',   'numeric');
-$getMaxWidth  = admFuncVariableIsValid($_GET, 'max_width',  'numeric');
-$getMaxHeight = admFuncVariableIsValid($_GET, 'max_height', 'numeric');
-$getThumbnail = admFuncVariableIsValid($_GET, 'thumb',      'boolean');
+$getPhotoId   = admFuncVariableIsValid($_GET, 'pho_id',     'int', array('requireValue' => true));
+$getPhotoNr   = admFuncVariableIsValid($_GET, 'photo_nr',   'int');
+$getMaxWidth  = admFuncVariableIsValid($_GET, 'max_width',  'int');
+$getMaxHeight = admFuncVariableIsValid($_GET, 'max_height', 'int');
+$getThumbnail = admFuncVariableIsValid($_GET, 'thumb',      'bool');
 
-// pruefen ob das Modul ueberhaupt aktiviert ist
-if ($gPreferences['enable_photo_module'] == 0)
+// check if the module is enabled and disallow access if it's disabled
+if ((int) $gSettingsManager->get('enable_photo_module') === 0)
 {
-    // das Modul ist deaktiviert
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
-elseif ($gPreferences['enable_photo_module'] == 2)
+elseif ((int) $gSettingsManager->get('enable_photo_module') === 2)
 {
     // nur eingeloggte Benutzer duerfen auf das Modul zugreifen
-    require('../../system/login_valid.php');
+    require(__DIR__ . '/../../system/login_valid.php');
 }
 
 // lokale Variablen initialisieren
 $image = null;
 
 // read album data out of session or database
-if(isset($_SESSION['photo_album']) && $_SESSION['photo_album']->getValue('pho_id') == $getPhotoId)
+if (isset($_SESSION['photo_album']) && (int) $_SESSION['photo_album']->getValue('pho_id') === $getPhotoId)
 {
     $photoAlbum =& $_SESSION['photo_album'];
-    $photoAlbum->setDatabase($gDb);
 }
 else
 {
@@ -57,86 +56,97 @@ else
     $_SESSION['photo_album'] = $photoAlbum;
 }
 
-// Bildpfad zusammensetzten
-$ordner  = SERVER_PATH. '/adm_my_files/photos/'.$photoAlbum->getValue('pho_begin', 'Y-m-d').'_'.$getPhotoId;
-$picpath = $ordner.'/'.$getPhotoNr.'.jpg';
-
-// im Debug-Modus den ermittelten Bildpfad ausgeben
-if($gDebug == 1)
+// check if the current user could view this photo album
+if(!$photoAlbum->visible())
 {
-    error_log($picpath);
+    $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
-// Wenn Thumbnail existiert laengere Seite ermitteln
-if($getThumbnail)
-{
-    if($getPhotoNr > 0)
-    {
-        $thumb_length=1;
-        if(file_exists($ordner.'/thumbnails/'.$getPhotoNr.'.jpg'))
-        {
-            // Ermittlung der Original Bildgroesse
-            $bildgroesse = getimagesize($ordner.'/thumbnails/'.$getPhotoNr.'.jpg');
+// Bildpfad zusammensetzten
+$albumFolder = ADMIDIO_PATH . FOLDER_DATA . '/photos/' . $photoAlbum->getValue('pho_begin', 'Y-m-d') . '_' . $getPhotoId;
+$picPath      = $albumFolder . '/' . $getPhotoNr . '.jpg';
+$picThumbPath = $albumFolder . '/thumbnails/' . $getPhotoNr . '.jpg';
 
-            $thumb_length = $bildgroesse[1];
-            if($bildgroesse[0]>$bildgroesse[1])
+// im Debug-Modus den ermittelten Bildpfad ausgeben
+$gLogger->info('ImagePath: ' . $picPath);
+
+if ($getThumbnail)
+{
+    if ($getPhotoNr > 0)
+    {
+        $thumbLength = null;
+
+        // Wenn Thumbnail existiert laengere Seite ermitteln
+        if (is_file($picThumbPath))
+        {
+            $imageProperties = getimagesize($picThumbPath);
+            if (is_array($imageProperties))
             {
-                $thumb_length = $bildgroesse[0];
+                $thumbLength = max($imageProperties[0], $imageProperties[1]);
             }
         }
 
         // Nachsehen ob Bild als Thumbnail in entsprechender Groesse hinterlegt ist
         // Wenn nicht anlegen
-        if(!file_exists($ordner.'/thumbnails/'.$getPhotoNr.'.jpg') || $thumb_length !=$gPreferences['photo_thumbs_scale'])
+        if (!is_file($picThumbPath) || $thumbLength !== $gSettingsManager->getInt('photo_thumbs_scale'))
         {
             // Nachsehen ob Thumnailordner existiert und wenn nicht SafeMode ggf. anlegen
-            if(!file_exists($ordner.'/thumbnails'))
+            if (!is_dir($albumFolder . '/thumbnails'))
             {
-                $folder = new Folder($ordner);
+                $folder = new Folder($albumFolder);
                 $folder->createFolder('thumbnails', true);
             }
 
             // nun das Thumbnail anlegen
-            $image = new Image($picpath);
-            $image->scaleLargerSide($gPreferences['photo_thumbs_scale']);
-            $image->copyToFile(null, $ordner.'/thumbnails/'.$getPhotoNr.'.jpg');
+            $image = new Image($picPath);
+            $image->scaleLargerSide($gSettingsManager->getInt('photo_thumbs_scale'));
+            $image->copyToFile(null, $picThumbPath);
         }
         else
         {
-            header('content-type: image/jpg');
-            echo readfile($ordner.'/thumbnails/'.$getPhotoNr.'.jpg');
+            header('Content-Type: image/jpeg');
+            readfile($picThumbPath);
         }
     }
     else
     {
         // kein Bild uebergeben, dann NoPix anzeigen
-        $image = new Image(THEME_SERVER_PATH. '/images/nopix.jpg');
-        $image->scaleLargerSide($gPreferences['photo_thumbs_scale']);
+        $image = new Image(THEME_ADMIDIO_PATH . '/images/nopix.jpg');
+        $image->scaleLargerSide($gSettingsManager->getInt('photo_thumbs_scale'));
     }
 }
 else
 {
-    if(!file_exists($picpath))
+    if (!is_file($picPath))
     {
-        $picpath = THEME_SERVER_PATH. '/images/nopix.jpg';
+        $picPath = THEME_ADMIDIO_PATH . '/images/nopix.jpg';
     }
     // Bild einlesen und scalieren
-    $image = new Image($picpath);
+    $image = new Image($picPath);
     $image->scale($getMaxWidth, $getMaxHeight);
 }
 
-if($image != null)
+if ($image !== null)
 {
-    // Einfuegen des Textes bei Bildern, die in der Ausgabe groesser als 200px sind
-    if (($getMaxWidth > 200) && $gPreferences['photo_image_text'] !== '')
+    // insert copyright text into photo if photo size is larger than 200px
+    if (($getMaxWidth > 200) && $gSettingsManager->getString('photo_image_text') !== '')
     {
-        $font_c = imagecolorallocate($image->imageResource, 255, 255, 255);
-        $font_ttf = THEME_SERVER_PATH.'/font.ttf';
-        $font_s = $getMaxWidth / $gPreferences['photo_image_text_size'];
-        $font_x = $font_s;
-        $font_y = $image->imageHeight-$font_s;
-        $text = $gPreferences['photo_image_text'];
-        imagettftext($image->imageResource, $font_s, 0, $font_x, $font_y, $font_c, $font_ttf, $text);
+        if ($gSettingsManager->getInt('photo_image_text_size') > 0)
+        {
+            $fontSize = $getMaxWidth / $gSettingsManager->getInt('photo_image_text_size');
+        }
+        else
+        {
+            $fontSize = $getMaxWidth / 40;
+        }
+        $imageSize = $image->getImageSize();
+        $fontX = $fontSize;
+        $fontY = $imageSize[0] - $fontSize;
+        $fontColor = imagecolorallocate($image->getImageResource(), 255, 255, 255);
+        $fontTtf = THEME_ADMIDIO_PATH.'/font.ttf';
+        $text = $gSettingsManager->getString('photo_image_text');
+        imagettftext($image->getImageResource(), $fontSize, 0, $fontX, $fontY, $fontColor, $fontTtf, $text);
     }
 
     // Rueckgabe des neuen Bildes

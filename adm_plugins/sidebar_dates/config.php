@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Konfigurationsdatei fuer Admidio-Plugin Sidebar-Dates
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -19,8 +19,14 @@ $plg_show_date_end = 1;
 
 // Soll ein Vorschau-Text der Ankündigung gezeigt werden?
 // 0 = keine Voranzeige
-// >0 = Anzahl Zeichen des Vorschau-Textes
+// 70 = Anzahl Zeichen des Vorschau-Textes
 $plg_dates_show_preview = 70;
+
+// If this option is set to true (1) than the full content of the
+// description will be shown. Also images and other html content.
+// 0 = only show text preview of description
+// 1 = show full html content of description
+$plgShowFullDescription = 0;
 
 // Maximale Anzahl von Zeichen in einem Wort,
 // bevor ein Zeilenumbruch kommt (Default = 0 (deaktiviert))
@@ -37,7 +43,7 @@ $plg_show_headline = 1;
 
 // Angabe der Prefix-Url für den Aufruf in Joomla
 // wenn keine Angabe erfolgt dann wird die Standard-URL von Admidio verwendet
-$plg_link_url = $g_root_path. '/adm_program/modules/dates/dates.php';
+$plg_link_url = '';
 
 // Name einer CSS-Klasse fuer Links
 // Nur noetig, falls die Links ein anderes Aussehen bekommen sollen

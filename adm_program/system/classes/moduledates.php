@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -33,8 +33,6 @@
  *                     [cat_name_intern] => COMMON
  *                     [4] => Allgemein
  *                     [cat_name] => Allgemein
- *                     [5] => 0
- *                     [cat_hidden] => 0
  *                     [6] => 0
  *                     [cat_system] => 0
  *                     [7] => 0
@@ -57,8 +55,6 @@
  *                     [dat_rol_id] =>
  *                     [16] =>
  *                     [dat_room_id] =>
- *                     [17] => 0
- *                     [dat_global] => 0
  *                     [18] => 2013-09-21 21:00:00
  *                     [dat_begin] => 2013-09-21 21:00:00
  *                     [19] => 2013-09-21 22:00:00
@@ -133,6 +129,11 @@
  */
 class ModuleDates extends Modules
 {
+    const MEMBER_APPROVAL_STATE_INVITED   = 0;
+    const MEMBER_APPROVAL_STATE_TENTATIVE = 1;
+    const MEMBER_APPROVAL_STATE_ATTEND    = 2;
+    const MEMBER_APPROVAL_STATE_REFUSED   = 3;
+
     /**
      * Constructor that will create an object of a parameter set needed in modules to get the recordsets.
      * Initialize parameters
@@ -145,134 +146,99 @@ class ModuleDates extends Modules
     }
 
     /**
-     * Method validates all date inputs and formats them to date format 'Y-m-d' needed for database queries
-     * @param  string       $date Date to be validated and formated if needed
-     * @return string|false
-     */
-    private function formatDate($date)
-    {
-        global $gPreferences;
-
-        $objDate = new DateTimeExtended($date, 'Y-m-d');
-
-        if($objDate->isValid())
-        {
-            return $date;
-        }
-        else
-        {
-            // check if date has system format
-            $objDate = new DateTimeExtended($date, $gPreferences['system_date']);
-
-            if($objDate->isValid())
-            {
-                return $objDate->format('Y-m-d');
-            }
-            else
-            {
-                return false;
-            }
-        }
-    }
-
-    /**
      * SQL query returns an array with available dates.
-     * @param  int   $startElement Defines the offset of the query (default: 0)
-     * @param  int   $limit        Limit of query rows (default: 0)
-     * @return array Array with all results, dates and parameters.
+     * @param int $startElement Defines the offset of the query (default: 0)
+     * @param int $limit        Limit of query rows (default: 0)
+     * @return array<string,mixed> Array with all results, dates and parameters.
      */
     public function getDataSet($startElement = 0, $limit = null)
     {
-        global $gCurrentOrganization;
-        global $gCurrentUser;
-        global $gDb;
-        global $gPreferences;
+        global $gDb, $gSettingsManager, $gCurrentUser;
 
-        if($limit === null)
+        if ($limit === null)
         {
-            $limit = $gPreferences['dates_per_page'];
+            $limit = $gSettingsManager->getInt('dates_per_page');
         }
 
-        if($gPreferences['system_show_create_edit'] == 1)
-        {
-            // show firstname and lastname of create and last change user
-            $additionalFields = '
-                cre_firstname.usd_value || \' \' || cre_surname.usd_value as create_name,
-                cha_firstname.usd_value || \' \' || cha_surname.usd_value as change_name ';
-        }
-        else
-        {
-            // show username of create and last change user
-            $additionalFields = ' cre_username.usr_login_name as create_name,
-                                  cha_username.usr_login_name as change_name ';
-        }
+        $catIdParams = array_merge(array(0), $gCurrentUser->getAllVisibleCategories('DAT'));
+        $additional = $this->sqlGetAdditional();
+        $sqlConditions = $this->getSqlConditions();
 
         // read dates from database
-        $sql = 'SELECT DISTINCT cat.*, dat.*, mem.mem_usr_id as member_date_role, mem.mem_leader,'.$additionalFields.'
-                  FROM '.TBL_DATE_ROLE.' dtr, '. TBL_CATEGORIES. ' cat, '. TBL_DATES. ' dat
-                       '.$this->sqlAdditionalTablesGet('data').'
-                  LEFT JOIN '. TBL_MEMBERS. ' mem
-                    ON mem.mem_usr_id = '.$gCurrentUser->getValue('usr_id').'
-                   AND mem.mem_rol_id = dat_rol_id
-                   AND mem.mem_begin <= \''.DATE_NOW.'\'
-                   AND mem.mem_end    > \''.DATE_NOW.'\'
-                 WHERE dat_cat_id = cat_id
-                   AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                       OR (   dat_global   = 1
-                          AND cat_org_id IN ('.$gCurrentOrganization->getFamilySQL().') ))
-                   AND dat_id = dtr_dat_id
-                       '.$this->sqlConditionsGet()
-                        . ' ORDER BY dat_begin '.$this->order;
+        $sql = 'SELECT DISTINCT cat.*, dat.*, mem.mem_usr_id AS member_date_role, mem.mem_approved AS member_approval_state,
+                       mem.mem_leader, mem.mem_comment AS comment, mem.mem_count_guests AS additional_guests,' . $additional['fields'] . '
+                  FROM ' . TBL_DATES . ' AS dat
+            INNER JOIN ' . TBL_CATEGORIES . ' AS cat
+                    ON cat_id = dat_cat_id
+                       ' . $additional['tables'] . '
+             LEFT JOIN ' . TBL_MEMBERS . ' AS mem
+                    ON mem.mem_rol_id = dat_rol_id
+                   AND mem.mem_usr_id = ? -- $gCurrentUser->getValue(\'usr_id\')
+                   AND mem.mem_begin <= ? -- DATE_NOW
+                   AND mem.mem_end    > ? -- DATE_NOW
+                 WHERE cat_id IN ('.replaceValuesArrWithQM($catIdParams).')
+                       ' . $sqlConditions['sql'] . '
+              ORDER BY dat_begin ' . $this->order;
 
         // Parameter
-        if($limit > 0)
+        if ($limit > 0)
         {
-            $sql .= ' LIMIT '.$limit;
+            $sql .= ' LIMIT ' . $limit;
         }
-        if($startElement > 0)
+        if ($startElement > 0)
         {
-            $sql .= ' OFFSET '.$startElement;
+            $sql .= ' OFFSET ' . $startElement;
         }
 
-        $datesStatement = $gDb->query($sql);
+        $queryParams = array_merge(
+            $additional['params'],
+            array(
+                (int) $gCurrentUser->getValue('usr_id'),
+                DATE_NOW,
+                DATE_NOW
+            ),
+            $catIdParams,
+            $sqlConditions['params']
+        );
+        $pdoStatement = $gDb->queryPrepared($sql, $queryParams); // TODO add more params
 
         // array for results
-        $dates['recordset']  = $datesStatement->fetchAll();
-        $dates['numResults'] = $datesStatement->rowCount();
-        $dates['limit']      = $limit;
-        $dates['totalCount'] = $this->getDataSetCount();
-
-        return $dates;
+        return array(
+            'recordset'  => $pdoStatement->fetchAll(),
+            'numResults' => $pdoStatement->rowCount(),
+            'limit'      => $limit,
+            'totalCount' => $this->getDataSetCount()
+        );
     }
 
     /**
      * Returns a module specific headline
-     * @param  string $headline The initial headline of the module.
+     * @param string $headline The initial headline of the module.
      * @return string Returns the full headline of the module
      */
     public function getHeadline($headline)
     {
-        global $gL10n, $gCurrentOrganization, $gDb;
+        global $gDb, $gL10n, $gCurrentOrganization;
 
         // set headline with category name
-        if($this->getParameter('cat_id') > 0)
+        if ($this->getParameter('cat_id') > 0)
         {
             $category  = new TableCategory($gDb, $this->getParameter('cat_id'));
-            $headline .= ' - '.$category->getValue('cat_name');
+            $headline .= ' - ' . $category->getValue('cat_name');
         }
 
         // check time period if old dates are chosen, then set headline to previous dates
         // Define a prefix
-        if($this->getParameter('dateStartFormatEnglish') < DATE_NOW
-            && $this->getParameter('dateEndFormatEnglish') < DATE_NOW
-            || $this->getParameter('mode') === 'old')
+        if ($this->getParameter('mode') === 'old'
+        ||    ($this->getParameter('dateStartFormatEnglish') < DATE_NOW
+            && $this->getParameter('dateEndFormatEnglish')   < DATE_NOW))
         {
-            $headline = $gL10n->get('DAT_PREVIOUS_DATES', ' ').$headline;
+            $headline = $gL10n->get('DAT_PREVIOUS_DATES', array('')) . $headline;
         }
 
-        if($this->getParameter('view_mode') === 'print')
+        if ($this->getParameter('view_mode') === 'print')
         {
-            $headline = $gCurrentOrganization->getValue('org_longname').' - '.$headline;
+            $headline = $gCurrentOrganization->getValue('org_longname') . ' - ' . $headline;
         }
 
         return $headline;
@@ -284,32 +250,271 @@ class ModuleDates extends Modules
      */
     public function getDataSetCount()
     {
-        if($this->id == 0)
-        {
-            global $gCurrentOrganization;
-            global $gDb;
+        global $gDb, $gCurrentUser;
 
-            $sql = 'SELECT COUNT(DISTINCT dat_id) as count
-                      FROM '.TBL_DATE_ROLE.', '. TBL_DATES. ', '. TBL_CATEGORIES. '
-                      '.$this->sqlAdditionalTablesGet('count') .'
-                     WHERE dat_cat_id = cat_id
-                       AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                           OR (   dat_global   = 1
-                              AND cat_org_id IN ('.$gCurrentOrganization->getFamilySQL().')
-                              )
-                           )
-                       AND dat_id = dtr_dat_id'
-                       .$this->sqlConditionsGet();
-
-            $statement = $gDb->query($sql);
-            $row = $statement->fetch();
-
-            return $row['count'];
-        }
-        else
+        if ($this->id > 0)
         {
             return 1;
         }
+
+        $catIdParams = array_merge(array(0), $gCurrentUser->getAllVisibleCategories('DAT'));
+        $sqlConditions = $this->getSqlConditions();
+
+        $sql = 'SELECT COUNT(DISTINCT dat_id) AS count
+                  FROM ' . TBL_DATES . '
+            INNER JOIN ' . TBL_CATEGORIES . '
+                    ON cat_id = dat_cat_id
+                 WHERE cat_id IN ('.replaceValuesArrWithQM($catIdParams).')
+                       '. $sqlConditions['sql'];
+
+        $statement = $gDb->queryPrepared($sql, array_merge($catIdParams, $sqlConditions['params']));
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Set a date range in which the dates should be searched. The method will fill
+     * 4 parameters @b dateStartFormatEnglish, @b dateStartFormatEnglish,
+     * @b dateEndFormatEnglish and @b dateEndFormatAdmidio that could be read with
+     * getParameter and could be used in the script.
+     * @param string $dateRangeStart A date in english or Admidio format that will be the start date of the range.
+     * @param string $dateRangeEnd   A date in english or Admidio format that will be the end date of the range.
+     * @throws AdmException SYS_DATE_END_BEFORE_BEGIN
+     * @return bool Returns false if invalid date format is submitted
+     */
+    public function setDateRange($dateRangeStart = '', $dateRangeEnd = '')
+    {
+        global $gSettingsManager;
+
+        if ($dateRangeStart === '')
+        {
+            $dateStart = '1970-01-01';
+            $dateEnd   = (date('Y') + 10) . '-12-31';
+
+            // set date_from and date_to regarding to current mode
+            switch ($this->mode)
+            {
+                case 'actual':
+                    $dateRangeStart = DATE_NOW;
+                    $dateRangeEnd   = $dateEnd;
+                    break;
+                case 'old':
+                    $dateRangeStart = $dateStart;
+                    $dateRangeEnd   = DATE_NOW;
+                    break;
+                case 'all':
+                    $dateRangeStart = $dateStart;
+                    $dateRangeEnd   = $dateEnd;
+                    break;
+            }
+        }
+        // If mode=old then we want to have the events in reverse order ('DESC')
+        if ($this->mode === 'old')
+        {
+            $this->order = 'DESC';
+        }
+
+        // Create date object and format date_from in English format and system format and push to daterange array
+        $objDateFrom = \DateTime::createFromFormat('Y-m-d', $dateRangeStart);
+
+        if ($objDateFrom === false)
+        {
+            // check if date_from has system format
+            $objDateFrom = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $dateRangeStart);
+        }
+
+        if ($objDateFrom === false)
+        {
+            return false;
+        }
+
+        $this->setParameter('dateStartFormatEnglish', $objDateFrom->format('Y-m-d'));
+        $this->setParameter('dateStartFormatAdmidio', $objDateFrom->format($gSettingsManager->getString('system_date')));
+
+        // Create date object and format date_to in English format and system format and push to daterange array
+        $objDateTo = \DateTime::createFromFormat('Y-m-d', $dateRangeEnd);
+
+        if ($objDateTo === false)
+        {
+            // check if date_from  has system format
+            $objDateTo = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $dateRangeEnd);
+        }
+
+        if ($objDateTo === false)
+        {
+            return false;
+        }
+
+        $this->setParameter('dateEndFormatEnglish', $objDateTo->format('Y-m-d'));
+        $this->setParameter('dateEndFormatAdmidio', $objDateTo->format($gSettingsManager->getString('system_date')));
+
+        // DateTo should be greater than DateFrom (Timestamp must be less)
+        if ($objDateFrom->getTimestamp() > $objDateTo->getTimestamp())
+        {
+            throw new AdmException('SYS_DATE_END_BEFORE_BEGIN');
+        }
+
+        return true;
+    }
+
+    /**
+     * Get additional tables for sql statement
+     * @return array<string,string|array<int,int>> Returns an array of a SQL string with the necessary joins and it's query params.
+     */
+    private function sqlGetAdditional()
+    {
+        global $gSettingsManager, $gProfileFields;
+
+        if ((int) $gSettingsManager->get('system_show_create_edit') === 1)
+        {
+            $lastNameUsfId  = (int) $gProfileFields->getProperty('LAST_NAME', 'usf_id');
+            $firstNameUsfId = (int) $gProfileFields->getProperty('FIRST_NAME', 'usf_id');
+
+            // show firstname and lastname of create and last change user
+            $additionalFields = '
+                cre_firstname.usd_value || \' \' || cre_surname.usd_value AS create_name,
+                cha_firstname.usd_value || \' \' || cha_surname.usd_value AS change_name ';
+            $additionalTables = '
+                LEFT JOIN '.TBL_USER_DATA.' AS cre_surname
+                       ON cre_surname.usd_usr_id = dat_usr_id_create
+                      AND cre_surname.usd_usf_id = ? -- $lastNameUsfId
+                LEFT JOIN '.TBL_USER_DATA.' AS cre_firstname
+                       ON cre_firstname.usd_usr_id = dat_usr_id_create
+                      AND cre_firstname.usd_usf_id = ? -- $firstNameUsfId
+                LEFT JOIN '.TBL_USER_DATA.' AS cha_surname
+                       ON cha_surname.usd_usr_id = dat_usr_id_change
+                      AND cha_surname.usd_usf_id = ? -- $lastNameUsfId
+                LEFT JOIN '.TBL_USER_DATA.' AS cha_firstname
+                       ON cha_firstname.usd_usr_id = dat_usr_id_change
+                      AND cha_firstname.usd_usf_id = ? -- $firstNameUsfId';
+            $additionalParams = array($lastNameUsfId, $firstNameUsfId, $lastNameUsfId, $firstNameUsfId);
+        }
+        else
+        {
+            // show username of create and last change user
+            $additionalFields = '
+                cre_username.usr_login_name AS create_name,
+                cha_username.usr_login_name AS change_name ';
+            $additionalTables = '
+                LEFT JOIN '.TBL_USERS.' AS cre_username
+                       ON cre_username.usr_id = dat_usr_id_create
+                LEFT JOIN '.TBL_USERS.' AS cha_username
+                       ON cha_username.usr_id = dat_usr_id_change ';
+            $additionalParams = array();
+        }
+
+        return array(
+            'fields' => $additionalFields,
+            'tables' => $additionalTables,
+            'params' => $additionalParams
+        );
+    }
+
+    /**
+     * Add several conditions to an SQL string that could later be used as additional conditions in other SQL queries.
+     * @return array<string,string|array<int,mixed>> Returns an array of a SQL string with additional conditions and it's query params.
+     */
+    private function getSqlConditions()
+    {
+        global $gCurrentUser;
+
+        $sqlConditions = '';
+        $params = array();
+
+        $id = (int) $this->getParameter('id');
+        // In case ID was permitted and user has rights
+        if ($id > 0)
+        {
+            $sqlConditions .= ' AND dat_id = ? '; // $id
+            $params[] = $id;
+        }
+        // ...otherwise get all additional events for a group
+        else
+        {
+            if (!$this->getParameter('dateStartFormatEnglish'))
+            {
+                $this->setDateRange(); // TODO Exception handling
+            }
+
+            // add 1 second to end date because full time events to until next day
+            $sqlConditions .= ' AND dat_begin <= ? AND dat_end > ? '; // $this->getParameter('dateEndFormatEnglish') . ' 23:59:59' AND $this->getParameter('dateStartFormatEnglish') . ' 00:00:00'
+            $params[] = $this->getParameter('dateEndFormatEnglish')   . ' 23:59:59';
+            $params[] = $this->getParameter('dateStartFormatEnglish') . ' 00:00:00';
+
+            $catId = (int) $this->getParameter('cat_id');
+            // show all events from category
+            if ($catId > 0)
+            {
+                $sqlConditions .= ' AND cat_id = ? '; // $catId
+                $params[] = $catId;
+            }
+        }
+
+        $currUsrId = (int) $gCurrentUser->getValue('usr_id');
+        // add conditions for role permission
+        if ($currUsrId > 0)
+        {
+            switch ($this->getParameter('show'))
+            {
+                case 'maybe_participate':
+                    $roleMemberships = $gCurrentUser->getRoleMemberships();
+                    $sqlConditions .= '
+                        AND dat_rol_id IS NOT NULL
+                        AND EXISTS (SELECT 1
+                                      FROM '. TBL_ROLES_RIGHTS .'
+                                INNER JOIN '. TBL_ROLES_RIGHTS_DATA .'
+                                        ON rrd_ror_id = ror_id
+                                     WHERE ror_name_intern = \'event_participation\'
+                                       AND rrd_object_id = dat_id
+                                       AND rrd_rol_id IN ('.replaceValuesArrWithQM($roleMemberships).')) ';
+                    $params = array_merge($params, $roleMemberships);
+                    break;
+
+                case 'only_participate':
+                    $sqlConditions .= '
+                        AND dat_rol_id IS NOT NULL
+                        AND dat_rol_id IN (SELECT mem_rol_id
+                                             FROM ' . TBL_MEMBERS . ' AS mem2
+                                            WHERE mem2.mem_usr_id = ? -- $currUsrId
+                                              AND mem2.mem_begin <= dat_begin
+                                              AND mem2.mem_end   >= dat_end) ';
+                    $params[] = $currUsrId;
+                    break;
+            }
+        }
+
+        return array(
+            'sql'    => $sqlConditions,
+            'params' => $params
+        );
+    }
+
+    /**
+     * Method validates all date inputs and formats them to date format 'Y-m-d' needed for database queries
+     * @deprecated 3.2.0:4.0.0 Dropped without replacement.
+     * @param string $date Date to be validated and formated if needed
+     * @return string|false
+     */
+    private function formatDate($date)
+    {
+        global $gLogger, $gSettingsManager;
+
+        $gLogger->warning('DEPRECATED: "$moduleDates->formatDate()" is deprecated without replacement!');
+
+        $objDate = \DateTime::createFromFormat('Y-m-d', $date);
+        if ($objDate !== false)
+        {
+            return $date;
+        }
+
+        // check if date has system format
+        $objDate = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $date);
+        if ($objDate !== false)
+        {
+            return $objDate->format('Y-m-d');
+        }
+
+        return false;
     }
 
     /**
@@ -318,254 +523,45 @@ class ModuleDates extends Modules
      * Html output will be set regarding the parameters.
      * If value matches the reference or date('1970-01-01'), the output value is cleared to get an empty string.
      * This method can be used to fill a html form
-     * @param  string $date      Date is to be checked to reference and default date '1970-01-01'.
-     * @param  string $reference Reference date
-     * @return string String with date value, or an empty string, if $date is '1970-01-01' or reference date
+     * @deprecated 3.2.0:4.0.0 Dropped without replacement.
+     * @param string $date      Date is to be checked to reference and default date '1970-01-01'.
+     * @param string $reference Reference date
+     * @return string|false String with date value, or an empty string, if $date is '1970-01-01' or reference date
      */
     public function getFormValue($date, $reference)
     {
-        if(!isset($date) || !isset($reference))
-        {
-            return false;
-        }
-        else
-        {
-            $checkedDate = $this->setFormValue($date, $reference);
-            return $checkedDate;
-        }
-    }
+        global $gLogger;
 
-    /**
-     * Set a date range in which the dates should be searched. The method will fill
-     * 4 parameters @b dateStartFormatEnglish, @b dateStartFormatEnglish,
-     * @b dateEndFormatEnglish and @b dateEndFormatAdmidio that could be read with
-     * getParameter and could be used in the script.
-     * @param  string     $dateRangeStart A date in english or Admidio format that will be the start date of the range.
-     * @param  string     $dateRangeEnd   A date in english or Admidio format that will be the end date of the range.
-     * @return void|false Returns false if invalid date format is submitted
-     */
-    public function setDateRange($dateRangeStart = '', $dateRangeEnd = '')
-    {
-        global $gPreferences;
+        $gLogger->warning('DEPRECATED: "$moduleDates->getFormValue()" is deprecated without replacement!');
 
-        if($dateRangeStart === '')
+        if (isset($date, $reference))
         {
-            $yearEnd = date('Y') + 10;
-
-            // set date_from and date_to regarding to current mode
-            switch($this->mode)
-            {
-                case 'actual':
-                    $dateRangeStart = DATE_NOW;
-                    $dateRangeEnd   = $yearEnd.'-12-31';
-                    break;
-                case 'old':
-                    $dateRangeStart = '1970-01-01';
-                    $dateRangeEnd   = DATE_NOW;
-                    $this->order    = 'DESC';
-                    break;
-                case 'all':
-                    $dateRangeStart = '1970-01-01';
-                    $dateRangeEnd   = $yearEnd.'-12-31';
-                    break;
-            }
+            return $this->setFormValue($date, $reference);
         }
 
-        // Create date object and format date_from in English format and system format and push to daterange array
-        $objDateFrom = DateTime::createFromFormat('Y-m-d', $dateRangeStart);
-
-        if($objDateFrom === false)
-        {
-            // check if date_from  has system format
-            $objDateFrom = DateTime::createFromFormat($gPreferences['system_date'], $dateRangeStart);
-        }
-
-        if(is_object($objDateFrom))
-        {
-            $this->setParameter('dateStartFormatEnglish', $objDateFrom->format('Y-m-d'));
-            $this->setParameter('dateStartFormatAdmidio', $objDateFrom->format($gPreferences['system_date']));
-        }
-        else
-        {
-            return false;
-        }
-
-        // Create date object and format date_to in English format and sytem format and push to daterange array
-        $objDateTo = DateTime::createFromFormat('Y-m-d', $dateRangeEnd);
-
-        if($objDateTo === false)
-        {
-            // check if date_from  has system format
-            $objDateTo = DateTime::createFromFormat($gPreferences['system_date'], $dateRangeEnd);
-        }
-
-        if(is_object($objDateTo))
-        {
-            $this->setParameter('dateEndFormatEnglish', $objDateTo->format('Y-m-d'));
-            $this->setParameter('dateEndFormatAdmidio', $objDateTo->format($gPreferences['system_date']));
-        }
-        else
-        {
-            return false;
-        }
-
-        // DateTo should be greater than DateFrom (Timestamp must be less)
-        if($objDateFrom->format('U') > $objDateTo->format('U'))
-        {
-            throw new AdmException('SYS_DATE_END_BEFORE_BEGIN');
-        }
+        return false;
     }
 
     /**
      * Check date value to reference and set html output.
      * If value matches to reference, value is cleared to get an empty string.
-     * @param  string $date
-     * @param  string $reference
+     * @deprecated 3.2.0:4.0.0 Dropped without replacement.
+     * @param string $date
+     * @param string $reference
      * @return string
      */
     private function setFormValue($date, $reference)
     {
+        global $gLogger;
+
+        $gLogger->warning('DEPRECATED: "$moduleDates->setFormValue()" is deprecated without replacement!');
+
         $checkedDate = $this->formatDate($date);
-        if($checkedDate == $reference || $checkedDate === '1970-01-01')
+        if ($checkedDate === $reference || $checkedDate === '1970-01-01')
         {
             $date = '';
         }
-        else
-        {
-            $this->date = $date;
-        }
 
         return $date;
-    }
-
-    /**
-     * Get additional tables for sql statement
-     * @param  string $type of sql statement:
-     *                      data:  is joining tables to get more data from them
-     *                      count: is joining tables only to get the correct number of records (default: 'data')
-     * @return string String with the necessary joins
-     */
-    public function sqlAdditionalTablesGet($type = 'data')
-    {
-        global $gPreferences;
-        global $gProfileFields;
-
-        $additionalTables = '';
-
-        if ($type === 'data')
-        {
-            if($gPreferences['system_show_create_edit'] == 1)
-            {
-                // Tables for showing firstname and lastname of create and last change user
-                $additionalTables = '
-                  LEFT JOIN '. TBL_USER_DATA .' cre_surname
-                    ON cre_surname.usd_usr_id = dat_usr_id_create
-                   AND cre_surname.usd_usf_id = '.$gProfileFields->getProperty('LAST_NAME', 'usf_id').'
-                  LEFT JOIN '. TBL_USER_DATA .' cre_firstname
-                    ON cre_firstname.usd_usr_id = dat_usr_id_create
-                   AND cre_firstname.usd_usf_id = '.$gProfileFields->getProperty('FIRST_NAME', 'usf_id').'
-                  LEFT JOIN '. TBL_USER_DATA .' cha_surname
-                    ON cha_surname.usd_usr_id = dat_usr_id_change
-                   AND cha_surname.usd_usf_id = '.$gProfileFields->getProperty('LAST_NAME', 'usf_id').'
-                  LEFT JOIN '. TBL_USER_DATA .' cha_firstname
-                    ON cha_firstname.usd_usr_id = dat_usr_id_change
-                   AND cha_firstname.usd_usf_id = '.$gProfileFields->getProperty('FIRST_NAME', 'usf_id');
-            }
-            else
-            {
-                // Tables for showing username of create and last change user
-                $additionalTables = '
-                  LEFT JOIN '. TBL_USERS .' cre_username
-                    ON cre_username.usr_id = dat_usr_id_create
-                  LEFT JOIN '. TBL_USERS .' cha_username
-                    ON cha_username.usr_id = dat_usr_id_change ';
-            }
-        }
-
-        return $additionalTables;
-    }
-
-    /**
-     * Prepare SQL Statement.
-     * @return string
-     */
-    private function sqlConditionsGet()
-    {
-        global $gValidLogin, $gCurrentUser;
-
-        $sqlConditions = '';
-
-        // if user isn't logged in, then don't show hidden categories
-        if (!$gValidLogin)
-        {
-            $sqlConditions .= ' AND cat_hidden = 0 ';
-        }
-
-        // In case ID was permitted and user has rights
-        if($this->getParameter('id') > 0)
-        {
-            $sqlConditions .= ' AND dat_id = '.$this->getParameter('id');
-        }
-        // ...otherwise get all additional events for a group
-        else
-        {
-            if(strlen($this->getParameter('dateStartFormatEnglish') === 0))
-            {
-                $this->setDateRange();
-            }
-
-            // add 1 second to end date because full time events to until next day
-            $sqlConditions .= ' AND dat_begin <= \''.$this->getParameter('dateEndFormatEnglish')  .' 23:59:59\'
-                                AND dat_end   >  \''.$this->getParameter('dateStartFormatEnglish').' 00:00:00\' ';
-
-            // show all events from category
-            if($this->getParameter('cat_id') > 0)
-            {
-                // show all events from category
-                $sqlConditions .= ' AND cat_id  = '.$this->getParameter('cat_id');
-            }
-        }
-
-        // add conditions for role permission
-        if($gCurrentUser->getValue('usr_id') > 0)
-        {
-            switch ($this->getParameter('show'))
-            {
-                case 'all':
-                    $sqlConditions .= '
-                    AND (  dtr_rol_id IS NULL
-                        OR dtr_rol_id IN (SELECT mem_rol_id
-                                            FROM '.TBL_MEMBERS.' mem2
-                                           WHERE mem2.mem_usr_id = '.$gCurrentUser->getValue('usr_id').'
-                                             AND mem2.mem_begin  <= dat_begin
-                                             AND mem2.mem_end    >= dat_end) ) ';
-                    break;
-                case 'maybe_participate':
-                    $sqlConditions .= '
-                    AND dat_rol_id IS NOT NULL
-                    AND (  dtr_rol_id IS NULL
-                        OR dtr_rol_id IN (SELECT mem_rol_id
-                                            FROM '.TBL_MEMBERS.' mem2
-                                           WHERE mem2.mem_usr_id = '.$gCurrentUser->getValue('usr_id').'
-                                             AND mem2.mem_begin  <= dat_begin
-                                             AND mem2.mem_end    >= dat_end) ) ';
-                    break;
-                case 'only_participate':
-                    $sqlConditions .= '
-                    AND dat_rol_id IS NOT NULL
-                    AND dat_rol_id IN (SELECT mem_rol_id
-                                         FROM '.TBL_MEMBERS.' mem2
-                                        WHERE mem2.mem_usr_id = '.$gCurrentUser->getValue('usr_id').'
-                                          AND mem2.mem_begin  <= dat_begin
-                                          AND mem2.mem_end    >= dat_end) ';
-                    break;
-            }
-        }
-        else
-        {
-            $sqlConditions .= ' AND dtr_rol_id IS NULL ';
-        }
-
-        return $sqlConditions;
     }
 }

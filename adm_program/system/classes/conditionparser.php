@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -18,68 +18,165 @@
  * exceptions when using the class.
  * @par Examples
  * @code // create a valid SQL condition out of the special syntax
- * $parser = new ConditionParser;
+ * $parser = new ConditionParser();
  * $sqlCondition = $parser->makeSqlStatement('> 5 AND <= 100', 'usd_value', 'int');
  * $sql = 'SELECT * FROM '.TBL_USER_DATA.' WHERE usd_id > 0 AND '.$sqlCondition; @endcode
  */
 class ConditionParser
 {
-    private $mSrcCond;              ///< The source condition with the user specific condition
-    private $mDestCond;             ///< The destination string with the valid sql statement
-    private $mSrcCondArray;         ///< An array from the string @b mSrcCond where every char is one array element
-    private $mNotExistsSql = '';    ///< Stores the sql statement if a record should not exists when user wants to exclude a column
-    private $mOpenQuotes = false;   ///< Flag if there is a open quote in this condition that must be closed before the next condition will be parsed
+    /**
+     * @var string The source condition with the user specific condition
+     */
+    private $srcCond = '';
+    /**
+     * @var string The destination string with the valid sql statement
+     */
+    private $destCond = '';
+    /**
+     * @var array<int,string> An array from the string @b mSrcCond where every char is one array element
+     */
+    private $srcCondArray = array();
+    /**
+     * @var string Stores the sql statement if a record should not exists when user wants to exclude a column
+     */
+    private $notExistsSql = '';
+    /**
+     * @var bool Flag if there is a open quote in this condition that must be closed before the next condition will be parsed
+     */
+    private $openQuotes = false;
+
+    /**
+     * constructor that will initialize variables
+     */
+    public function __construct()
+    {
+
+    }
+
+    /**
+     * Starts the "DestCondition"
+     * @param string $columnType      The type of the column. Valid types are @b string, @b int, @b date and @b checkbox
+     * @param string $columnName      The name of the database column for which the condition should be created
+     * @param string $sourceCondition The user condition string
+     * @return bool Returns true if "mDestCondition" is complete
+     */
+    private function startDestCond($columnType, $columnName, $sourceCondition)
+    {
+        $this->destCond = ' AND ';  // Bedingungen fuer das Feld immer mit UND starten
+
+        if ($columnType === 'string')
+        {
+            $this->destCond .= '( UPPER(' . $columnName . ') ';
+        }
+        elseif ($columnType === 'checkbox')
+        {
+            // Sonderfall !!!
+            // bei einer Checkbox kann es nur 1 oder 0 geben und keine komplizierten Verknuepfungen
+            if ($sourceCondition === '1')
+            {
+                $this->destCond .= $columnName . ' = 1 ';
+            }
+            else
+            {
+                $this->destCond .= '(' . $columnName . ' IS NULL OR ' . $columnName . ' = 0) ';
+            }
+
+            return true;
+        }
+        // $columnType = "int" or "date"
+        else
+        {
+            $this->destCond .= '( ' . $columnName . ' ';
+        }
+
+        return false;
+    }
+
+    /**
+     * Ends the "DestCondition"
+     */
+    private function endDestCond()
+    {
+        if ($this->openQuotes)
+        {
+            // allways set quote marks for a value because some fields are a varchar in db
+            // but should only filled with integer
+            $this->destCond .= '\' ';
+        }
+
+        $this->destCond .= ' ) ';
+    }
+
+    /**
+     * @param string $columnType
+     * @param string $sourceCondition
+     * @return bool Returns true if date search and false if age search
+     */
+    private static function isDateSearch($columnType, $sourceCondition)
+    {
+        $sourceCondition = admStrToUpper($sourceCondition);
+
+        return $columnType === 'date' && (admStrContains($sourceCondition, 'J') || admStrContains($sourceCondition, 'Y'));
+    }
 
     /**
      * Creates a valid date format @b YYYY-MM-DD for the SQL statement
-     * @param  string $date     The unformated date from user input e.g. @b 12.04.2012
-     * @param  string $operator The actual operator for the @b date parameter
-     * @return string String with a SQL valid date format @b YYYY-MM-DD
+     * @param string $date     The unformated date from user input e.g. @b 12.04.2012
+     * @param string $operator The actual operator for the @b date parameter
+     * @return string String with a SQL valid date format @b YYYY-MM-DD or empty string
      */
     private function getFormatDate($date, $operator)
     {
-        global $gPreferences;
-        $formatDate = '';
+        global $gSettingsManager;
 
         // if last char is Y or J then user searches for age
-        $last = substr($date, -1);
-        $last = admStrToUpper($last);
+        $lastDateChar = admStrToUpper(substr($date, -1));
 
-        if($last === 'J' || $last === 'Y')
+        if ($lastDateChar === 'J' || $lastDateChar === 'Y')
         {
-            $age  = (int) substr($date, 0, -1);
-            $date = new DateTimeExtended(date('Y').'-'.date('m').'-'.date('d'), 'Y-m-d');
             $ageCondition = '';
+            $dateObj = new \DateTime();
+            $years   = new \DateInterval('P' . substr($date, 0, -1) . 'Y');
+            $oneYear = new \DateInterval('P1Y');
+            $oneDay  = new \DateInterval('P1D');
+            $dateObj->sub($years);
 
             switch ($operator)
             {
                 case '=':
                     // first remove = from destination condition
-                    $this->mDestCond = substr($this->mDestCond, 0, strlen($this->mDestCond) - 4);
+                    $this->destCond = substr($this->destCond, 0, -4);
 
                     // now compute the dates for a valid birthday with that age
-                    $date->modify('-'.$age.' years');
-                    $dateTo = $date->format('Y-m-d');
-                    $date->modify('-1 year');
-                    $date->modify('+1 day');
-                    $dateFrom = $date->format('Y-m-d');
+                    $dateTo = $dateObj->format('Y-m-d');
 
-                    $ageCondition = ' BETWEEN \''.$dateFrom.'\' AND \''.$dateTo.'\'';
-                    $this->mOpenQuotes = false;
+                    $dateObj->sub($oneYear)->add($oneDay);
+                    $dateFrom = $dateObj->format('Y-m-d');
+
+                    $ageCondition = ' BETWEEN \'' . $dateFrom . '\' AND \'' . $dateTo . '\'';
+                    $this->openQuotes = false;
                     break;
                 case '}':
                     // search for dates that are older than the age
-                    // because the age itself takes 1 year we must add 1 year and 1 day to age
-                    $date->modify('-'.($age+1).' years');
-                    $date->modify('+1 day');
-                    $ageCondition = $date->format('Y-m-d');
+                    // because the age itself takes 1 year we must subtract 1 year to age
+                    $dateObj->sub($oneYear)->add($oneDay);
+                    $ageCondition = $dateObj->format('Y-m-d');
                     break;
                 case '{':
                     // search for dates that are younger than the age
                     // we must add 1 day to the date because the day itself belongs to the age
-                    $date->modify('-'.$age.' years');
-                    $date->modify('+1 day');
-                    $ageCondition = $date->format('Y-m-d');
+                    $dateObj->add($oneDay);
+                    $ageCondition = $dateObj->format('Y-m-d');
+                    break;
+                case ']':
+                    // search for dates that are older or equal than the age
+                    $ageCondition = $dateObj->format('Y-m-d');
+                    break;
+                case '[':
+                    // search for dates that are younger or equal than the age
+                    // because the age itself takes 1 year we must subtract another 1 year but the day itself must be ignored to age
+                    $dateObj->sub($oneYear)->add($oneDay);
+                    $ageCondition = $dateObj->format('Y-m-d');
                     break;
             }
 
@@ -87,381 +184,16 @@ class ConditionParser
         }
 
         // validate date and return it in database format
-        if($date !== '')
+        if ($date !== '')
         {
-            $date = new DateTimeExtended($date, $gPreferences['system_date']);
-            if($date->isValid())
+            $dateObject = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $date);
+            if ($dateObject !== false)
             {
-                $formatDate = $date->format('Y-m-d');
+                return $dateObject->format('Y-m-d');
             }
         }
 
-        return $formatDate;
-    }
-
-    /**
-     * Replace different user conditions with predefined chars that
-     * represents a special condition e.g. @b ! represents @b != and @b <>
-     * @param string $sourceCondition The user condition string
-     * @return string String with the predefined chars for conditions
-     */
-    public function makeStandardCondition($sourceCondition)
-    {
-        global $gL10n;
-
-        $this->mSrcCond = admStrToUpper(trim($sourceCondition));
-        $this->mSrcCond = strtr($this->mSrcCond, '*', '%');
-
-        // valid 'not null' is '#'
-        $this->mSrcCond = str_replace(admStrToUpper($gL10n->get('SYS_NOT_EMPTY')), ' # ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' NOT NULL ', ' # ', $this->mSrcCond);
-
-        // valid 'null' is '_'
-        $this->mSrcCond = str_replace(admStrToUpper($gL10n->get('SYS_EMPTY')), ' _ ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' NULL ', ' _ ', $this->mSrcCond);
-
-        // valid 'is not' is '!'
-        $this->mSrcCond = str_replace('{}',     ' ! ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('!=',     ' ! ', $this->mSrcCond);
-
-        // valid 'is' is '='
-        $this->mSrcCond = str_replace('==',     ' = ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' LIKE ', ' = ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' IS ',   ' = ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' IST ',  ' = ', $this->mSrcCond);
-
-        // valid 'less than' is '['
-        $this->mSrcCond = str_replace('{=',     ' [ ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('={',     ' [ ', $this->mSrcCond);
-
-        // valid 'greater than' is ']'
-        $this->mSrcCond = str_replace('}=',     ' ] ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('=}',     ' ] ', $this->mSrcCond);
-
-        // valid 'and' is '&'
-        $this->mSrcCond = str_replace(' AND ',  ' & ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' UND ',  ' & ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('&&',     ' & ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('+',      ' & ', $this->mSrcCond);
-
-        // valid 'or' is '|'
-        $this->mSrcCond = str_replace(' OR ',   ' | ', $this->mSrcCond);
-        $this->mSrcCond = str_replace(' ODER ', ' | ', $this->mSrcCond);
-        $this->mSrcCond = str_replace('||',     ' | ', $this->mSrcCond);
-
-        return $this->mSrcCond;
-    }
-
-    /**
-     * Creates from a user defined condition a valid SQL condition
-     * @param string $sourceCondition The user condition string
-     * @param string $columnName      The name of the database column for which the condition should be created
-     * @param string $columnType      The type of the column. Valid types are @b string, @b int, @b date and @b checkbox
-     * @param string $fieldName       The name of the profile field. This is used for error output to the end user
-     * @throws AdmException LST_NOT_VALID_DATE_FORMAT
-     *                      LST_NOT_NUMERIC
-     * @return string       Returns a valid SQL string with the condition for that column
-     */
-    public function makeSqlStatement($sourceCondition, $columnName, $columnType, $fieldName)
-    {
-        $bStartCondition   = true;     // gibt an, dass eine neue Bedingung angefangen wurde
-        $bNewCondition     = true;     // in Stringfeldern wird nach einem neuen Wort gesucht -> neue Bedingung
-        $bStartOperand     = false;    // gibt an, ob bei num. oder Datumsfeldern schon <>= angegeben wurde
-        $this->mOpenQuotes = false;    // set to true if quotes for conditions are open
-        $date              = '';       // Variable speichert bei Datumsfeldern das gesamte Datum
-        $operator          = '=';      // saves the actual operator, if no operator is set then = will be default
-        $this->mDestCond   = '';
-
-        if($sourceCondition !== '' && $columnName !== '' && $columnType !== '')
-        {
-            $this->mSrcCond      = $this->makeStandardCondition($sourceCondition);
-            $this->mSrcCondArray = str_split($this->mSrcCond);
-
-            // Bedingungen fuer das Feld immer mit UND starten
-            if($columnType === 'string')
-            {
-                $this->mDestCond = ' AND ( UPPER('.$columnName.') ';
-            }
-            elseif($columnType === 'checkbox')
-            {
-                // Sonderfall !!!
-                // bei einer Checkbox kann es nur 1 oder 0 geben und keine komplizierten Verknuepfungen
-                if($sourceCondition == 1)
-                {
-                    $this->mDestCond = ' AND '.$columnName.' = 1 ';
-                }
-                else
-                {
-                    $this->mDestCond = ' AND ('.$columnName.' IS NULL OR '.$columnName.' = 0) ';
-                }
-                return $this->mDestCond;
-            }
-            else
-            {
-                $this->mDestCond = ' AND ( '.$columnName.' ';
-            }
-
-            // Zeichen fuer Zeichen aus dem Bedingungsstring wird hier verarbeitet
-            for($mCount = 0; $mCount < strlen($this->mSrcCond); ++$mCount)
-            {
-                $character = $this->mSrcCondArray[$mCount];
-
-                if($character === '&' || $character === '|')
-                {
-                    if($bNewCondition)
-                    {
-                        // neue Bedingung, also Verknuepfen
-                        if($character === '&')
-                        {
-                            $this->mDestCond = $this->mDestCond.' AND ';
-                        }
-                        elseif($character === '|')
-                        {
-                            $this->mDestCond = $this->mDestCond.' OR ';
-                        }
-
-                        // Feldname noch dahinter
-                        if($columnType === 'string')
-                        {
-                            $this->mDestCond = $this->mDestCond.' UPPER('.$columnName.') ';
-                        }
-                        else
-                        {
-                            $this->mDestCond = $this->mDestCond.' '.$columnName.' ';
-                        }
-
-                        $bStartCondition = true;
-                    }
-                }
-                else
-                {
-                    // Verleich der Werte wird hier verarbeitet
-                    if($character === '='
-                    || $character === '!'
-                    || $character === '_'
-                    || $character === '#'
-                    || $character === '{'
-                    || $character === '}'
-                    || $character === '['
-                    || $character === ']')
-                    {
-                        // save actual operator for later use
-                        $operator = $character;
-
-                        if(!$bStartCondition)
-                        {
-                            $this->mDestCond = $this->mDestCond.' AND '.$columnName.' ';
-                            $bStartCondition = true;
-                        }
-
-                        switch ($character)
-                        {
-                            case '=':
-                                if ($columnType === 'string')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' LIKE ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' = ';
-                                }
-                                break;
-                            case '!':
-                                if ($columnType === 'string')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' NOT LIKE ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' <> ';
-                                }
-                                break;
-                            case '_':
-                                $this->mDestCond = $this->mDestCond.' IS NULL ';
-                                if($this->mNotExistsSql !== '')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' OR NOT EXISTS ('.$this->mNotExistsSql.') ';
-                                }
-                                break;
-                            case '#':
-                                $this->mDestCond = $this->mDestCond.' IS NOT NULL ';
-                                if($this->mNotExistsSql !== '')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' OR EXISTS ('.$this->mNotExistsSql.') ';
-                                }
-                                break;
-                            case '{':
-                                // bastwe: invert condition on age search
-                                if($columnType === 'date'
-                                    && (strstr(admStrToUpper($sourceCondition), 'J') !== false
-                                        || strstr(admStrToUpper($sourceCondition), 'Y') !== false))
-                                {
-                                    $this->mDestCond = $this->mDestCond.' > ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' < ';
-                                }
-                                break;
-                            case '}':
-                                // bastwe: invert condition on age search
-                                if($columnType === 'date'
-                                    && (strstr(admStrToUpper($sourceCondition), 'J') !== false
-                                        || strstr(admStrToUpper($sourceCondition), 'Y') !== false))
-                                {
-                                    $this->mDestCond = $this->mDestCond.' < ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' > ';
-                                }
-                                break;
-                            case '[':
-                                // bastwe: invert condition on age search
-                                if($columnType === 'date'
-                                    && (strstr(admStrToUpper($sourceCondition), 'J') !== false
-                                        || strstr(admStrToUpper($sourceCondition), 'Y') !== false))
-                                {
-                                    $this->mDestCond = $this->mDestCond.' >= ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' <= ';
-                                }
-                                break;
-                            case ']':
-                                // bastwe: invert condition on age search
-                                if($columnType === 'date'
-                                    && (strstr(admStrToUpper($sourceCondition), 'J') !== false
-                                        || strstr(admStrToUpper($sourceCondition), 'Y') !== false))
-                                {
-                                    $this->mDestCond = $this->mDestCond.' <= ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' >= ';
-                                }
-                                break;
-                            default:
-                                $this->mDestCond = $this->mDestCond.$character;
-                        }
-
-                        if($character !== '_' && $character !== '#')
-                        {
-                            // allways set quote marks for a value because some fields are a varchar in db
-                            // but should only filled with integer
-                            $this->mDestCond   = $this->mDestCond.' \'';
-                            $this->mOpenQuotes = true;
-                            $bStartOperand     = true;
-                        }
-                    }
-                    else
-                    {
-                        // pruefen, ob ein neues Wort anfaengt
-                        if($character === ' ' && !$bNewCondition)
-                        {
-                            // if date column than the date will be saved in $date.
-                            // This variable must then be parsed and changed in a valid database format
-                            if($columnType === 'date' && $date !== '')
-                            {
-                                if($this->getFormatDate($date, $operator) !== '')
-                                {
-                                    $this->mDestCond = $this->mDestCond.$this->getFormatDate($date, $operator);
-                                }
-                                else
-                                {
-                                    throw new AdmException('LST_NOT_VALID_DATE_FORMAT', $fieldName);
-                                }
-                                $date = '';
-                            }
-
-                            if($this->mOpenQuotes)
-                            {
-                                // allways set quote marks for a value because some fields are a varchar in db
-                                // but should only filled with integer
-                                $this->mDestCond   = $this->mDestCond.'\' ';
-                                $this->mOpenQuotes = false;
-                            }
-
-                            $bNewCondition = true;
-                        }
-                        elseif($character !== ' ')
-                        {
-                            // neues Suchwort, aber noch keine Bedingung
-
-                            if($bNewCondition && !$bStartCondition)
-                            {
-                                if($columnType === 'string')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' AND UPPER('.$columnName.') ';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' AND '.$columnName.' = ';
-                                }
-                                $this->mOpenQuotes = false;
-                            }
-                            elseif($bNewCondition && !$bStartOperand)
-                            {
-                                // first condition of these column
-                                if($columnType === 'string')
-                                {
-                                    $this->mDestCond = $this->mDestCond.' LIKE \'';
-                                }
-                                else
-                                {
-                                    $this->mDestCond = $this->mDestCond.' = \'';
-                                }
-                                $this->mOpenQuotes = true;
-                            }
-
-                            // Zeichen an Zielstring dranhaengen
-                            if($columnType === 'date')
-                            {
-                                $date = $date.$character;
-                            }
-                            elseif($columnType === 'int' && !is_numeric($character))
-                            {
-                                // if numeric field than only numeric characters are allowed
-                                throw new AdmException('LST_NOT_NUMERIC', $fieldName);
-                            }
-                            else
-                            {
-                                $this->mDestCond = $this->mDestCond.$character;
-                            }
-
-                            $bNewCondition   = false;
-                            $bStartCondition = false;
-                        }
-                    }
-                }
-            }
-
-            // if date column than the date will be saved in $date.
-            // This variable must then be parsed and changed in a valid database format
-            if($columnType === 'date' && $date !== '')
-            {
-                if($this->getFormatDate($date, $operator) !== '')
-                {
-                    $this->mDestCond = $this->mDestCond.$this->getFormatDate($date, $operator);
-                }
-                else
-                {
-                    throw new AdmException('LST_NOT_VALID_DATE_FORMAT', $fieldName);
-                }
-            }
-
-            if($this->mOpenQuotes)
-            {
-                // allways set quote marks for a value because some fields are a varchar in db
-                // but should only filled with integer
-                $this->mDestCond = $this->mDestCond.'\' ';
-            }
-
-            $this->mDestCond = $this->mDestCond.' ) ';
-        }
-
-        return $this->mDestCond;
+        return '';
     }
 
     /**
@@ -474,6 +206,320 @@ class ConditionParser
      */
     public function setNotExistsStatement($sqlStatement)
     {
-        $this->mNotExistsSql = $sqlStatement;
+        $this->notExistsSql = $sqlStatement;
+    }
+
+    /**
+     * Creates from a user defined condition a valid SQL condition
+     * @param string $sourceCondition The user condition string
+     * @param string $columnName      The name of the database column for which the condition should be created
+     * @param string $columnType      The type of the column. Valid types are @b string, @b int, @b date and @b checkbox
+     * @param string $fieldName       The name of the profile field. This is used for error output to the end user
+     * @throws AdmException LST_NOT_VALID_DATE_FORMAT
+     *                      LST_NOT_NUMERIC
+     * @return string Returns a valid SQL string with the condition for that column
+     */
+    public function makeSqlStatement($sourceCondition, $columnName, $columnType, $fieldName)
+    {
+        $conditionComplete = $this->startDestCond($columnType, $columnName, $sourceCondition);
+        if ($conditionComplete)
+        {
+            return $this->destCond;
+        }
+
+        $this->openQuotes = false;    // set to true if quotes for conditions are open
+        $startCondition   = true;     // gibt an, dass eine neue Bedingung angefangen wurde
+        $newCondition     = true;     // in Stringfeldern wird nach einem neuen Wort gesucht -> neue Bedingung
+        $startOperand     = false;    // gibt an, ob bei num. oder Datumsfeldern schon <>= angegeben wurde
+        $date             = '';       // Variable speichert bei Datumsfeldern das gesamte Datum
+        $operator         = '=';      // saves the actual operator, if no operator is set then = will be default
+
+        $this->makeStandardCondition($sourceCondition);
+        $this->srcCondArray = str_split($this->srcCond);
+
+        // Zeichen fuer Zeichen aus dem Bedingungsstring wird hier verarbeitet
+        foreach ($this->srcCondArray as $character)
+        {
+            if ($character === '&' || $character === '|')
+            {
+                if ($newCondition)
+                {
+                    // neue Bedingung, also Verknuepfen
+                    if ($character === '&')
+                    {
+                        $this->destCond .= ' AND ';
+                    }
+                    elseif ($character === '|')
+                    {
+                        $this->destCond .= ' OR ';
+                    }
+
+                    // Feldname noch dahinter
+                    if ($columnType === 'string')
+                    {
+                        $this->destCond .= ' UPPER(' . $columnName . ') ';
+                    }
+                    else
+                    {
+                        $this->destCond .= ' ' . $columnName . ' ';
+                    }
+
+                    $startCondition = true;
+                }
+            }
+            // Verleich der Werte wird hier verarbeitet
+            elseif (in_array($character, array('=', '!', '_', '#', '{', '}', '[', ']'), true))
+            {
+                // save actual operator for later use
+                $operator = $character;
+
+                if (!$startCondition)
+                {
+                    $this->destCond .= ' AND ' . $columnName . ' ';
+                    $startCondition = true;
+                }
+
+                switch ($character)
+                {
+                    case '=':
+                        if ($columnType === 'string')
+                        {
+                            $this->destCond .= ' LIKE ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' = ';
+                        }
+                        break;
+                    case '!':
+                        if ($columnType === 'string')
+                        {
+                            $this->destCond .= ' NOT LIKE ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' <> ';
+                        }
+                        break;
+                    case '_':
+                        $this->destCond .= ' IS NULL ';
+                        if ($this->notExistsSql !== '')
+                        {
+                            $this->destCond .= ' OR NOT EXISTS (' . $this->notExistsSql . ') ';
+                        }
+                        break;
+                    case '#':
+                        $this->destCond .= ' IS NOT NULL ';
+                        if ($this->notExistsSql !== '')
+                        {
+                            $this->destCond .= ' OR EXISTS (' . $this->notExistsSql . ') ';
+                        }
+                        break;
+                    case '{':
+                        // bastwe: invert condition on age search
+                        if (self::isDateSearch($columnType, $sourceCondition))
+                        {
+                            $this->destCond .= ' > ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' < ';
+                        }
+                        break;
+                    case '}':
+                        // bastwe: invert condition on age search
+                        if (self::isDateSearch($columnType, $sourceCondition))
+                        {
+                            $this->destCond .= ' < ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' > ';
+                        }
+                        break;
+                    case '[':
+                        // bastwe: invert condition on age search
+                        if (self::isDateSearch($columnType, $sourceCondition))
+                        {
+                            $this->destCond .= ' >= ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' <= ';
+                        }
+                        break;
+                    case ']':
+                        // bastwe: invert condition on age search
+                        if (self::isDateSearch($columnType, $sourceCondition))
+                        {
+                            $this->destCond .= ' <= ';
+                        }
+                        else
+                        {
+                            $this->destCond .= ' >= ';
+                        }
+                        break;
+                    default:
+                        $this->destCond .= $character;
+                }
+
+                if ($character !== '_' && $character !== '#')
+                {
+                    // allways set quote marks for a value because some fields are a varchar in db
+                    // but should only filled with integer
+                    $this->destCond  .= ' \'';
+                    $this->openQuotes = true;
+                    $startOperand     = true;
+                }
+            }
+            elseif ($character === ' ')
+            {
+                // pruefen, ob ein neues Wort anfaengt
+                if (!$newCondition)
+                {
+                    // if date column than the date will be saved in $date.
+                    // This variable must then be parsed and changed in a valid database format
+                    if ($columnType === 'date' && $date !== '')
+                    {
+                        $formatDate = $this->getFormatDate($date, $operator);
+                        if ($formatDate !== '')
+                        {
+                            $this->destCond .= $formatDate;
+                        }
+                        else
+                        {
+                            throw new AdmException('LST_NOT_VALID_DATE_FORMAT', $fieldName);
+                        }
+                        $date = '';
+                    }
+
+                    if ($this->openQuotes)
+                    {
+                        // allways set quote marks for a value because some fields are a varchar in db
+                        // but should only filled with integer
+                        $this->destCond  .= '\' ';
+                        $this->openQuotes = false;
+                    }
+
+                    $newCondition = true;
+                }
+            }
+            else
+            {
+                // neues Suchwort, aber noch keine Bedingung
+
+                if ($newCondition && !$startCondition)
+                {
+                    if ($columnType === 'string')
+                    {
+                        $this->destCond .= ' AND UPPER(' . $columnName . ') ';
+                    }
+                    else
+                    {
+                        $this->destCond .= ' AND ' . $columnName . ' = ';
+                    }
+                    $this->openQuotes = false;
+                }
+                elseif ($newCondition && !$startOperand)
+                {
+                    // first condition of these column
+                    if ($columnType === 'string')
+                    {
+                        $this->destCond .= ' LIKE \'';
+                    }
+                    else
+                    {
+                        $this->destCond .= ' = \'';
+                    }
+                    $this->openQuotes = true;
+                }
+
+                // Zeichen an Zielstring dranhaengen
+                if ($columnType === 'date')
+                {
+                    $date .= $character;
+                }
+                elseif ($columnType === 'int' && !is_numeric($character))
+                {
+                    // if numeric field than only numeric characters are allowed
+                    throw new AdmException('LST_NOT_NUMERIC', $fieldName);
+                }
+                else
+                {
+                    $this->destCond .= $character;
+                }
+
+                $newCondition   = false;
+                $startCondition = false;
+            }
+        }
+
+        // if date column than the date will be saved in $date.
+        // This variable must then be parsed and changed in a valid database format
+        if ($columnType === 'date' && $date !== '')
+        {
+            $formatDate = $this->getFormatDate($date, $operator);
+            if ($formatDate !== '')
+            {
+                $this->destCond .= $formatDate;
+            }
+            else
+            {
+                throw new AdmException('LST_NOT_VALID_DATE_FORMAT', $fieldName);
+            }
+        }
+
+        $this->endDestCond();
+
+        return $this->destCond;
+    }
+
+    /**
+     * Replace different user conditions with predefined chars that
+     * represents a special condition e.g. @b ! represents @b != and @b <>
+     * @param string $sourceCondition The user condition string
+     * @return string String with the predefined chars for conditions
+     */
+    public function makeStandardCondition($sourceCondition)
+    {
+        global $gL10n;
+
+        $this->srcCond = admStrToUpper(trim($sourceCondition));
+
+        $replaceArray = array(
+            '*' => '%',
+            // valid 'not null' is '#'
+            admStrToUpper($gL10n->get('SYS_NOT_EMPTY')) => ' # ',
+            ' NOT NULL '                                => ' # ',
+            // valid 'null' is '_'
+            admStrToUpper($gL10n->get('SYS_EMPTY')) => ' _ ',
+            ' NULL '                                => ' _ ',
+            // valid 'is not' is '!'
+            '{}'     => ' ! ',
+            '!='     => ' ! ',
+            // valid 'is' is '='
+            '=='     => ' = ',
+            ' LIKE ' => ' = ',
+            ' IS '   => ' = ',
+            ' IST '  => ' = ',
+            // valid 'less than' is '['
+            '{='     => ' [ ',
+            '={'     => ' [ ',
+            // valid 'greater than' is ']'
+            '}='     => ' ] ',
+            '=}'     => ' ] ',
+            // valid 'and' is '&'
+            ' AND '  => ' & ',
+            ' UND '  => ' & ',
+            '&&'     => ' & ',
+            '+'      => ' & ',
+            // valid 'or' is '|'
+            ' OR '   => ' | ',
+            ' ODER ' => ' | ',
+            '||'     => ' | '
+        );
+        $this->srcCond = str_replace(array_keys($replaceArray), array_values($replaceArray), $this->srcCond);
+
+        return $this->srcCond;
     }
 }

@@ -3,13 +3,13 @@
  ***********************************************************************************************
  * Import users from a csv file
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 $_SESSION['import_csv_request'] = $_POST;
 
@@ -27,16 +27,19 @@ define('USER_IMPORT_COMPLETE', '4');
 if(!$gCurrentUser->editUsers())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
 // Lastname und firstname are mandatory fields
 if(strlen($_POST['usf-'.$gProfileFields->getProperty('LAST_NAME', 'usf_id')]) === 0)
 {
-    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gProfileFields->getProperty('LAST_NAME', 'usf_name')));
+    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gProfileFields->getProperty('LAST_NAME', 'usf_name'))));
+    // => EXIT
 }
 if(strlen($_POST['usf-'.$gProfileFields->getProperty('FIRST_NAME', 'usf_id')]) === 0)
 {
-    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gProfileFields->getProperty('FIRST_NAME', 'usf_name')));
+    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gProfileFields->getProperty('FIRST_NAME', 'usf_name'))));
+    // => EXIT
 }
 
 if(array_key_exists('first_row', $_POST))
@@ -61,14 +64,14 @@ $depRoles = array();
 // Abhängige Rollen ermitteln
 $depRoles = RoleDependency::getParentRoles($gDb, $_SESSION['rol_id']);
 
-if($firstRowTitle == true)
+if($firstRowTitle)
 {
     // erste Zeile ueberspringen, da hier die Spaltenbezeichnungen stehen
     $line = next($_SESSION['file_lines']);
     $startRow = 1;
 }
 
-for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
+for($i = $startRow, $iMax = count($_SESSION['file_lines']); $i < $iMax; ++$i)
 {
     $user->clear();
     $columnArray = explode($_SESSION['value_separator'], $line);
@@ -82,7 +85,7 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
         // nun alle Userfelder durchgehen und schauen, bei welchem
         // die entsprechende Dateispalte ausgewaehlt wurde
         // dieser dann den Wert zuordnen
-        foreach($gProfileFields->mProfileFields as $field)
+        foreach($gProfileFields->getProfileFields() as $field)
         {
             if(strlen($_POST['usf-'. $field->getValue('usf_id')]) > 0 && $columnKey == $_POST['usf-'. $field->getValue('usf_id')])
             {
@@ -94,7 +97,7 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
 
                 if($field->getValue('usf_name_intern') === 'COUNTRY')
                 {
-                    $user->setValue($field->getValue('usf_name_intern'), $gL10n->getCountryByName($columnValue));
+                    $user->setValue($field->getValue('usf_name_intern'), $gL10n->getCountryIsoCode($columnValue));
                 }
                 else
                 {
@@ -124,7 +127,7 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
                             $arrListValues = $field->getValue('usf_value_list', 'text');
                             $position = 1;
 
-                            foreach($arrListValues as $key => $value)
+                            foreach($arrListValues as $value)
                             {
                                 if(strcmp(admStrToLower($columnValue), admStrToLower(trim($arrListValues[$position]))) === 0)
                                 {
@@ -154,10 +157,10 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
                             }
                             break;
                         case 'TEXT':
-                            $user->setValue($field->getValue('usf_name_intern'), substr($columnValue, 0, 50));
+                            $user->setValue($field->getValue('usf_name_intern'), substr($columnValue, 0, 100));
                             break;
                         default:
-                            $user->setValue($field->getValue('usf_name_intern'), substr($columnValue, 0, 255));
+                            $user->setValue($field->getValue('usf_name_intern'), substr($columnValue, 0, 4000));
                     }
                 }
             }
@@ -169,75 +172,80 @@ for($i = $startRow; $i < count($_SESSION['file_lines']); ++$i)
     {
         // search for existing user with same name and read user data
         $sql = 'SELECT MAX(usr_id) AS usr_id
-                  FROM '. TBL_USERS. '
-                  JOIN '. TBL_USER_DATA. ' last_name
+                  FROM '.TBL_USERS.'
+            INNER JOIN '.TBL_USER_DATA.' AS last_name
                     ON last_name.usd_usr_id = usr_id
-                   AND last_name.usd_usf_id = '.  $gProfileFields->getProperty('LAST_NAME', 'usf_id'). '
-                   AND last_name.usd_value  = \''. $gDb->escapeString($user->getValue('LAST_NAME', 'database')). '\'
-                  JOIN '. TBL_USER_DATA. ' first_name
+                   AND last_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'LAST_NAME\', \'usf_id\')
+                   AND last_name.usd_value  = ? -- $user->getValue(\'LAST_NAME\', \'database\')
+            INNER JOIN '.TBL_USER_DATA.' AS first_name
                     ON first_name.usd_usr_id = usr_id
-                   AND first_name.usd_usf_id = '.  $gProfileFields->getProperty('FIRST_NAME', 'usf_id'). '
-                   AND first_name.usd_value  = \''. $gDb->escapeString($user->getValue('FIRST_NAME', 'database')). '\'
-                 WHERE usr_valid = 1 ';
-        $statement = $gDb->query($sql);
-        $rowDuplicateUser = $statement->fetch();
-        if($rowDuplicateUser['usr_id'] > 0)
+                   AND first_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'FIRST_NAME\', \'usf_id\')
+                   AND first_name.usd_value  = ? -- $user->getValue(\'FIRST_NAME\', \'database\')
+                 WHERE usr_valid = 1';
+        $queryParams = array(
+            $gProfileFields->getProperty('LAST_NAME', 'usf_id'),
+            $user->getValue('LAST_NAME', 'database'),
+            $gProfileFields->getProperty('FIRST_NAME', 'usf_id'),
+            $user->getValue('FIRST_NAME', 'database')
+        );
+        $pdoStatement = $gDb->queryPrepared($sql, $queryParams);
+        $maxUserId = (int) $pdoStatement->fetchColumn();
+        if($maxUserId > 0)
         {
-            $duplicate_user = new User($gDb, $gProfileFields, $rowDuplicateUser['usr_id']);
+            $duplicateUser = new User($gDb, $gProfileFields, $maxUserId);
         }
 
-        if($rowDuplicateUser['usr_id'] > 0)
+        if($maxUserId > 0)
         {
             if($_SESSION['user_import_mode'] == USER_IMPORT_DISPLACE)
             {
                 // delete all user data of profile fields
-                $duplicate_user->deleteUserFieldData();
+                $duplicateUser->deleteUserFieldData();
             }
 
             if($_SESSION['user_import_mode'] == USER_IMPORT_COMPLETE
             || $_SESSION['user_import_mode'] == USER_IMPORT_DISPLACE)
             {
                 // edit data of user, if user already exists
-                foreach($importedFields as $key => $field_name_intern)
+                foreach($importedFields as $fieldNameIntern)
                 {
-                    if($duplicate_user->getValue($field_name_intern) != $user->getValue($field_name_intern))
+                    if($duplicateUser->getValue($fieldNameIntern) != $user->getValue($fieldNameIntern))
                     {
-                        if($gProfileFields->getProperty($field_name_intern, 'usf_type') === 'DATE')
+                        if($gProfileFields->getProperty($fieldNameIntern, 'usf_type') === 'DATE')
                         {
                             // the date must be formated
-                            $duplicate_user->setValue($field_name_intern, $user->getValue($field_name_intern, $gPreferences['system_date']));
+                            $duplicateUser->setValue($fieldNameIntern, $user->getValue($fieldNameIntern, $gSettingsManager->getString('system_date')));
                         }
-                        elseif($field_name_intern === 'COUNTRY')
+                        elseif($fieldNameIntern === 'COUNTRY')
                         {
                             // we need the iso-code and not the name of the country
-                            $duplicate_user->setValue($field_name_intern, $gL10n->getCountryByName($user->getValue($field_name_intern)));
+                            $duplicateUser->setValue($fieldNameIntern, $gL10n->getCountryIsoCode($user->getValue($fieldNameIntern)));
                         }
-                        elseif($gProfileFields->getProperty($field_name_intern, 'usf_type') === 'DROPDOWN'
-                            || $gProfileFields->getProperty($field_name_intern, 'usf_type') === 'RADIO_BUTTON')
+                        elseif($gProfileFields->getProperty($fieldNameIntern, 'usf_type') === 'DROPDOWN'
+                            || $gProfileFields->getProperty($fieldNameIntern, 'usf_type') === 'RADIO_BUTTON')
                         {
                             // get number and not value of entry
-                            $duplicate_user->setValue($field_name_intern, $user->getValue($field_name_intern, 'database'));
+                            $duplicateUser->setValue($fieldNameIntern, $user->getValue($fieldNameIntern, 'database'));
                         }
                         else
                         {
-                            $duplicate_user->setValue($field_name_intern, $user->getValue($field_name_intern));
+                            $duplicateUser->setValue($fieldNameIntern, $user->getValue($fieldNameIntern));
                         }
                     }
                 }
-                $user = $duplicate_user;
+                $user = $duplicateUser;
             }
         }
 
-        if($rowDuplicateUser['usr_id'] == 0
-        || ($rowDuplicateUser['usr_id']  > 0 && $_SESSION['user_import_mode'] > USER_IMPORT_NOT_EDIT))
+        if($maxUserId === 0 || ($maxUserId > 0 && $_SESSION['user_import_mode'] > USER_IMPORT_NOT_EDIT))
         {
             // if user doesn't exists or should be duplicated then count as new user
-            if($rowDuplicateUser['usr_id'] == 0 || $_SESSION['user_import_mode'] == USER_IMPORT_DUPLICATE)
+            if($maxUserId === 0 || $_SESSION['user_import_mode'] == USER_IMPORT_DUPLICATE)
             {
                 ++$countImportNewUser;
             }
             // existing users count as edited if mode is displace or complete
-            elseif($rowDuplicateUser['usr_id']  > 0 && $user->columnsValueChanged())
+            elseif($maxUserId > 0 && $user->hasColumnsValueChanged())
             {
                 ++$countImportEditUser;
             }
@@ -269,5 +277,6 @@ $_SESSION['user_import_mode'] = '';
 $_SESSION['file_lines']       = '';
 $_SESSION['value_separator']  = '';
 
-$gMessage->setForwardUrl($g_root_path.'/adm_program/modules/members/members.php');
-$gMessage->show($gL10n->get('MEM_IMPORT_SUCCESSFUL', $countImportNewUser, $countImportEditUser, $countImportEditRole));
+$gMessage->setForwardUrl(ADMIDIO_URL.FOLDER_MODULES.'/members/members.php');
+$gMessage->show($gL10n->get('MEM_IMPORT_SUCCESSFUL', array($countImportNewUser, $countImportEditUser, $countImportEditRole)));
+// => EXIT

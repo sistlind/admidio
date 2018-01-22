@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -18,7 +18,7 @@
  *
  * @par Example: Creating a div element
  * @code
- *  $testArray = array('Test_1', 'Test_2','Test_3');
+ * $testArray = array('Test_1', 'Test_2','Test_3');
  * // Get the Instance for a new division element
  * $div = new HtmlDiv('ID_Wrapper', 'Class_Wrapper');
  * // add a headline
@@ -49,55 +49,54 @@
  */
 class HtmlDiv extends HtmlElement
 {
-    protected $level; ///< Integer value for the depth of nested div elements starting with level 1 for the main element
+    /**
+     * @var int Integer value for the depth of nested div elements starting with level 1 for the main element
+     */
+    protected $level = 1;
 
     /**
      * Constructor creates the element
      *
-     * @param string $id Id of the main div
+     * @param string $id    Id of the main div
      * @param string $class Class name of the main div
      */
-    public function __construct($id = '', $class = '')
+    public function __construct($id = null, $class = null)
     {
-        parent::__construct('div', '', '', true);
+        parent::__construct('div');
 
-        if($id !== '')
+        if ($id !== null)
         {
             $this->addAttribute('id', $id);
         }
 
-        if($class !== '')
+        if ($class !== null)
         {
             $this->addAttribute('class', $class);
         }
-
-        // set div level to 1
-        $this->level = 1;
     }
 
     /**
      * Add a datalist (dl).
-     *
-     * @param string|null $id Id Attribute
-     * @param string|null $class Class Attribute
+     * @param string $id    Id Attribute
+     * @param string $class Class Attribute
      */
     public function addDivElement($id = null, $class = null)
     {
         // Div elements do not need having child elements an can be nested straight forward.
         // For this exception in html we have to take care that the flag of the parent class is always reseted, otherwise the
         // attributes are not parsed, because parent class htmlElement()  determines that the attributes of the
-        // parent element are already parsed if flag has value 1 and the next element is a child with optional attributes and closing tag.
+        // parent element are already parsed if flag has value true and the next element is a child with optional attributes and closing tag.
         // So we must overwrite the protected parent variable
-        $this->parentFlag = 0;
+        $this->parentFlag = false;
         // Define new div element
         $this->addParentElement('div');
 
-        if($id !== null)
+        if ($id !== null)
         {
             $this->addAttribute('id', $id);
         }
 
-        if($class !== null)
+        if ($class !== null)
         {
             $this->addAttribute('class', $class);
         }
@@ -106,28 +105,27 @@ class HtmlDiv extends HtmlElement
     }
 
     /**
-     * @par Add inline element into current division.
-     *
-     * @param string      $element The inline element
-     * @param string|null $id Id Attribute
-     * @param string|null $class Class Attribute
-     * @param string|null $data Data of the element (optional)
+     * Add inline element into current division.
+     * @param string $element The inline element
+     * @param string $id      Id Attribute
+     * @param string $class   Class Attribute
+     * @param string $data    Data of the element (optional)
      */
     public function addInline($element, $id = null, $class = null, $data = null)
     {
         $this->addElement($element);
 
-        if($id !== null)
+        if ($id !== null)
         {
             $this->addAttribute('id', $id);
         }
 
-        if($class !== null)
+        if ($class !== null)
         {
             $this->addAttribute('class', $class);
         }
 
-        if($data !== null)
+        if ($data !== null)
         {
             $this->addData($data);
         }
@@ -139,40 +137,33 @@ class HtmlDiv extends HtmlElement
      * All end tags to position are closed automatically starting with last setted element tag.
      *
      * @param string $parentElement Parent element to be closed
-     * @return false|void
+     * @return bool
      */
     public function closeParentElement($parentElement)
     {
-        // initialize position and count entries in array
-        $position = '';
+        // count entries in array
         $totalCount = count($this->arrParentElements);
 
-        if($totalCount === 0)
+        if ($totalCount === 0)
         {
             return false;
         }
 
-        if(in_array($parentElement, $this->arrParentElements, true))
-        {
-            // find position in log array
-            for($i = 0; $i < $totalCount-1; ++$i)
-            {
-                if($this->arrParentElements[$i] === $parentElement)
-                {
-                    $position = $i;
-                }
-            }
+        // find position in log array
+        $position = array_search($parentElement, $this->arrParentElements, true);
 
+        if (is_int($position))
+        {
             // if last position set Endtag in string and remove from array
-            if($position === $totalCount)
+            if ($position === $totalCount)
             {
-                $this->htmlString .= '</' . $this->arrParentElements[$totalCount] . '>';
+                $this->htmlString .= '</' . $this->arrParentElements[$position] . '>';
                 unset($this->arrParentElements[$position]);
             }
             else
             {
                 // all elements setted later must also be closed and removed from array
-                for($i = $totalCount-1; $i >= $position; --$i)
+                for ($i = $totalCount - 1; $i >= $position; --$i)
                 {
                     $this->htmlString .= '</' . $this->arrParentElements[$i] . '>';
                     unset($this->arrParentElements[$i]);
@@ -180,11 +171,13 @@ class HtmlDiv extends HtmlElement
             }
         }
 
-        if($parentElement === 'div')
+        if ($parentElement === 'div')
         {
             // set new level
             --$this->level;
         }
+
+        return true;
     }
 
     /**
@@ -195,10 +188,11 @@ class HtmlDiv extends HtmlElement
     public function getHtmlDiv()
     {
         // first check if open div elements exists and set all endtags if needed
-        for($this->level; $this->level > 2; --$this->level)
+        for ($this->level; $this->level > 2; --$this->level)
         {
             $this->closeParentElement('div');
         }
-        return parent::getHtmlElement();
+
+        return $this->getHtmlElement();
     }
 }

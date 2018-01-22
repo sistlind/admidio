@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Various functions for guestbook module
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -22,87 +22,83 @@
  *            (Default) GBO_GUESTBOOK
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 // Initialize and check the parameters
-$getGboId    = admFuncVariableIsValid($_GET, 'id',       'numeric');
-$getMode     = admFuncVariableIsValid($_GET, 'mode',     'numeric', array('requireValue' => true));
-$getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string',  array('defaultValue' => $gL10n->get('GBO_GUESTBOOK')));
+$getGboId    = admFuncVariableIsValid($_GET, 'id',       'int');
+$getMode     = admFuncVariableIsValid($_GET, 'mode',     'int',    array('requireValue' => true));
+$getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string', array('defaultValue' => $gL10n->get('GBO_GUESTBOOK')));
 
-// pruefen ob das Modul ueberhaupt aktiviert ist
-if ($gPreferences['enable_guestbook_module'] == 0)
+// check if the module is enabled and disallow access if it's disabled
+if ((int) $gSettingsManager->get('enable_guestbook_module') === 0)
 {
-    // das Modul ist deaktiviert
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
-elseif($gPreferences['enable_guestbook_module'] == 2)
+elseif ((int) $gSettingsManager->get('enable_guestbook_module') === 2)
 {
     // nur eingeloggte Benutzer duerfen auf das Modul zugreifen
-    require_once('../../system/login_valid.php');
+    require(__DIR__ . '/../../system/login_valid.php');
 }
 
 // Erst einmal pruefen ob die noetigen Berechtigungen vorhanden sind
-if ($getMode === 2 || $getMode === 3 || $getMode === 4 || $getMode === 5 || $getMode === 8)
+if ($getMode === 4)
 {
-
-    if ($getMode === 4)
+    // Wenn nicht jeder kommentieren darf, muss man eingeloggt zu sein
+    if (!$gSettingsManager->getBool('enable_gbook_comments4all'))
     {
-        // Wenn nicht jeder kommentieren darf, muss man eingeloggt zu sein
-        if ($gPreferences['enable_gbook_comments4all'] == 0)
-        {
-            require_once('../../system/login_valid.php');
+        require(__DIR__ . '/../../system/login_valid.php');
 
-            // Ausserdem werden dann commentGuestbook-Rechte benoetigt
-            if (!$gCurrentUser->commentGuestbookRight())
-            {
-                $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
-            }
-        }
-
-    }
-    else
-    {
-        // Der User muss fuer die anderen Modes auf jeden Fall eingeloggt sein
-        require_once('../../system/login_valid.php');
-    }
-
-    if ($getMode === 2 || $getMode === 3 || $getMode === 5 || $getMode === 8)
-    {
-        // Fuer die modes 2,3,5,6,7 und 8 werden editGuestbook-Rechte benoetigt
-        if(!$gCurrentUser->editGuestbookRight())
+        // Ausserdem werden dann commentGuestbook-Rechte benoetigt
+        if (!$gCurrentUser->commentGuestbookRight())
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
+    }
+
+}
+elseif (in_array($getMode, array(2, 3, 5, 8), true))
+{
+    // Der User muss fuer die anderen Modes auf jeden Fall eingeloggt sein
+    require(__DIR__ . '/../../system/login_valid.php');
+
+    // Fuer die modes 2,3,5 und 8 werden editGuestbook-Rechte benoetigt
+    if (!$gCurrentUser->editGuestbookRight())
+    {
+        $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        // => EXIT
     }
 }
 
-if ($getMode === 1 || $getMode === 2 || $getMode === 3 || $getMode === 9)
+if (in_array($getMode, array(1, 2, 3, 9), true))
 {
     // Gaestebuchobjekt anlegen
     $guestbook = new TableGuestbook($gDb);
 
-    if($getGboId > 0)
+    if ($getGboId > 0)
     {
         $guestbook->readDataById($getGboId);
 
         // Pruefung, ob der Eintrag zur aktuellen Organisation gehoert
-        if($guestbook->getValue('gbo_org_id') != $gCurrentOrganization->getValue('org_id'))
+        if ((int) $guestbook->getValue('gbo_org_id') !== (int) $gCurrentOrganization->getValue('org_id'))
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
     }
 }
-else
+elseif (in_array($getMode, array(4, 5, 8, 10), true))
 {
-    // Gaestebuchobjekt anlegen
-    $guestbook_comment = new TableGuestbookComment($gDb);
+    // Gaestebuchkommentarobjekt anlegen
+    $gbComment = new TableGuestbookComment($gDb);
 
-    if($getGboId > 0 && $getMode != 4)
+    if ($getGboId > 0 && $getMode !== 4)
     {
-        $guestbook_comment->readDataById($getGboId);
+        $gbComment->readDataById($getGboId);
 
         // Pruefung, ob der Eintrag zur aktuellen Organisation gehoert
-        if($guestbook_comment->getValue('gbo_org_id') != $gCurrentOrganization->getValue('org_id'))
+        if ((int) $gbComment->getValue('gbo_org_id') !== (int) $gCurrentOrganization->getValue('org_id'))
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
         }
@@ -114,25 +110,25 @@ if ($getMode === 1 || $getMode === 3)
     // Der Inhalt des Formulars wird nun in der Session gespeichert...
     $_SESSION['guestbook_entry_request'] = $_POST;
 
-    // if login and new entry then fill name with login user
-    if($getMode === 1 && $gCurrentUser->getValue('usr_id') > 0)
+    if ($getMode === 1)
     {
-        $_POST['gbo_name'] = $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME');
-    }
-
-    // Falls der User nicht eingeloggt ist, aber ein Captcha geschaltet ist,
-    // muss natuerlich der Code ueberprueft werden
-    if ($getMode === 1 && !$gValidLogin && $gPreferences['enable_guestbook_captcha'] == 1)
-    {
-        if (!isset($_SESSION['captchacode']) || admStrToUpper($_SESSION['captchacode']) != admStrToUpper($_POST['captcha']))
+        // if login and new entry then fill name with login user
+        if ($gCurrentUser->getValue('usr_id') > 0)
         {
-            if($gPreferences['captcha_type'] === 'pic')
+            $_POST['gbo_name'] = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
+        }
+
+        // if user is not logged in and captcha is activated then check captcha
+        if (!$gValidLogin && $gSettingsManager->getBool('enable_guestbook_captcha'))
+        {
+            try
             {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CODE_INVALID'));
+                FormValidation::checkCaptcha($_POST['captcha_code']);
             }
-            elseif($gPreferences['captcha_type'] === 'calc')
+            catch (AdmException $e)
             {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CALC_CODE_INVALID'));
+                $e->showHtml();
+                // => EXIT
             }
         }
     }
@@ -141,135 +137,137 @@ if ($getMode === 1 || $getMode === 3)
     $_POST['gbo_text'] = admFuncVariableIsValid($_POST, 'gbo_text', 'html');
 
     // POST Variablen in das Gaestebuchobjekt schreiben
-    foreach($_POST as $key => $value)
+    foreach ($_POST as $key => $value) // TODO possible security issue
     {
-        if(strpos($key, 'gbo_') === 0)
+        if (admStrStartsWith($key, 'gbo_'))
         {
-            if(!$guestbook->setValue($key, $value))
+            if (!$guestbook->setValue($key, $value))
             {
                 // Daten wurden nicht uebernommen, Hinweis ausgeben
-                if($key === 'gbo_email')
+                if ($key === 'gbo_email')
                 {
-                    $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', $gL10n->get('SYS_EMAIL')));
+                    $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', array($gL10n->get('SYS_EMAIL'))));
+                    // => EXIT
                 }
-                elseif($key === 'gbo_homepage')
+                elseif ($key === 'gbo_homepage')
                 {
-                    $gMessage->show($gL10n->get('SYS_URL_INVALID_CHAR', $gL10n->get('SYS_WEBSITE')));
+                    $gMessage->show($gL10n->get('SYS_URL_INVALID_CHAR', array($gL10n->get('SYS_WEBSITE'))));
+                    // => EXIT
                 }
             }
         }
     }
 
-    if (strlen($guestbook->getValue('gbo_name')) > 0 && strlen($guestbook->getValue('gbo_text'))  > 0)
+    if ($guestbook->getValue('gbo_name') === '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_NAME'))));
+        // => EXIT
+    }
+    elseif ($guestbook->getValue('gbo_text') === '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_TEXT'))));
+        // => EXIT
+    }
+    else
     {
         // Gaestebucheintrag speichern
 
-        if($gValidLogin)
+        if ($gValidLogin)
         {
-            if(strlen($guestbook->getValue('gbo_name')) === 0)
-            {
-                // Falls der User eingeloggt ist, wird die aktuelle UserId und der korrekte Name mitabgespeichert...
-                $guestbook->setValue('gbo_name', $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME'));
-            }
+            // Falls der User eingeloggt ist, wird die aktuelle UserId und der korrekte Name mitabgespeichert...
+            $guestbook->setValue('gbo_name', $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME'));
         }
         else
         {
-            if($gPreferences['flooding_protection_time'] != 0)
+            if ($gSettingsManager->getInt('flooding_protection_time') > 0)
             {
                 // Falls er nicht eingeloggt ist, wird vor dem Abspeichern noch geprueft ob der
                 // User innerhalb einer festgelegten Zeitspanne unter seiner IP-Adresse schon einmal
                 // einen GB-Eintrag erzeugt hat...
-                $sql = 'SELECT count(*) FROM '. TBL_GUESTBOOK. '
-                         WHERE unix_timestamp(gbo_timestamp_create) > unix_timestamp()-'. $gPreferences['flooding_protection_time']. '
-                           AND gbo_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                           AND gbo_ip_address = \''. $guestbook->getValue('gbo_ip_adress'). '\'';
-                $statement = $gDb->query($sql);
-                $row = $statement->fetch();
-                if($row[0] > 0)
+                $sql = 'SELECT COUNT(*) AS count
+                          FROM '.TBL_GUESTBOOK.'
+                         WHERE unix_timestamp(gbo_timestamp_create) > unix_timestamp() - ? -- $gSettingsManager->getInt(\'flooding_protection_time\')
+                           AND gbo_org_id     = ? -- $gCurrentOrganization->getValue(\'org_id\')
+                           AND gbo_ip_address = ? -- $guestbook->getValue(\'gbo_ip_address\')';
+                $queryParams = array($gSettingsManager->getInt('flooding_protection_time'), $gCurrentOrganization->getValue('org_id'), $guestbook->getValue('gbo_ip_address'));
+                $pdoStatement = $gDb->queryPrepared($sql, $queryParams);
+
+                if ($pdoStatement->fetchColumn() > 0)
                 {
                     // Wenn dies der Fall ist, gibt es natuerlich keinen Gaestebucheintrag...
-                    $gMessage->show($gL10n->get('GBO_FLOODING_PROTECTION', $gPreferences['flooding_protection_time']));
+                    $gMessage->show($gL10n->get('GBO_FLOODING_PROTECTION', array($gSettingsManager->getInt('flooding_protection_time'))));
+                    // => EXIT
                 }
             }
         }
 
         // Bei Moderation wird die Nachricht zunächst nicht veröffentlicht
-        if(($gPreferences['enable_guestbook_moderation'] == 1 && !$gValidLogin)
-        || ($gPreferences['enable_guestbook_moderation'] == 2 && !$gCurrentUser->editGuestbookRight()))
+        if (((int) $gSettingsManager->get('enable_guestbook_moderation') === 1 && !$gValidLogin)
+        ||  ((int) $gSettingsManager->get('enable_guestbook_moderation') === 2 && !$gCurrentUser->editGuestbookRight()))
         {
             $guestbook->setValue('gbo_locked', '1');
         }
 
         // Daten in Datenbank schreiben
-        $return_code = $guestbook->save();
+        $returnCode = $guestbook->save();
 
-        if($return_code < 0)
+        if ($returnCode === false)
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
-
-        if($return_code == 0)
+        else
         {
             // Benachrichtigungs-Email für neue Einträge
-            if(!$gValidLogin)
+            if (!$gValidLogin)
             {
-                $gbo_name  = $_POST['gbo_name'];
-                $gbo_email = $_POST['gbo_email'];
-                $gbo_text  = $_POST['gbo_text'];
+                $gboName  = $_POST['gbo_name'];
+                $gboEmail = $_POST['gbo_email'];
+                $gboText  = $_POST['gbo_text'];
             }
             else
             {
-                $gbo_name  = $gCurrentUser->getValue('FIRST_NAME').' '.$gCurrentUser->getValue('LAST_NAME');
-                $gbo_email = $gCurrentUser->getValue('EMAIL');
-                $gbo_text  = $_POST['gbo_text'];
+                $gboName  = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
+                $gboEmail = $gCurrentUser->getValue('EMAIL');
+                $gboText  = $_POST['gbo_text'];
             }
-            $sender_name = $gbo_name;
-            if(!strValidCharacters($gbo_email, 'email'))
+            $senderName = $gboName;
+            if (!strValidCharacters($gboEmail, 'email'))
             {
-                $gbo_email = $gPreferences['email_administrator'];
-                $sender_name = 'Administrator '.$gCurrentOrganization->getValue('org_homepage');
+                $gboEmail = $gSettingsManager->getString('email_administrator');
+                $senderName = 'Administrator '.$gCurrentOrganization->getValue('org_homepage');
             }
-            $notification = new Email();
-            $notification->adminNotfication($gL10n->get('GBO_EMAIL_NOTIFICATION_TITLE'), $gL10n->get('GBO_EMAIL_NOTIFICATION_MESSAGE', $gCurrentOrganization->getValue('org_longname'), $gbo_text, $gbo_name, date($gPreferences['system_date'], time())), $sender_name, $gbo_email);
+            try
+            {
+                $notification = new Email();
+                $notification->adminNotification($gL10n->get('GBO_EMAIL_NOTIFICATION_TITLE'), $gL10n->get('GBO_EMAIL_NOTIFICATION_MESSAGE', array($gCurrentOrganization->getValue('org_longname'), $gboText, $gboName, date($gSettingsManager->getString('system_date')))), $senderName, $gboEmail);
+            }
+            catch (AdmException $e)
+            {
+                $e->showHtml();
+            }
         }
 
         // Der Inhalt des Formulars wird bei erfolgreichem insert/update aus der Session geloescht
         unset($_SESSION['guestbook_entry_request']);
         $gNavigation->deleteLastUrl();
 
-        // Der CaptchaCode wird bei erfolgreichem insert/update aus der Session geloescht
-        if (isset($_SESSION['captchacode']))
-        {
-            unset($_SESSION['captchacode']);
-        }
-
-        $url = $g_root_path.'/adm_program/modules/guestbook/guestbook.php?headline='. $getHeadline;
+        $url = safeUrl(ADMIDIO_URL . FOLDER_MODULES.'/guestbook/guestbook.php', array('headline' => $getHeadline));
 
         // Bei Moderation Hinweis ausgeben dass Nachricht erst noch geprüft werden muss
-        if(($gPreferences['enable_guestbook_moderation'] == 1 && !$gValidLogin)
-        || ($gPreferences['enable_guestbook_moderation'] == 2 && !$gCurrentUser->editGuestbookRight()))
+        if (((int) $gSettingsManager->get('enable_guestbook_moderation') === 1 && !$gValidLogin)
+        ||  ((int) $gSettingsManager->get('enable_guestbook_moderation') === 2 && !$gCurrentUser->editGuestbookRight()))
         {
             $gMessage->setForwardUrl($url);
             $gMessage->show($gL10n->get('GBO_ENTRY_QUEUED'));
+            // => EXIT
         }
 
-        header('Location: '.$url);
-        exit();
-    }
-    else
-    {
-        if(strlen($guestbook->getValue('gbo_name')) > 0)
-        {
-            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_TEXT')));
-        }
-        else
-        {
-            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_TEXT')));
-        }
+        admRedirect($url);
+        // => EXIT
     }
 }
-
-elseif($getMode === 2)
+elseif ($getMode === 2)
 {
     // den Gaestebucheintrag loeschen...
     $guestbook->delete();
@@ -280,7 +278,7 @@ elseif($getMode === 2)
 elseif ($getMode === 5)
 {
     // Gaestebuchkommentar loeschen...
-    $guestbook_comment->delete();
+    $gbComment->delete();
 
     // Loeschen erfolgreich -> Rueckgabe fuer XMLHttpRequest
     echo 'done';
@@ -295,35 +293,35 @@ elseif ($getMode === 9)
 }
 elseif ($getMode === 10)
 {
-    // den Gaestebucheintrag freischalten...
-    $guestbook_comment->moderate();
+    // den Gaestebuchkommentar freischalten...
+    $gbComment->moderate();
     // Freischalten erfolgreich -> Rueckgabe fuer XMLHttpRequest
     echo 'done';
 }
-elseif($getMode === 4 || $getMode === 8)
+elseif ($getMode === 4 || $getMode === 8)
 {
     // Der Inhalt des Formulars wird nun in der Session gespeichert...
     $_SESSION['guestbook_comment_request'] = $_POST;
 
-    // if login then fill name with login user
-    if($getMode === 4 && $gCurrentUser->getValue('usr_id') > 0)
+    if ($getMode === 4)
     {
-        $_POST['gbc_name'] = $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME');
-    }
-
-    // Falls der User nicht eingeloggt ist, aber ein Captcha geschaltet ist,
-    // muss natuerlich der Code ueberprueft werden
-    if ($getMode === 4 && !$gValidLogin && $gPreferences['enable_guestbook_captcha'] == 1)
-    {
-        if (!isset($_SESSION['captchacode']) || admStrToUpper($_SESSION['captchacode']) != admStrToUpper($_POST['captcha']))
+        // if login then fill name with login user
+        if ($gCurrentUser->getValue('usr_id') > 0)
         {
-            if($gPreferences['captcha_type'] === 'pic')
+            $_POST['gbc_name'] = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
+        }
+
+        // if user is not logged in and captcha is activated then check captcha
+        if (!$gValidLogin && $gSettingsManager->getBool('enable_guestbook_captcha'))
+        {
+            try
             {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CODE_INVALID'));
+                FormValidation::checkCaptcha($_POST['captcha_code']);
             }
-            elseif($gPreferences['captcha_type'] === 'calc')
+            catch (AdmException $e)
             {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CALC_CODE_INVALID'));
+                $e->showHtml();
+                // => EXIT
             }
         }
     }
@@ -332,135 +330,142 @@ elseif($getMode === 4 || $getMode === 8)
     $_POST['gbc_text'] = admFuncVariableIsValid($_POST, 'gbc_text', 'html');
 
     // POST Variablen in das Gaestebuchkommentarobjekt schreiben
-    foreach($_POST as $key => $value)
+    foreach ($_POST as $key => $value) // TODO possible security issue
     {
-        if(strpos($key, 'gbc_') === 0)
+        if (admStrStartsWith($key, 'gbc_'))
         {
-            if(!$guestbook_comment->setValue($key, $value))
+            if (!$gbComment->setValue($key, $value))
             {
                 // Daten wurden nicht uebernommen, Hinweis ausgeben
-                if($key === 'gbc_email')
+                if ($key === 'gbc_email')
                 {
-                    $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', $gL10n->get('SYS_EMAIL')));
+                    $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', array($gL10n->get('SYS_EMAIL'))));
+                    // => EXIT
                 }
             }
         }
     }
 
-    if($getMode === 4)
+    if ($getMode === 4)
     {
-        $guestbook_comment->setValue('gbc_gbo_id', $getGboId);
+        $gbComment->setValue('gbc_gbo_id', $getGboId);
     }
 
-    if (strlen($guestbook_comment->getValue('gbc_name')) > 0 && strlen($guestbook_comment->getValue('gbc_text')) > 0)
+    if ($gbComment->getValue('gbc_name') !== '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_NAME'))));
+        // => EXIT
+    }
+    elseif ($gbComment->getValue('gbc_text') !== '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_COMMENT'))));
+        // => EXIT
+    }
+    else
     {
         // Gaestebuchkommentar speichern
 
-        if($gValidLogin)
+        if ($gValidLogin)
         {
-            if(strlen($guestbook_comment->getValue('gbc_name')) === 0)
-            {
-                // Falls der User eingeloggt ist, wird die aktuelle UserId und der korrekte Name mitabgespeichert...
-                $guestbook_comment->setValue('gbc_name', $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME'));
-            }
+            // Falls der User eingeloggt ist, wird die aktuelle UserId und der korrekte Name mitabgespeichert...
+            $gbComment->setValue('gbc_name', $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME'));
         }
         else
         {
-            if($gPreferences['flooding_protection_time'] != 0)
+            if ($gSettingsManager->getInt('flooding_protection_time') > 0)
             {
                 // Falls er nicht eingeloggt ist, wird vor dem Abspeichern noch geprueft ob der
                 // User innerhalb einer festgelegten Zeitspanne unter seiner IP-Adresse schon einmal
                 // einen GB-Eintrag/Kommentar erzeugt hat...
-                $sql = 'SELECT count(*) FROM '. TBL_GUESTBOOK_COMMENTS. '
-                         WHERE unix_timestamp(gbc_timestamp_create) > unix_timestamp()-'. $gPreferences['flooding_protection_time']. '
-                           AND gbc_ip_address = \''. $guestbook_comment->getValue('gbc_ip_adress'). '\'';
-                $statement = $gDb->query($sql);
-                $row = $statement->fetch();
-                if($row[0] > 0)
+                $sql = 'SELECT COUNT(*) AS count
+                          FROM '.TBL_GUESTBOOK_COMMENTS.'
+                         WHERE unix_timestamp(gbc_timestamp_create) > unix_timestamp() - ? -- $gSettingsManager->getInt(\'flooding_protection_time\')
+                           AND gbc_ip_address = ? -- $gbComment->getValue(\'gbc_ip_adress\')';
+                $pdoStatement = $gDb->queryPrepared($sql, array($gSettingsManager->getInt('flooding_protection_time'), $gbComment->getValue('gbc_ip_adress')));
+
+                if ($pdoStatement->fetchColumn() > 0)
                 {
                     // Wenn dies der Fall ist, gibt es natuerlich keinen Gaestebucheintrag...
-                    $gMessage->show($gL10n->get('GBO_FLOODING_PROTECTION', $gPreferences['flooding_protection_time']));
+                    $gMessage->show($gL10n->get('GBO_FLOODING_PROTECTION', array($gSettingsManager->getInt('flooding_protection_time'))));
+                    // => EXIT
                 }
             }
         }
 
         // Bei Moderation wird die Nachricht zunächst nicht veröffentlicht
-        if(($gPreferences['enable_guestbook_moderation'] == 1 && !$gValidLogin)
-        || ($gPreferences['enable_guestbook_moderation'] == 2 && !$gCurrentUser->editGuestbookRight()))
+        if (((int) $gSettingsManager->get('enable_guestbook_moderation') === 1 && !$gValidLogin)
+        ||  ((int) $gSettingsManager->get('enable_guestbook_moderation') === 2 && !$gCurrentUser->editGuestbookRight()))
         {
-            $guestbook_comment->setValue('gbc_locked', '1');
+            $gbComment->setValue('gbc_locked', '1');
         }
 
         // Daten in Datenbank schreiben
-        $return_code = $guestbook_comment->save();
+        $returnCode = $gbComment->save();
 
-        if($return_code < 0)
+        if ($returnCode === false)
         {
             $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+            // => EXIT
         }
-
-        if($return_code == 0)
+        else
         {
             // Benachrichtigungs-Email für neue Einträge
-            if(!$gValidLogin)
+            if (!$gValidLogin)
             {
-                $gbc_name  = $guestbook_comment->getValue('gbc_name');
-                $gbc_email = $guestbook_comment->getValue('gbc_email');
+                $gbcName  = $gbComment->getValue('gbc_name');
+                $gbcEmail = $gbComment->getValue('gbc_email');
             }
             else
             {
-                $gbc_name  = $gCurrentUser->getValue('FIRST_NAME').' '.$gCurrentUser->getValue('LAST_NAME');
-                $gbc_email = $gCurrentUser->getValue('EMAIL');
+                $gbcName  = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
+                $gbcEmail = $gCurrentUser->getValue('EMAIL');
             }
-            $sender_name = $gbc_name;
-            if($gbc_email === '')
+            $senderName = $gbcName;
+            if ($gbcEmail === '')
             {
-                $gbc_email = $gPreferences['email_administrator'];
-                $sender_name = 'Administrator '.$gCurrentOrganization->getValue('org_homepage');
+                $gbcEmail = $gSettingsManager->getString('email_administrator');
+                $senderName = 'Administrator ' . $gCurrentOrganization->getValue('org_homepage');
             }
-            $message = $gL10n->get('GBO_EMAIL_NOTIFICATION_GBC_MESSAGE', $gCurrentOrganization->getValue('org_longname'), $guestbook_comment->getValue('gbc_text'), $gbc_name, date($gPreferences['system_date'], time()));
-            $notification = new Email();
-            $notification->adminNotfication($gL10n->get('GBO_EMAIL_NOTIFICATION_GBC_TITLE'), $message, $sender_name, $gbc_email);
-
+            $message = $gL10n->get(
+                'GBO_EMAIL_NOTIFICATION_GBC_MESSAGE',
+                array($gCurrentOrganization->getValue('org_longname'),
+                $gbComment->getValue('gbc_text'),
+                $gbcName,
+                date($gSettingsManager->getString('system_date')))
+            );
+            try
+            {
+                $notification = new Email();
+                $notification->adminNotification($gL10n->get('GBO_EMAIL_NOTIFICATION_GBC_TITLE'), $message, $senderName, $gbcEmail);
+            }
+            catch (AdmException $e)
+            {
+                $e->showHtml();
+            }
         }
 
         // Der Inhalt des Formulars wird bei erfolgreichem insert/update aus der Session geloescht
         unset($_SESSION['guestbook_comment_request']);
         $gNavigation->deleteLastUrl();
 
-        // Der CaptchaCode wird bei erfolgreichem insert/update aus der Session geloescht
-        if (isset($_SESSION['captchacode']))
-        {
-            unset($_SESSION['captchacode']);
-        }
-
-        $url = $g_root_path.'/adm_program/modules/guestbook/guestbook.php?id='. $guestbook_comment->getValue('gbc_gbo_id'). '&headline='. $getHeadline;
+        $url = safeUrl(ADMIDIO_URL . FOLDER_MODULES . '/guestbook/guestbook.php', array('id' => $gbComment->getValue('gbc_gbo_id'), 'headline' => $getHeadline));
 
         // Bei Moderation Hinweis ausgeben dass Nachricht erst noch geprüft werden muss
-        if(($gPreferences['enable_guestbook_moderation'] == 1 && !$gValidLogin)
-        || ($gPreferences['enable_guestbook_moderation'] == 2 && !$gCurrentUser->editGuestbookRight()))
+        if (((int) $gSettingsManager->get('enable_guestbook_moderation') === 1 && !$gValidLogin)
+        ||  ((int) $gSettingsManager->get('enable_guestbook_moderation') === 2 && !$gCurrentUser->editGuestbookRight()))
         {
             $gMessage->setForwardUrl($url);
             $gMessage->show($gL10n->get('GBO_ENTRY_QUEUED'));
+            // => EXIT
         }
 
-        header('Location: '.$url);
-        exit();
-    }
-    else
-    {
-        if(strlen($guestbook_comment->getValue('gbc_name')) > 0)
-        {
-            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_COMMENT')));
-        }
-        else
-        {
-            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_NAME')));
-        }
+        admRedirect($url);
+        // => EXIT
     }
 }
 else
 {
     // Falls der Mode unbekannt ist, ist natürlich auch Ende...
     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+    // => EXIT
 }

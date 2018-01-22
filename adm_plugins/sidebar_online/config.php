@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Konfigurationsdatei fuer Admidio-Plugin Sidebar-Online
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -36,7 +36,7 @@ $plg_link_class = '';
 $plg_link_target = '_self';
 
 // Text der über den angezeigten Benutzern steht (Default = "Online sind:<br />"
-$plg_online_text = "Online sind:<br />";
+$plg_online_text = 'Online sind:<br />';
 
 // Soll die Überschrift des Plugins angezeigt werden
 // 1 = (Default) Überschrift wird angezeigt

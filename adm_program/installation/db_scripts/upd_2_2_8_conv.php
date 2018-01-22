@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Data conversion for version 2.2.8
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -13,26 +13,27 @@
 $sql = 'SELECT * FROM '. TBL_ORGANIZATIONS;
 $orgaStatement = $gDb->query($sql);
 
-while($row_orga = $orgaStatement->fetch())
+while($rowOrga = $orgaStatement->fetch())
 {
-    $last_cat_type = '';
-    $counter       = 0;
-    $sql = 'SELECT * FROM '. TBL_CATEGORIES. '
-             WHERE (  cat_org_id = '. $row_orga['org_id']. '
+    $lastCatType = '';
+    $counter     = 0;
+    $sql = 'SELECT *
+              FROM '.TBL_CATEGORIES.'
+             WHERE (  cat_org_id = '. $rowOrga['org_id']. '
                    OR cat_org_id IS NULL )
-             ORDER BY cat_type, cat_org_id, cat_sequence ';
+          ORDER BY cat_type, cat_org_id, cat_sequence ';
     $catStatement = $gDb->query($sql);
 
-    while($row_cat = $catStatement->fetch())
+    while($rowCat = $catStatement->fetch())
     {
-        if($row_cat['cat_type'] != $last_cat_type)
+        if($rowCat['cat_type'] != $lastCatType)
         {
             $counter = 1;
-            $last_cat_type = $row_cat['cat_type'];
+            $lastCatType = $rowCat['cat_type'];
         }
 
-        $sql = 'UPDATE '. TBL_CATEGORIES. ' SET cat_sequence = '. $counter. '
-                 WHERE cat_id = '. $row_cat['cat_id'];
+        $sql = 'UPDATE '.TBL_CATEGORIES.' SET cat_sequence = '. $counter. '
+                 WHERE cat_id = '. $rowCat['cat_id'];
         $gDb->query($sql);
 
         ++$counter;

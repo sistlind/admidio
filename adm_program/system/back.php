@@ -5,12 +5,12 @@
  * last url that should be shown. The script uses the navigation class to handle
  * the url stack.
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
-include('common.php');
+require_once(__DIR__ . '/common.php');
 
 // delete the last url from the stack. This should be the actual page.
 $gNavigation->deleteLastUrl();
@@ -19,8 +19,10 @@ $gNavigation->deleteLastUrl();
 $nextUrl = $gNavigation->getUrl();
 
 // if no page was found then show the default homepage
-if($nextUrl === '')
+if ($nextUrl === null)
 {
     $nextUrl = $gHomepage;
 }
-header('Location: '.$nextUrl);
+
+admRedirect($nextUrl);
+// => EXIT

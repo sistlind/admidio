@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Various functions for roles handling
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -13,30 +13,27 @@
  * Parameters:
  *
  * rol_id: ID of role, that should be edited
- * mode :  1 - show different consequences of role will be deleted
- *         2 - create or edit role
+ * mode :  2 - create or edit role
  *         3 - set role inaktive
  *         4 - delete role
  *         5 - set role active
- *         6 - ask if inactive role should be deleted
- *         7 - set role invisible
- *         8 - set role visible
  *         9 - return if role has former members ? Return: 1 und 0
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
-$getRoleId = admFuncVariableIsValid($_GET, 'rol_id', 'numeric');
-$getMode   = admFuncVariableIsValid($_GET, 'mode',   'numeric', array('requireValue' => true));
+$getRoleId = admFuncVariableIsValid($_GET, 'rol_id', 'int');
+$getMode   = admFuncVariableIsValid($_GET, 'mode',   'int', array('requireValue' => true));
 
 // only members who are allowed to create and edit roles should have access to
 // most of these functions
-if(!$gCurrentUser->manageRoles() && $getMode != 9)
+if($getMode !== 9 && !$gCurrentUser->manageRoles())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
 // Rollenobjekt anlegen
@@ -47,86 +44,75 @@ if($getRoleId > 0)
     $role->readDataById($getRoleId);
 
     // Pruefung, ob die Rolle zur aktuellen Organisation gehoert
-    if($role->getValue('cat_org_id') != $gCurrentOrganization->getValue('org_id') && $role->getValue('cat_org_id') > 0)
+    if((int) $role->getValue('cat_org_id') !== (int) $gCurrentOrganization->getValue('org_id') && $role->getValue('cat_org_id') > 0)
     {
         $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        // => EXIT
     }
 }
 
 $_SESSION['roles_request'] = $_POST;
+$rolName = $role->getValue('rol_name');
 
-if($getMode === 1)
-{
-    // create html page object
-    $page = new HtmlPage($gL10n->get('ROL_ROLE_DELETE'));
-
-    // add back link to module menu
-    $messageMenu = $page->getMenu();
-    $messageMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
-
-    $page->addHtml('
-        <div class="message">
-            <p class="lead">
-                <img src="'. THEME_PATH. '/icons/roles_gray.png" alt="'.$gL10n->get('ROL_INACTIV_ROLE').'" />
-                '.$gL10n->get('ROL_INACTIV_ROLE_DESC').'<br /><br />
-                <img src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('ROL_ROLE_DELETE').'" />
-                '.$gL10n->get('ROL_HINT_DELETE_ROLE', $gL10n->get('SYS_DELETE')).'
-            </p>
-
-            <button id="btn_inactive" type="button" class="btn btn-primary"
-                onclick="self.location.href=\''.$g_root_path.'/adm_program/modules/roles/roles_function.php?rol_id='.$getRoleId.'&mode=3\'"><img
-                src="'. THEME_PATH. '/icons/roles_gray.png" alt="'.$gL10n->get('ROL_INACTIV_ROLE').'" />&nbsp;'.$gL10n->get('ROL_INACTIV_ROLE').'</button>
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <button id="btn_delete" type="button" class="btn btn-primary"
-                onclick="self.location.href=\''.$g_root_path.'/adm_program/modules/roles/roles_function.php?rol_id='.$getRoleId.'&mode=4\'"><img
-                src="'. THEME_PATH. '/icons/delete.png" alt="'.$gL10n->get('SYS_DELETE').'" />&nbsp;'.$gL10n->get('SYS_DELETE').'</button>
-        </div>'
-    );
-
-    $page->show();
-    exit();
-}
-elseif($getMode === 2)
+if($getMode === 2)
 {
     // Rolle anlegen oder updaten
 
     if(!array_key_exists('rol_name', $_POST) || $_POST['rol_name'] === '')
     {
         // es sind nicht alle Felder gefuellt
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_NAME')));
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_NAME'))));
+        // => EXIT
     }
-    if($_POST['rol_cat_id'] == 0)
+    if((int) $_POST['rol_cat_id'] === 0)
     {
         // es sind nicht alle Felder gefuellt
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_CATEGORY')));
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_CATEGORY'))));
+        // => EXIT
     }
 
-    if($role->getValue('rol_name') != $_POST['rol_name'])
+    if($rolName !== $_POST['rol_name'])
     {
         // Schauen, ob die Rolle bereits existiert
         $sql = 'SELECT COUNT(*) AS count
-                  FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                 WHERE rol_name   LIKE \''. $_POST['rol_name']. '\'
-                   AND rol_cat_id = '. $_POST['rol_cat_id']. '
-                   AND rol_id    <> '. $getRoleId. '
-                   AND rol_cat_id = cat_id
-                   AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
-                       OR cat_org_id IS NULL ) ';
-        $statement = $gDb->query($sql);
-        $row = $statement->fetch();
+                  FROM '.TBL_ROLES.'
+            INNER JOIN '.TBL_CATEGORIES.'
+                    ON cat_id = rol_cat_id
+                 WHERE rol_name   = ? -- $_POST[\'rol_name\']
+                   AND rol_cat_id = ? -- $_POST[\'rol_cat_id\']
+                   AND rol_id    <> ? -- $getRoleId
+                   AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
+                       OR cat_org_id IS NULL )';
+        $queryParams = array(
+            $_POST['rol_name'],
+            (int) $_POST['rol_cat_id'],
+            $getRoleId,
+            (int) $gCurrentOrganization->getValue('org_id')
+        );
+        $pdoStatement = $gDb->queryPrepared($sql, $queryParams);
 
-        if($row['count'] > 0)
+        if($pdoStatement->fetchColumn() > 0)
         {
             $gMessage->show($gL10n->get('ROL_ROLE_NAME_EXISTS'));
+            // => EXIT
         }
     }
 
-    // bei der Rolle "Webmaster" muessen bestimmte Flags gesetzt sein
-    if($role->getValue('rol_webmaster') == 1)
+    // Administrator role need some more flags
+    if($role->getValue('rol_administrator') == 1)
     {
         $_POST['rol_assign_roles']   = 1;
         $_POST['rol_all_lists_view'] = 1;
         $_POST['rol_mail_to_all']    = 1;
+    }
+
+    if($role->getValue('cat_name_intern') === 'EVENTS')
+    {
+        $_POST['rol_start_date'] = '';
+        $_POST['rol_start_time'] = '';
+        $_POST['rol_end_date'] = '';
+        $_POST['rol_end_time'] = '';
+        $_POST['rol_max_members'] = '';
     }
 
     // bei allen Checkboxen muss geprueft werden, ob hier ein Wert uebertragen wurde
@@ -145,13 +131,13 @@ elseif($getMode === 2)
         'rol_weblinks',
         'rol_all_lists_view',
         'rol_mail_to_all',
-        'rol_profile',
-        'rol_inventory'
+        'rol_profile'
     );
 
-    foreach($checkboxes as $key => $value)
+    foreach($checkboxes as $value)
     {
-        if(!isset($_POST[$value]) || $_POST[$value] != 1)
+        // initialize the roles rights if value not set or not = 1 or its a event role
+        if(!isset($_POST[$value]) || $_POST[$value] != 1 || $role->getValue('cat_name_intern') === 'EVENTS')
         {
             $_POST[$value] = 0;
         }
@@ -161,12 +147,16 @@ elseif($getMode === 2)
     // Check valid format of date input
     // ------------------------------------------------
 
+    $validFromDate = '';
+    $validToDate   = '';
+
     if(strlen($_POST['rol_start_date']) > 0)
     {
-        $validFromDate = DateTime::createFromFormat($gPreferences['system_date'], $_POST['rol_start_date']);
+        $validFromDate = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $_POST['rol_start_date']);
         if(!$validFromDate)
         {
-            $gMessage->show($gL10n->get('SYS_DATE_INVALID', $gL10n->get('ROL_VALID_FROM'), $gPreferences['system_date']));
+            $gMessage->show($gL10n->get('SYS_DATE_INVALID', array($gL10n->get('ROL_VALID_FROM'), $gSettingsManager->getString('system_date'))));
+            // => EXIT
         }
         else
         {
@@ -177,10 +167,11 @@ elseif($getMode === 2)
 
     if(strlen($_POST['rol_end_date']) > 0)
     {
-        $validToDate = DateTime::createFromFormat($gPreferences['system_date'], $_POST['rol_end_date']);
+        $validToDate = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $_POST['rol_end_date']);
         if(!$validToDate)
         {
-            $gMessage->show($gL10n->get('SYS_DATE_INVALID', $gL10n->get('ROL_VALID_TO'), $gPreferences['system_date']));
+            $gMessage->show($gL10n->get('SYS_DATE_INVALID', array($gL10n->get('ROL_VALID_TO'), $gSettingsManager->getString('system_date'))));
+            // => EXIT
         }
         else
         {
@@ -195,6 +186,7 @@ elseif($getMode === 2)
         if ($validFromDate > $validToDate)
         {
             $gMessage->show($gL10n->get('SYS_DATE_END_BEFORE_BEGIN'));
+            // => EXIT
         }
 
     }
@@ -205,10 +197,11 @@ elseif($getMode === 2)
 
     if(strlen($_POST['rol_start_time']) > 0)
     {
-        $validFromTime = DateTime::createFromFormat('Y-m-d '.$gPreferences['system_time'], DATE_NOW.' '.$_POST['date_to_time']);
+        $validFromTime = \DateTime::createFromFormat('Y-m-d '.$gSettingsManager->getString('system_time'), DATE_NOW.' '.$_POST['rol_start_time']);
         if(!$validFromTime)
         {
-            $gMessage->show($gL10n->get('SYS_TIME_INVALID', $gL10n->get('ROL_TIME_FROM'), $gPreferences['system_time']));
+            $gMessage->show($gL10n->get('SYS_TIME_INVALID', array($gL10n->get('ROL_TIME_FROM'), $gSettingsManager->getString('system_time'))));
+            // => EXIT
         }
         else
         {
@@ -219,10 +212,11 @@ elseif($getMode === 2)
 
     if(strlen($_POST['rol_end_time']) > 0)
     {
-        $validToTime = DateTime::createFromFormat('Y-m-d '.$gPreferences['system_time'], DATE_NOW.' '.$_POST['rol_end_time']);
+        $validToTime = \DateTime::createFromFormat('Y-m-d '.$gSettingsManager->getString('system_time'), DATE_NOW.' '.$_POST['rol_end_time']);
         if(!$validToTime)
         {
-            $gMessage->show($gL10n->get('SYS_TIME_INVALID', $gL10n->get('ROL_TIME_TO'), $gPreferences['system_time']));
+            $gMessage->show($gL10n->get('SYS_TIME_INVALID', array($gL10n->get('ROL_TIME_TO'), $gSettingsManager->getString('system_time'))));
+            // => EXIT
         }
         else
         {
@@ -232,31 +226,33 @@ elseif($getMode === 2)
     }
 
     // Kontrollieren ob bei nachtraeglicher Senkung der maximalen Mitgliederzahl diese nicht bereits ueberschritten wurde
-    if($getRoleId > 0 && $_POST['rol_max_members'] != $role->getValue('rol_max_members'))
+    if($getRoleId > 0 && (int) $_POST['rol_max_members'] !== (int) $role->getValue('rol_max_members'))
     {
         // Zaehlen wieviele Leute die Rolle bereits haben, ohne Leiter
-        $role->setValue('rol_max_members', $_POST['rol_max_members']);
-        $num_free_places = $role->countVacancies();
+        $role->setValue('rol_max_members', (int) $_POST['rol_max_members']);
+        $numFreePlaces = $role->countVacancies();
 
-        if($num_free_places < 0)
+        if($numFreePlaces < 0)
         {
-            $gMessage->show($gL10n->get('SYS_ROLE_MAX_MEMBERS', $role->getValue('rol_name')));
+            $gMessage->show($gL10n->get('SYS_ROLE_MAX_MEMBERS', array($rolName)));
+            // => EXIT
         }
     }
 
-    // POST Variablen in das Role-Objekt schreiben
-    foreach($_POST as $key => $value)
+    try
     {
-        if(strpos($key, 'rol_') === 0)
+        // POST Variablen in das Role-Objekt schreiben
+        foreach($_POST as $key => $value) // TODO possible security issue
         {
-            $returnCode = $role->setValue($key, $value);
-
-            // at least one role must have this flag otherwise show error
-            if($returnCode == false && $key === 'rol_default_registration')
+            if(admStrStartsWith($key, 'rol_'))
             {
-                $gMessage->show($gL10n->get('ROL_NO_DEFAULT_ROLE', $gL10n->get('ROL_DEFAULT_REGISTRATION')));
+                $role->setValue($key, $value);
             }
         }
+    }
+    catch(AdmException $e)
+    {
+        $e->showHtml();
     }
 
     // Daten in Datenbank schreiben
@@ -265,18 +261,19 @@ elseif($getMode === 2)
     if($returnCode < 0)
     {
         $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        // => EXIT
     }
 
     // holt die Role ID des letzten Insert Statements
-    if($getRoleId == 0)
+    if($getRoleId === 0)
     {
         $getRoleId = $role->getValue('rol_id');
     }
 
     // save role dependencies in database
-    if(array_key_exists('dependent_roles', $_POST))
+    if(array_key_exists('dependent_roles', $_POST) && $role->getValue('cat_name_intern') !== 'EVENTS')
     {
-        $sentChildRoles = $_POST['dependent_roles'];
+        $sentChildRoles = array_map('intval', $_POST['dependent_roles']);
 
         $roleDep = new RoleDependency($gDb);
 
@@ -284,7 +281,7 @@ elseif($getMode === 2)
         $dbChildRoles = RoleDependency::getChildRoles($gDb, $getRoleId);
 
         // entferne alle Rollen die nicht mehr ausgewählt sind
-        if($dbChildRoles != -1)
+        if(count($dbChildRoles) > 0)
         {
             foreach ($dbChildRoles as $dbChildRole)
             {
@@ -301,7 +298,7 @@ elseif($getMode === 2)
         {
             foreach ($sentChildRoles as $sentChildRole)
             {
-                if($dbChildRoles != -1 && !in_array($sentChildRole, $dbChildRoles, true) && $sentChildRole > 0)
+                if($sentChildRole > 0 && !in_array($sentChildRole, $dbChildRoles, true))
                 {
                     $roleDep->clear();
                     $roleDep->setChild($sentChildRole);
@@ -324,69 +321,50 @@ elseif($getMode === 2)
 
     $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
     $gMessage->show($gL10n->get('SYS_SAVE_DATA'));
+    // => EXIT
 }
 elseif($getMode === 3)
 {
     // Rolle zur inaktiven Rolle machen
-    $return_code = $role->setInactive();
-
-    if($return_code < 0)
+    if($role->setInactive())
     {
-        $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        echo 'done';
     }
-
-    $gMessage->setForwardUrl($gNavigation->getUrl());
-    $gMessage->show($gL10n->get('ROL_ROLE_SET_MODE', $role->getValue('rol_name'), $gL10n->get('SYS_INACTIVE')));
+    else
+    {
+        echo $gL10n->get('SYS_NO_RIGHTS');
+    }
+    exit();
 }
 elseif($getMode === 4)
 {
     // delete role from database
     try
     {
-        $role->delete();
+        if($role->delete())
+        {
+            echo 'done';
+        }
     }
     catch(AdmException $e)
     {
         $e->showHtml();
+        // => EXIT
     }
-
-    $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
-    $gMessage->show($gL10n->get('SYS_DELETE_DATA'));
+    exit();
 }
 elseif($getMode === 5)
 {
     // Rolle wieder aktiv setzen
-    $return_code = $role->setActive();
-
-    if($return_code < 0)
+    if($role->setActive())
     {
-        $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        echo 'done';
     }
-
-    $gMessage->setForwardUrl($gNavigation->getUrl());
-    $gMessage->show($gL10n->get('ROL_ROLE_SET_MODE', $role->getValue('rol_name'), $gL10n->get('SYS_ACTIVE')));
-}
-elseif($getMode === 6)
-{
-    // Fragen, ob die inaktive Rolle geloescht werden soll
-    $gMessage->setForwardYesNo($g_root_path.'/adm_program/modules/roles/roles_function.php?rol_id='.$getRoleId.'&amp;mode=4');
-    $gMessage->show($gL10n->get('ROL_ROLE_DELETE_DESC', $role->getValue('rol_name')));
-}
-elseif($getMode === 7)
-{
-    $role->setValue('rol_visible', 0);
-    $role->save();
-
-    $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
-    $gMessage->show($gL10n->get('ROL_ROLE_SET_MODE', $role->getValue('rol_name'), $gL10n->get('SYS_INVISIBLE')));
-}
-elseif($getMode === 8)
-{
-    $role->setValue('rol_visible', 1);
-    $role->save();
-
-    $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
-    $gMessage->show($gL10n->get('ROL_ROLE_SET_MODE', $role->getValue('rol_name'), $gL10n->get('SYS_VISIBLE')));
+    else
+    {
+        $gL10n->get('SYS_NO_RIGHTS');
+    }
+    exit();
 }
 elseif($getMode === 9)
 {

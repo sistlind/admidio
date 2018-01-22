@@ -3,31 +3,31 @@
  ***********************************************************************************************
  * Sidebar Online
  *
- * Version 1.5.0
+ * Version 1.7.0
  * Plugin shows visitors and registered members of the homepage
  *
- * Compatible with Admidio version 3.0
+ * Compatible with Admidio version 3.2
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
 // create path to plugin
-$plugin_folder_pos = strpos(__FILE__, 'adm_plugins') + 11;
-$plugin_file_pos   = strpos(__FILE__, 'sidebar_online.php');
-$plugin_folder     = substr(__FILE__, $plugin_folder_pos+1, $plugin_file_pos-$plugin_folder_pos-2);
+$pluginFolderPos = strpos(__FILE__, 'adm_plugins') + 11;
+$pluginFilePos   = strpos(__FILE__, 'sidebar_online.php');
+$pluginFolder    = substr(__FILE__, $pluginFolderPos + 1, $pluginFilePos - $pluginFolderPos - 2);
 
 if(!defined('PLUGIN_PATH'))
 {
-    define('PLUGIN_PATH', substr(__FILE__, 0, $plugin_folder_pos));
+    define('PLUGIN_PATH', substr(__FILE__, 0, $pluginFolderPos));
 }
 require_once(PLUGIN_PATH. '/../adm_program/system/common.php');
-require_once(PLUGIN_PATH. '/'.$plugin_folder.'/config.php');
+require_once(PLUGIN_PATH. '/'.$pluginFolder.'/config.php');
 
 // Sprachdatei des Plugins einbinden
-$gL10n->addLanguagePath(PLUGIN_PATH. '/'.$plugin_folder.'/languages');
+$gL10n->addLanguageFolderPath(PLUGIN_PATH. '/'.$pluginFolder.'/languages');
 
 // pruefen, ob alle Einstellungen in config.php gesetzt wurden
 // falls nicht, hier noch mal die Default-Werte setzen
@@ -70,28 +70,35 @@ else
 }
 
 // Referenzzeit setzen
-$ref_date = date('Y.m.d H:i:s', time() - 60 * $plg_time_online);
+$now = new \DateTime();
+$minutesOffset = new \DateInterval('PT' . $plg_time_online . 'M');
+$refDate = $now->sub($minutesOffset)->format('Y-m-d H:i:s');
 
 // User IDs alles Sessons finden, die in genannter aktueller und referenz Zeit sind
 $sql = 'SELECT ses_usr_id, usr_login_name
-          FROM '. TBL_SESSIONS. '
-          LEFT JOIN '. TBL_USERS. '
-            ON ses_usr_id = usr_id
-         WHERE ses_timestamp BETWEEN \''.$ref_date.'\' AND \''.DATETIME_NOW.'\'
-           AND ses_org_id = '.$gCurrentOrganization->getValue('org_id');
-if($plg_show_visitors == 0)
+          FROM '.TBL_SESSIONS.'
+     LEFT JOIN '.TBL_USERS.'
+            ON usr_id = ses_usr_id
+         WHERE ses_timestamp BETWEEN ? AND ? -- $refDate AND DATETIME_NOW
+           AND ses_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')';
+$queryParams = array($refDate, DATETIME_NOW, $gCurrentOrganization->getValue('org_id'));
+if(!$plg_show_visitors)
 {
-    $sql = $sql. ' AND ses_usr_id IS NOT NULL ';
+    $sql .= '
+        AND ses_usr_id IS NOT NULL';
 }
-if($plg_show_self == 0 && $gValidLogin)
+if(!$plg_show_self && $gValidLogin)
 {
-    $sql = $sql. ' AND ses_usr_id <> '. $gCurrentUser->getValue('usr_id');
+    $sql .= '
+         AND ses_usr_id <> ? -- $gCurrentUser->getValue(\'usr_id\')';
+    $queryParams[] = $gCurrentUser->getValue('usr_id');
 }
-$sql = $sql. " ORDER BY ses_usr_id ";
-$onlineUsersStatement = $gDb->query($sql);
+$sql .= '
+     ORDER BY ses_usr_id';
+$onlineUsersStatement = $gDb->queryPrepared($sql, $queryParams);
 
-echo '<div id="plugin_'. $plugin_folder. '" class="admidio-plugin-content">';
-if($plg_show_headline == 1)
+echo '<div id="plugin_'. $pluginFolder. '" class="admidio-plugin-content">';
+if($plg_show_headline)
 {
     echo '<h3>'.$gL10n->get('PLG_ONLINE_HEADLINE').'</h3>';
 }
@@ -99,17 +106,18 @@ if($plg_show_headline == 1)
 if($onlineUsersStatement->rowCount() > 0)
 {
     echo $plg_online_text;
-    $usr_id_merker  = 0;
-    $count_visitors = 0;
+
+    $usrIdMerker   = 0;
+    $countVisitors = 0;
 
     while($row = $onlineUsersStatement->fetchObject())
     {
         if($row->ses_usr_id > 0)
         {
-            if($row->ses_usr_id != $usr_id_merker)
+            if((int) $row->ses_usr_id !== $usrIdMerker)
             {
-                echo '<b><a class="'. $plg_link_class. '" target="'. $plg_link_target. '" title="'.$gL10n->get('SYS_SHOW_PROFILE').'" alt="'.$gL10n->get('SYS_SHOW_PROFILE').'"
-                    href="'. $g_root_path. '/adm_program/modules/profile/profile.php?user_id='. $row->ses_usr_id. '">'. $row->usr_login_name. '</a></b>';
+                echo '<strong><a class="'. $plg_link_class. '" target="'. $plg_link_target. '" title="'.$gL10n->get('SYS_SHOW_PROFILE').'"
+                    href="'. safeUrl(ADMIDIO_URL. FOLDER_MODULES. '/profile/profile.php', array('user_id' => $row->ses_usr_id)). '">'. $row->usr_login_name. '</a></strong>';
 
                 // User neben-/untereinander anzeigen
                 if($plg_show_users_side_by_side)
@@ -120,18 +128,18 @@ if($onlineUsersStatement->rowCount() > 0)
                 {
                     echo '<br />';
                 }
-                $usr_id_merker = $row->ses_usr_id;
+                $usrIdMerker = (int) $row->ses_usr_id;
             }
         }
         else
         {
-            ++$count_visitors;
+            ++$countVisitors;
         }
     }
 
-    if($plg_show_visitors && $count_visitors > 0)
+    if($plg_show_visitors && $countVisitors > 0)
     {
-        echo $gL10n->get('PLG_ONLINE_VAR_NUM_VISITORS', $count_visitors);
+        echo $gL10n->get('PLG_ONLINE_VAR_NUM_VISITORS', array($countVisitors));
     }
 }
 else

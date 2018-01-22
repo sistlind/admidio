@@ -4,31 +4,31 @@
 --
 
 INSERT INTO %PREFIX%_components (com_type, com_name, com_name_intern, com_version, com_beta, com_update_step)
-                         VALUES ('SYSTEM', 'Admidio Core', 'CORE', '3.0.3', 0, 610)
-                              , ('MODULE', 'ANN_ANNOUNCEMENTS', 'ANNOUCEMENTS', '3.0.0', 0, 0)
-                              , ('MODULE', 'BAC_DATABASE_BACKUP', 'BACKUP', '3.0.0', 0, 0)
-                              , ('MODULE', 'SYS_CATEGORIES', 'CATEGORIES', '3.0.0', 0, 0)
-                              , ('MODULE', 'DAT_DATES', 'DATES', '3.0.0', 0, 0)
-                              , ('MODULE', 'DOW_DOWNLOADS', 'DOWNLOADS', '3.0.0', 0, 0)
-                              , ('MODULE', 'GBO_GUESTBOOK', 'GUESTBOOK', '3.0.0', 0, 0)
-                              , ('MODULE', 'LNK_WEBLINKS', 'LINKS', '3.0.0', 0, 0)
-                              , ('MODULE', 'LST_LISTS', 'LISTS', '3.0.0', 0, 0)
-                              , ('MODULE', 'MEM_USER_MANAGEMENT', 'MEMBERS', '3.0.0', 0, 0)
-                              , ('MODULE', 'SYS_MESSAGES', 'MESSAGES', '3.0.0', 0, 0)
-                              , ('MODULE', 'PHO_PHOTOS', 'PHOTOS', '3.0.0', 0, 0)
-                              , ('MODULE', 'SYS_SETTINGS', 'PREFERENCES', '3.0.0', 0, 0)
-                              , ('MODULE', 'PRO_PROFILE', 'PROFILE', '3.0.0', 0, 0)
-                              , ('MODULE', 'SYS_REGISTRATION', 'REGISTRATION', '3.0.0', 0, 0)
-                              , ('MODULE', 'ROL_ROLE_ADMINISTRATION', 'ROLES', '3.0.0', 0, 0)
-                              , ('MODULE', 'ROO_ROOM_MANAGEMENT', 'ROOMS', '3.0.0', 0, 0);
+                         VALUES ('SYSTEM', 'Admidio Core', 'CORE', '3.2.0', 0, 500)
+                              , ('MODULE', 'ANN_ANNOUNCEMENTS', 'ANNOUCEMENTS', '3.2.0', 0, 0)
+                              , ('MODULE', 'BAC_DATABASE_BACKUP', 'BACKUP', '3.2.0', 0, 0)
+                              , ('MODULE', 'SYS_CATEGORIES', 'CATEGORIES', '3.2.0', 0, 0)
+                              , ('MODULE', 'DAT_DATES', 'DATES', '3.2.0', 0, 0)
+                              , ('MODULE', 'DOW_DOWNLOADS', 'DOWNLOADS', '3.2.0', 0, 0)
+                              , ('MODULE', 'GBO_GUESTBOOK', 'GUESTBOOK', '3.2.0', 0, 0)
+                              , ('MODULE', 'LNK_WEBLINKS', 'LINKS', '3.2.0', 0, 0)
+                              , ('MODULE', 'LST_LISTS', 'LISTS', '3.2.0', 0, 0)
+                              , ('MODULE', 'MEM_USER_MANAGEMENT', 'MEMBERS', '3.2.0', 0, 0)
+                              , ('MODULE', 'SYS_MESSAGES', 'MESSAGES', '3.2.0', 0, 0)
+                              , ('MODULE', 'PHO_PHOTOS', 'PHOTOS', '3.2.0', 0, 0)
+                              , ('MODULE', 'SYS_SETTINGS', 'PREFERENCES', '3.2.0', 0, 0)
+                              , ('MODULE', 'PRO_PROFILE', 'PROFILE', '3.2.0', 0, 0)
+                              , ('MODULE', 'SYS_REGISTRATION', 'REGISTRATION', '3.2.0', 0, 0)
+                              , ('MODULE', 'ROL_ROLE_ADMINISTRATION', 'ROLES', '3.2.0', 0, 0)
+                              , ('MODULE', 'ROO_ROOM_MANAGEMENT', 'ROOMS', '3.2.0', 0, 0);
 
 --
 -- Data for table adm_organizations
 --
 
 INSERT INTO %PREFIX%_organizations (org_id, org_longname, org_shortname, org_org_id_parent, org_homepage) VALUES
-(1, 'Demo-Organisation', 'DEMO', NULL, 'http://demo.admidio.org'),
-(2, 'Test-Organisation', 'TEST', 1, 'http://demo.admidio.org');
+(1, 'Demo-Organisation', 'DEMO', NULL, 'https://demo.admidio.org/'),
+(2, 'Test-Organisation', 'TEST', 1, 'https://demo.admidio.org/');
 
 --
 -- Data for table adm_preferences
@@ -66,7 +66,7 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (4300, 1, 'enable_weblinks_module', '1'),
 (4310, 1, 'dates_ical_days_past', '60'),
 (4320, 1, 'dates_ical_days_future', '365'),
-(4330, 1, 'dates_viewmode', 'html'),
+(4330, 1, 'dates_view', 'detail'),
 (4400, 1, 'dates_per_page', '10'),
 (4600, 1, 'dates_show_map_link', '1'),
 (4700, 1, 'dates_show_rooms', '0'),
@@ -78,6 +78,7 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (6500, 1, 'lists_hide_overview_details', '0'),
 (6600, 1, 'lists_members_per_page', '25'),
 (6700, 1, 'lists_roles_per_page', '10'),
+(6705, 1, 'lists_default_configuration', '1'),
 (6800, 1, 'logout_minutes', '20'),
 (6900, 1, 'mail_bcc_count', '50'),
 (6910, 1, 'mail_character_encoding', 'utf-8'),
@@ -86,7 +87,6 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (6925, 1, 'mail_into_to', '0'),
 (6927, 1, 'mail_show_former', '1'),
 (6930, 1, 'mail_max_receiver', '4'),
-(6950, 1, 'mail_sender_into_to', '0'),
 (7000, 1, 'mail_sendmail_address', ''),
 (7010, 1, 'mail_sendmail_name', ''),
 (7020, 1, 'mail_send_method', 'phpmail'),
@@ -103,6 +103,7 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (7251, 1, 'members_days_field_history', '365'),
 (7252, 1, 'members_show_all_users', '1'),
 (7300, 1, 'photo_image_text', '© demo.admidio.org'),
+(7305, 1, 'photo_image_text_size', '40'),
 (7350, 1, 'photo_albums_per_page', '16'),
 (7400, 1, 'photo_save_scale', '640'),
 (7500, 1, 'photo_show_width', '640'),
@@ -133,13 +134,9 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (9365, 1, 'system_show_create_edit', '1'),
 (9370, 1, 'system_time', 'H:i'),
 (9400, 1, 'captcha_background_color', '#FFEFC4'),
-(9410, 1, 'captcha_font_size', '20'),
-(9420, 1, 'captcha_fonts', 'Theme'),
+(9420, 1, 'captcha_fonts', 'AHGBold.ttf'),
 (9430, 1, 'captcha_width', '250'),
-(9440, 1, 'captcha_height', '60'),
-(9450, 1, 'captcha_signs', '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'),
-(9460, 1, 'captcha_signature', 'POWERED  BY   A D M I D I O . O R G'),
-(9470, 1, 'captcha_signature_font_size', '13'),
+(9460, 1, 'captcha_signature', 'Powered by Admidio.org'),
 (9480, 1, 'captcha_type', 'pic'),
 (10001, 2, 'announcements_per_page', '10'),
 (11001, 2, 'ecard_thumbs_scale', '250'),
@@ -172,7 +169,7 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (43001, 2, 'enable_weblinks_module', '1'),
 (43100, 2, 'dates_ical_days_past', '60'),
 (43200, 2, 'dates_ical_days_future', '365'),
-(43300, 2, 'dates_viewmode', 'html'),
+(43300, 2, 'dates_view', 'detail'),
 (44001, 2, 'dates_per_page', '10'),
 (46001, 2, 'dates_show_map_link', '1'),
 (47001, 2, 'dates_show_rooms', '0'),
@@ -184,6 +181,7 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (65001, 2, 'lists_hide_overview_details', '0'),
 (66001, 2, 'lists_members_per_page', '25'),
 (67001, 2, 'lists_roles_per_page', '10'),
+(67005, 2, 'lists_default_configuration', '9'),
 (68001, 2, 'logout_minutes', '20'),
 (69001, 2, 'mail_bcc_count', '50'),
 (69100, 2, 'mail_character_encoding', 'utf-8'),
@@ -192,7 +190,6 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (69250, 2, 'mail_into_to', '0'),
 (69270, 2, 'mail_show_former', '1'),
 (69300, 2, 'mail_max_receiver', '1'),
-(69500, 2, 'mail_sender_into_to', '0'),
 (70001, 2, 'mail_sendmail_address', ''),
 (70010, 2, 'mail_sendmail_name', ''),
 (70020, 2, 'mail_send_method', 'phpmail'),
@@ -208,8 +205,9 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (72500, 2, 'members_users_per_page', '25'),
 (72510, 2, 'members_days_field_history', '365'),
 (72520, 2, 'members_show_all_users', '0'),
-(73050, 2, 'photo_albums_per_page', '16'),
-(73001, 2, 'photo_image_text', '© demo.admidio.org'),
+(73000, 2, 'photo_albums_per_page', '16'),
+(73025, 2, 'photo_image_text', '© demo.admidio.org'),
+(73050, 2, 'photo_image_text_size', '40'),
 (74001, 2, 'photo_save_scale', '640'),
 (75001, 2, 'photo_show_width', '640'),
 (76001, 2, 'photo_show_height', '480'),
@@ -236,17 +234,25 @@ INSERT INTO %PREFIX%_preferences (prf_id, prf_org_id, prf_name, prf_value) VALUE
 (93050, 2, 'system_language', 'de'),
 (93060, 2, 'system_organization_select', '1'),
 (93070, 2, 'system_search_similar', '1'),
-(93650, 2, 'system_show_create_edit', '2'),
 (93080, 2, 'system_time', 'H:i'),
+(93650, 2, 'system_show_create_edit', '2'),
 (94000, 2, 'captcha_background_color', '#FFEFC4'),
-(94010, 2, 'captcha_font_size', '20'),
-(94020, 2, 'captcha_fonts', 'Theme'),
+(94020, 2, 'captcha_fonts', 'AHGBold.ttf'),
 (94030, 2, 'captcha_width', '250'),
-(94040, 2, 'captcha_height', '60'),
-(94050, 2, 'captcha_signs', '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'),
-(94060, 2, 'captcha_signature', 'POWERED  BY   A D M I D I O . O R G'),
-(94070, 2, 'captcha_signature_font_size', '13'),
-(94080, 2, 'captcha_type', 'pic');
+(94060, 2, 'captcha_signature', 'Powered by Admidio.org'),
+(94080, 2, 'captcha_type', 'pic'),
+(94081, 1, 'password_min_strength', '1'),
+(94082, 1, 'system_browser_update_check', '0'),
+(94083, 1, 'system_hashing_cost', '10'),
+(94084, 1, 'mail_recipients_with_roles', '0'),
+(94085, 1, 'captcha_lines_numbers', '5'),
+(94086, 1, 'captcha_perturbation', '0.75'),
+(94087, 1, 'captcha_background_image', ''),
+(94088, 1, 'captcha_text_color', '#707070'),
+(94089, 1, 'captcha_line_color', '#707070'),
+(94090, 1, 'captcha_charset', '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxy'),
+(94091, 1, 'members_enable_user_relations', '1'),
+(94093, 2, 'system_hashing_cost', '10');
 
 
 --
@@ -409,7 +415,9 @@ INSERT INTO %PREFIX%_users (usr_id, usr_login_name, usr_password, usr_new_passwo
 (352, 'Mustermann01', 'e10adc3949ba59abbe56e057f20f883e', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 352, '2008-05-28 23:31:26', NULL, NULL, 0),
 (353, 'Dina', 'c33367701511b4f6020ec61ded352059', NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 353, '2008-05-28 23:33:38', NULL, NULL, 0),
 (354, 'DEMO_CHAIRMAN', '$P$CEaSDNBX5KaDVJ7JukTje72cjqD5Kh1', NULL, NULL, NULL, NULL, '2009-04-22 20:30:15', '2009-02-27 02:04:16', 2, NULL, 0, 1, '2009-06-12 20:29:33', 354, '2010-05-12 20:29:33', 1),
-(355, 'SYS_MEMBER', '$P$CEaSDNBX5KaDVJ7JukTje72cjqD5Kh1', NULL, NULL, NULL, NULL, '2010-01-12 18:29:15', '2010-02-27 12:34:09', 2, NULL, 0, 1, '2009-07-12 20:29:33', 355, '2010-05-12 20:29:33', 1);
+(355, 'SYS_MEMBER', '$P$CEaSDNBX5KaDVJ7JukTje72cjqD5Kh1', NULL, NULL, NULL, NULL, '2010-01-12 18:29:15', '2010-02-27 12:34:09', 2, NULL, 0, 1, '2009-07-12 20:29:33', 355, '2010-05-12 20:29:33', 1),
+(356, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 1, '2008-04-26 20:47:22', 1, '2009-02-14 20:47:22', 1),
+(357, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, 1, '2008-04-26 20:47:22', 1, '2009-02-14 20:47:22', 1);
 
 
 --
@@ -429,31 +437,58 @@ INSERT INTO %PREFIX%_categories (cat_id, cat_org_id, cat_type, cat_name_intern, 
 (10, 1, 'DAT', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
 (11, 1, 'DAT', 'COURSES', 'INS_COURSES', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
 (12, 1, 'DAT', 'TRAINING', 'INS_TRAINING', 0, 0, 0, 3, 1, '2012-01-08 11:12:05', NULL, NULL),
-(13, 2, 'ROL', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
-(14, 2, 'ROL', 'GROUPS', 'INS_GROUPS', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
-(15, 2, 'ROL', 'COURSES', 'INS_COURSES', 0, 0, 0, 3, 1, '2012-01-08 11:12:05', NULL, NULL),
-(16, 2, 'ROL', 'TEAMS', 'INS_TEAMS', 0, 0, 0, 4, 1, '2012-01-08 11:12:05', NULL, NULL),
-(17, 2, 'LNK', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
-(19, 2, 'LNK', 'ADMIDIO', 'Admidio', 0, 0, 0, 2, 1, '2011-04-06 22:05:20', NULL, NULL),
-(20, 2, 'DAT', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
-(21, 2, 'DAT', 'COURSES', 'INS_COURSES', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
-(22, 2, 'DAT', 'TRAINING', 'INS_TRAINING', 0, 0, 0, 3, 1, '2012-01-08 11:12:05', NULL, NULL),
-(23, NULL, 'ROL', 'CONFIRMATION_OF_PARTICIPATION', 'SYS_CONFIRMATION_OF_PARTICIPATION', 1, 1, 0, 4, 1, '2012-01-08 11:12:05', NULL, NULL);
+(13, 1, 'ANN', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
+(14, 1, 'ANN', 'IMPORTANT', 'SYS_IMPORTANT', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
+(100, 2, 'ROL', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
+(101, 2, 'ROL', 'GROUPS', 'INS_GROUPS', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
+(102, 2, 'ROL', 'COURSES', 'INS_COURSES', 0, 0, 0, 3, 1, '2012-01-08 11:12:05', NULL, NULL),
+(103, 2, 'ROL', 'TEAMS', 'INS_TEAMS', 0, 0, 0, 4, 1, '2012-01-08 11:12:05', NULL, NULL),
+(104, 2, 'LNK', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
+(105, 2, 'LNK', 'ADMIDIO', 'Admidio', 0, 0, 0, 2, 1, '2011-04-06 22:05:20', NULL, NULL),
+(106, 2, 'DAT', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
+(107, 2, 'DAT', 'COURSES', 'INS_COURSES', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
+(108, 2, 'DAT', 'TRAINING', 'INS_TRAINING', 0, 0, 0, 3, 1, '2012-01-08 11:12:05', NULL, NULL),
+(109, 2, 'ANN', 'COMMON', 'SYS_COMMON', 0, 0, 0, 1, 1, '2012-01-08 11:12:05', NULL, NULL),
+(110, 2, 'ANN', 'IMPORTANT', 'SYS_IMPORTANT', 0, 0, 0, 2, 1, '2012-01-08 11:12:05', NULL, NULL),
+(200, NULL, 'ROL', 'CONFIRMATION_OF_PARTICIPATION', 'SYS_EVENTS_CONFIRMATION_OF_PARTICIPATION', 1, 1, 0, 4, 1, '2012-01-08 11:12:05', NULL, NULL);
 
 
 --
 -- Data for table adm_roles
 --
 
-INSERT INTO %PREFIX%_roles (rol_id, rol_cat_id, rol_name, rol_description, rol_assign_roles, rol_approve_users, rol_announcements, rol_dates, rol_download, rol_edit_user, rol_guestbook, rol_guestbook_comments, rol_mail_to_all, rol_mail_this_role, rol_photo, rol_profile, rol_weblinks, rol_this_list_view, rol_all_lists_view, rol_leader_rights, rol_default_registration, rol_start_date, rol_start_time, rol_end_date, rol_end_time, rol_weekday, rol_location, rol_max_members, rol_cost, rol_cost_period, rol_usr_id_create, rol_timestamp_create, rol_usr_id_change, rol_timestamp_change, rol_valid, rol_system, rol_visible, rol_webmaster) VALUES
-(1, 3, 'SYS_WEBMASTER', 'INS_DESCRIPTION_WEBMASTER', 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2008-04-20 22:35:08', 1, '2008-04-20 22:35:08', 1, 0, 1, 1),
+INSERT INTO %PREFIX%_roles (rol_id, rol_cat_id, rol_name, rol_description, rol_assign_roles, rol_approve_users, rol_announcements, rol_dates, rol_download, rol_edit_user, rol_guestbook, rol_guestbook_comments, rol_mail_to_all, rol_mail_this_role, rol_photo, rol_profile, rol_weblinks, rol_this_list_view, rol_all_lists_view, rol_leader_rights, rol_default_registration, rol_start_date, rol_start_time, rol_end_date, rol_end_time, rol_weekday, rol_location, rol_max_members, rol_cost, rol_cost_period, rol_usr_id_create, rol_timestamp_create, rol_usr_id_change, rol_timestamp_change, rol_valid, rol_system, rol_visible, rol_administrator) VALUES
+(1, 3, 'SYS_ADMINISTRATOR', 'INS_DESCRIPTION_ADMINISTRATOR', 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2008-04-20 22:35:08', 1, '2008-04-20 22:35:08', 1, 0, 1, 1),
 (2, 3, 'SYS_MEMBERS', 'INS_DESCRIPTION_MEMBER', 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 1, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 1, '2008-05-03 16:26:36', 1, '2008-05-03 16:26:36', 1, 0, 1, 0),
 (3, 3, 'INS_BOARD', 'INS_DESCRIPTION_BOARD', 0, 0, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 2, 1, 1, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 1, '2008-05-03 16:26:12', 1, '2008-05-03 16:26:12', 1, 0, 1, 0),
 (4, 6, 'DEMO_ROL_1_YOUTH_TEAM', 'DEMO_ROL_1_YOUTH_TEAM_CONTENT', 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 1, 0, 3, 0, NULL, '15:00:00', NULL, '16:00:00', 3, 'Sportplatz', NULL, NULL, NULL, 1, '2008-05-03 16:24:41', 1, '2008-05-03 16:24:41', 1, 0, 1, 0),
 (5, 6, 'DEMO_ROL_2_YOUTH_TEAM', 'DEMO_ROL_2_YOUTH_TEAM_CONTENT', 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 1, 0, 3, 0, NULL, '16:00:00', NULL, '17:00:00', 5, 'Sportplatz', NULL, NULL, NULL, 1, '2008-05-03 16:25:58', 1, '2008-05-03 16:25:58', 1, 0, 1, 0),
-(6, 13, 'SYS_WEBMASTER', 'INS_DESCRIPTION_WEBMASTER', 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2009-05-20 22:35:08', 1, '2010-01-21 20:35:08', 1, 0, 1, 1),
-(7, 13, 'SYS_MEMBERS', 'INS_DESCRIPTION_MEMBER', 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 1, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 1, '2009-05-20 16:26:36', 1, '2010-12-22 06:34:06', 1, 0, 1, 0),
-(8, 23, 'DAT_DATE 2012-05-13 19:00 - 4', 'DEMO_DAT_BARBECUE', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2011-06-03 10:08:00', NULL, NULL, 1, 0, 0, 0);
+(6, 100, 'SYS_ADMINISTRATOR', 'INS_DESCRIPTION_ADMINISTRATOR', 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2009-05-20 22:35:08', 1, '2010-01-21 20:35:08', 1, 0, 1, 1),
+(7, 100, 'SYS_MEMBERS', 'INS_DESCRIPTION_MEMBER', 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 1, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 1, '2009-05-20 16:26:36', 1, '2010-12-22 06:34:06', 1, 0, 1, 0),
+(8, 200, 'DAT_DATE 2017-02-06 19:00 - 4', 'DEMO_DAT_BARBECUE', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2011-06-03 10:08:00', NULL, NULL, 1, 0, 0, 0),
+(9, 200, 'DAT_DATE 2017-04-13 13:00 - 14', 'DEMO_DAT_YOGA', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2016-11-24 12:08:23', NULL, NULL, 1, 0, 0, 0),
+(10, 200, 'DAT_DATE 2017-05-15 19:00 - 15', 'DEMO_DAT_BOARD_MEETING', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2011-06-03 10:08:00', NULL, NULL, 1, 0, 0, 0),
+(11, 200, 'DAT_DATE 2017-05-26 19:00 - 26', 'DEMO_DAT_BOARD_MEETING', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2011-06-03 10:08:00', NULL, NULL, 1, 0, 0, 0);
+
+
+--
+-- Data for table adm_roles_rights
+--
+
+INSERT INTO %PREFIX%_roles_rights (ror_id, ror_name_intern, ror_table) VALUES
+(1, 'folder_view', 'adm_folders'),
+(2, 'folder_upload', 'adm_folders');
+
+
+--
+-- Data for table adm_roles_rights_data
+--
+
+INSERT INTO %PREFIX%_roles_rights_data (rrd_id, rrd_ror_id, rrd_rol_id, rrd_object_id, rrd_usr_id_create, rrd_timestamp_create) VALUES
+(1, 1, 3, 3, 1, '2015-01-08 13:12:05'),
+(2, 2, 3, 1, 1, '2015-03-08 15:56:35'),
+(3, 2, 1, 2, 1, '2016-10-08 01:45:05'),
+(4, 2, 3, 3, 1, '2016-10-08 11:23:05');
 
 
 --
@@ -483,34 +518,67 @@ Sachsen-Anhalt
 Schleswig-Holstein
 Thüringen', NULL, NULL, 0, 0, 0, 0, 6, 1, '2013-11-27T17:50:14', 1, '2013-11-28T16:12:08'),
 (6, 1, 'TEXT', 'COUNTRY', 'SYS_COUNTRY', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 7, 1, '2012-01-08 11:12:05', NULL, NULL),
-(7, 1, 'TEXT', 'PHONE', 'SYS_PHONE', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 8, 1, '2012-01-08 11:12:05', NULL, NULL),
-(8, 1, 'TEXT', 'MOBILE', 'SYS_MOBILE', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 9, 1, '2012-01-08 11:12:05', NULL, NULL),
-(9, 1, 'TEXT', 'FAX', 'SYS_FAX', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 10, 1, '2012-01-08 11:12:05', NULL, NULL),
+(7, 1, 'PHONE', 'PHONE', 'SYS_PHONE', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 8, 1, '2012-01-08 11:12:05', NULL, NULL),
+(8, 1, 'PHONE', 'MOBILE', 'SYS_MOBILE', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 9, 1, '2012-01-08 11:12:05', NULL, NULL),
+(9, 1, 'PHONE', 'FAX', 'SYS_FAX', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 10, 1, '2012-01-08 11:12:05', NULL, NULL),
 (10, 1, 'DATE', 'BIRTHDAY', 'SYS_BIRTHDAY', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 11, 1, '2012-01-08 11:12:05', NULL, NULL),
 (11, 1, 'RADIO_BUTTON', 'GENDER', 'SYS_GENDER', NULL, 'male.png|SYS_MALE
 female.png|SYS_FEMALE', NULL, NULL, 0, 0, 0, 0, 12, 1, '2012-01-08 11:12:05', NULL, NULL),
 (12, 1, 'EMAIL', 'EMAIL', 'SYS_EMAIL', NULL, NULL, NULL, NULL, 1, 0, 0, 1, 13, 1, '2012-01-08 11:12:05', NULL, NULL),
 (13, 1, 'URL', 'WEBSITE', 'SYS_WEBSITE', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 14, 1, '2012-01-08 11:12:05', NULL, NULL),
 (14, 2, 'TEXT', 'AOL_INSTANT_MESSENGER', 'INS_AOL_INSTANT_MESSENGER', NULL, NULL, 'aim.png', NULL, 0, 0, 0, 0, 1, 1, '2012-01-08 11:12:07', NULL, NULL),
-(22, 2, 'TEXT', 'FACEBOOK', 'INS_FACEBOOK', 'INS_FACEBOOK_DESC', NULL, 'facebook.png', 'http://www.facebook.com/%user_content%', 0, 0, 0, 0, 2, 1, '2012-01-08 11:11:40', NULL, NULL),
-(15, 2, 'TEXT', 'GOOGLE_PLUS', 'INS_GOOGLE_PLUS', 'INS_GOOGLE_PLUS_DESC', NULL, 'google_plus.png', 'https://plus.google.com/%user_content%/posts', 0, 0, 0, 0, 3, 1, '2012-01-08 11:12:07', NULL, NULL),
-(16, 2, 'TEXT', 'ICQ', 'INS_ICQ', 'INS_ICQ_DESC', NULL, 'icq.png', 'http://www.icq.com/people/%user_content%', 0, 0, 0, 0, 4, 1, '2012-01-08 11:12:07', NULL, NULL),
+(22, 2, 'TEXT', 'FACEBOOK', 'INS_FACEBOOK', 'INS_FACEBOOK_DESC', NULL, 'facebook.png', 'https://www.facebook.com/#user_content#', 0, 0, 0, 0, 2, 1, '2012-01-08 11:11:40', NULL, NULL),
+(15, 2, 'TEXT', 'GOOGLE_PLUS', 'INS_GOOGLE_PLUS', 'INS_GOOGLE_PLUS_DESC', NULL, 'google_plus.png', 'https://plus.google.com/#user_content#/posts', 0, 0, 0, 0, 3, 1, '2012-01-08 11:12:07', NULL, NULL),
+(16, 2, 'TEXT', 'ICQ', 'INS_ICQ', 'INS_ICQ_DESC', NULL, 'icq.png', 'https://www.icq.com/people/#user_content#', 0, 0, 0, 0, 4, 1, '2012-01-08 11:12:07', NULL, NULL),
 (18, 2, 'TEXT', 'SKYPE', 'INS_SKYPE', 'INS_SKYPE_DESC', NULL, 'skype.png', NULL, 0, 0, 0, 0, 5, 1, '2012-01-08 11:12:07', NULL, NULL),
-(23, 2, 'TEXT', 'TWITTER', 'INS_TWITTER', 'INS_TWITTER_DESC', NULL, 'twitter.png', 'http://twitter.com/#!/%user_content%', 0, 0, 0, 0, 6, 1, '2012-01-08 11:11:40', NULL, NULL),
-(24, 2, 'TEXT', 'XING', 'INS_XING', 'INS_XING_DESC', NULL, 'xing.png', 'https://www.xing.com/profile/%user_content%', 0, 0, 0, 0, 8, 1, '2012-01-08 11:11:40', NULL, NULL),
+(23, 2, 'TEXT', 'TWITTER', 'INS_TWITTER', 'INS_TWITTER_DESC', NULL, 'twitter.png', 'https://twitter.com/#user_content#', 0, 0, 0, 0, 6, 1, '2012-01-08 11:11:40', NULL, NULL),
+(24, 2, 'TEXT', 'XING', 'INS_XING', 'INS_XING_DESC', NULL, 'xing.png', 'https://www.xing.com/profile/#user_content#', 0, 0, 0, 0, 8, 1, '2012-01-08 11:11:40', NULL, NULL),
 (19, 2, 'TEXT', 'YAHOO_MESSENGER', 'INS_YAHOO_MESSENGER', NULL, NULL, 'yahoo.png', NULL, 0, 0, 0, 0, 9, 1, '2012-01-08 11:12:07', NULL, NULL),
 (20, 8, 'NUMBER', 'MEMBERSHIP_NUMBER', 'DEMO_PRO_MEMBERSHIP_NUMBER', NULL, NULL, NULL, NULL, 0, 1, 0, 0, 1, 1, '2011-04-06 22:05:20', NULL, NULL),
 (21, 8, 'TEXT', 'FAVORITE_COLOR', 'DEMO_PRO_FAVORITE_COLOR', 'DEMO_PRO_FAVORITE_COLOR_CONTENT', NULL, NULL, NULL, 0, 0, 0, 0, 2, 1, '2011-04-06 22:05:20', NULL, NULL);
 
 
 --
+-- Data for table adm_user_relation_types
+--
+
+INSERT INTO %PREFIX%_user_relation_types (urt_id, urt_name, urt_name_male, urt_name_female, urt_id_inverse, urt_usr_id_create, urt_timestamp_create, urt_usr_id_change, urt_timestamp_change) VALUES
+(1, 'INS_PARENT', 'INS_FATHER', 'INS_MOTHER', 2, 2, '2016-11-22 05:29:56', NULL, NULL),
+(2, 'INS_CHILD', 'INS_SON', 'INS_DAUGHTER', 1, 2, '2016-11-22 05:29:56', NULL, NULL),
+(3, 'INS_SIBLING', 'INS_BROTHER', 'INS_SISTER', 3, 2, '2016-11-22 05:29:56', NULL, NULL),
+(4, 'INS_SPOUSE', 'INS_HUSBAND', 'INS_WIFE', 4, 2, '2016-11-22 05:29:56', NULL, NULL),
+(5, 'INS_COHABITANT', 'INS_COHABITANT_MALE', 'INS_COHABITANT_FEMALE', 5, 2, '2016-11-22 05:29:56', NULL, NULL),
+(6, 'INS_COMPANION', 'INS_BOYFRIEND', 'INS_GIRLFRIEND', 6, 2, '2016-11-22 05:29:56', NULL, NULL),
+(7, 'INS_SUPERIOR', 'INS_SUPERIOR_MALE', 'INS_SUPERIOR_FEMALE', 8, 2, '2016-11-22 05:29:56', NULL, NULL),
+(8, 'INS_SUBORDINATE', 'INS_SUBORDINATE_MALE', 'INS_SUBORDINATE_FEMALE', 7, 2, '2016-11-22 05:29:56', NULL, NULL);
+
+
+--
+-- Data for table adm_user_relations
+--
+
+INSERT INTO %PREFIX%_user_relations (ure_id, ure_urt_id, ure_usr_id1, ure_usr_id2, ure_usr_id_create, ure_timestamp_create, ure_usr_id_change, ure_timestamp_change) VALUES
+(1, 4, 1, 355, 1, '2016-12-06 20:02:09', NULL, NULL),
+(2, 4, 355, 1, 1, '2016-12-06 20:02:09', NULL, NULL),
+(3, 2, 1, 356, 1, '2016-12-06 20:02:23', NULL, NULL),
+(4, 1, 356, 1, 1, '2016-12-06 20:02:23', NULL, NULL),
+(5, 2, 1, 357, 1, '2016-12-06 20:02:35', NULL, NULL),
+(6, 1, 357, 1, 1, '2016-12-06 20:02:35', NULL, NULL),
+(7, 1, 357, 355, 1, '2016-12-06 20:02:58', NULL, NULL),
+(8, 2, 355, 357, 1, '2016-12-06 20:02:58', NULL, NULL),
+(9, 3, 357, 356, 1, '2016-12-06 20:03:15', NULL, NULL),
+(10, 3, 356, 357, 1, '2016-12-06 20:03:15', NULL, NULL),
+(11, 2, 355, 356, 1, '2016-12-06 20:04:32', NULL, NULL),
+(12, 1, 356, 355, 1, '2016-12-06 20:04:32', NULL, NULL);
+
+--
 -- Data for table adm_announcements
 --
 
-INSERT INTO %PREFIX%_announcements (ann_id, ann_org_shortname, ann_global, ann_headline, ann_description, ann_usr_id_create, ann_timestamp_create, ann_usr_id_change, ann_timestamp_change) VALUES
-(1, 'DEMO', '0', 'DEMO_ANN_NEW_JERSEYS', 'DEMO_ANN_NEW_JERSEYS_CONTENT', 1, '2012-01-01 00:00:00', NULL, NULL),
-(2, 'DEMO', '0', 'DEMO_ANN_AEROBICS_COURSE', 'DEMO_ANN_AEROBICS_COURSE_CONTENT', 1, '2012-01-08 11:12:05', 1, '2012-01-06 17:33:53'),
-(3, 'DEMO', '1', 'DEMO_ANN_WELCOME', 'DEMO_ANN_WELCOME_CONTENT', 1, '2012-01-08 11:12:05', NULL, NULL);
+INSERT INTO %PREFIX%_announcements (ann_id, ann_cat_id, ann_global, ann_headline, ann_description, ann_usr_id_create, ann_timestamp_create, ann_usr_id_change, ann_timestamp_change) VALUES
+(1, 13, '0', 'DEMO_ANN_NEW_JERSEYS', 'DEMO_ANN_NEW_JERSEYS_CONTENT', 1, '2012-01-01 00:00:00', NULL, NULL),
+(2, 13, '0', 'DEMO_ANN_AEROBICS_COURSE', 'DEMO_ANN_AEROBICS_COURSE_CONTENT', 1, '2012-01-08 11:12:05', 1, '2012-01-06 17:33:53'),
+(3, 14, '1', 'DEMO_ANN_WELCOME', 'DEMO_ANN_WELCOME_CONTENT', 1, '2012-01-08 11:12:05', NULL, NULL);
 
 
 --
@@ -521,14 +589,17 @@ INSERT INTO %PREFIX%_dates (dat_id, dat_cat_id, dat_global, dat_begin, dat_end, 
 (3, 12, 0, '2012-01-22 16:00:00', '2012-01-22 18:00:00', 0, 'DEMO_DAT_YOUTH_TRAINING_CONTENT', 'DEMO_DAT_YOUTH_TRAINING_LOCATION', 'GBR', 'DEMO_DAT_YOUTH_TRAINING', 0,  1, '2008-07-06 17:38:26', NULL, NULL, NULL, NULL, 0),
 (4, 10, 0, '2012-01-12 19:00:00', '2012-01-12 23:30:00', 0, 'DEMO_DAT_BARBECUE_CONTENT', NULL, NULL, 'DEMO_DAT_BARBECUE', 1, 1, '2008-07-06 17:41:18', NULL, NULL, 8, NULL, 0),
 (5, 10, 0, '2012-02-07 00:00:00', '2012-02-12 00:00:00', 1, 'DEMO_DAT_TRAINER_COURSE_CONTENT', 'DEMO_DAT_TRAINER_COURSE_LOCATION', 'FRA', 'DEMO_DAT_TRAINER_COURSE', 1, 1, '2008-07-06 17:49:13', NULL, NULL, NULL, NULL, 0),
-(6, 21, 1, '2012-01-18 15:00:00', '2012-01-18 19:00:00', 0, 'DEMO_DAT_COMPUTER_COURSE_CONTENT', 'DEMO_DAT_COMPUTER_COURSE_LOCATION', 'DEU', 'DEMO_DAT_COMPUTER_COURSE', 0, 1, '2010-01-06 11:25:13', NULL, NULL, NULL, NULL, 0),
+(6, 106, 1, '2012-01-18 15:00:00', '2012-01-18 19:00:00', 0, 'DEMO_DAT_COMPUTER_COURSE_CONTENT', 'DEMO_DAT_COMPUTER_COURSE_LOCATION', 'DEU', 'DEMO_DAT_COMPUTER_COURSE', 0, 1, '2010-01-06 11:25:13', NULL, NULL, NULL, NULL, 0),
 (7, 10, 1, '2012-01-07 06:00:00', '2012-01-08 15:00:00', 1, 'DEMO_DAT_TRIP_AMSTERDAM_CONTENT', 'DEMO_DAT_TRIP_AMSTERDAM_LOCATION', 'NLD', 'DEMO_DAT_TRIP_AMSTERDAM', 0, 1, '2010-01-06 11:25:13', NULL, NULL, NULL, NULL, 0),
 (8, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0,  1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
 (9, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
 (10, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
 (11, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
 (12, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
-(13, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0);
+(13, 12, 0, '2012-01-22 17:00:00', '2012-01-22 18:30:00', 0, null, 'DEMO_DAT_TEAM_TRAINING_LOCATION', 'AUT', 'DEMO_DAT_TEAM_TRAINING', 0, 1, '2013-09-06 12:05:26', NULL, NULL, NULL, NULL, 0),
+(14, 107, 0, '2012-01-12 19:00:00', '2012-01-12 23:30:00', 0, 'DEMO_DAT_YOGA_CONTENT', 'DEMO_DAT_YOGA_LOCATION', 'ESP', 'DEMO_DAT_YOGA', 1, 1, '2008-07-06 17:41:18', NULL, NULL, 9, NULL, 0),
+(15, 10, 0, '2012-01-12 20:00:00', '2012-01-12 22:00:00', 0, null, 'DEMO_DAT_CLUBHOUSE', 'DEU', 'DEMO_DAT_BOARD_MEETING', 0, 1, '2017-05-06 23:03:18', NULL, NULL, 10, NULL, 0),
+(16, 10, 0, '2012-01-12 20:00:00', '2012-01-12 22:00:00', 0, null, 'DEMO_DAT_CLUBHOUSE', 'DEU', 'DEMO_DAT_BOARD_MEETING', 0, 1, '2017-05-06 23:03:18', NULL, NULL, 11, NULL, 0);
 
 --
 -- Data for table adm_date_role
@@ -545,18 +616,24 @@ INSERT INTO %PREFIX%_date_role (dtr_id, dtr_dat_id, dtr_rol_id) VALUES
 (8, 10, NULL),
 (9, 11, NULL),
 (10, 12, NULL),
-(11, 13, NULL);
+(11, 13, NULL),
+(12, 14, NULL),
+(13, 15, 3),
+(14, 16, 3);
 
 --
 -- Data for table adm_folders
 --
 
 INSERT INTO %PREFIX%_folders (fol_id, fol_org_id, fol_fol_id_parent, fol_type, fol_name, fol_description, fol_path, fol_locked, fol_public, fol_usr_id, fol_timestamp) VALUES
-(1, 1, NULL, 'DOWNLOAD', 'download', NULL, '/adm_my_files', 0, 1, NULL, '2014-01-01 22:35:07'),
-(2, 1, 1, 'DOWNLOAD', 'licenses', NULL, '/adm_my_files/download', 0, 1, NULL, '2014-02-05 14:05:34');
+(1, 1, NULL, 'DOWNLOAD', 'download_demo', NULL, '/adm_my_files', 0, 1, 1, '2014-01-01 22:35:07'),
+(2, 1, 1, 'DOWNLOAD', 'licenses', NULL, '/adm_my_files/download_demo', 0, 1, 1, '2014-02-05 14:05:34'),
+(3, 1, 1, 'DOWNLOAD', 'board-meeting', NULL, '/adm_my_files/download_demo', 0, 0, 354, '2016-04-15 13:25:06'),
+(100, 2, NULL, 'DOWNLOAD', 'download_test', NULL, '/adm_my_files', 0, 1, 1, '2014-01-01 22:35:07');
+
 
 --
--- Data for table adm_folders
+-- Data for table adm_files
 --
 
 INSERT INTO %PREFIX%_files (fil_id, fil_fol_id, fil_name, fil_description, fil_locked, fil_counter, fil_usr_id, fil_timestamp) VALUES
@@ -565,14 +642,17 @@ INSERT INTO %PREFIX%_files (fil_id, fil_fol_id, fil_name, fil_description, fil_l
 (3, 2, 'gpl-3.0.txt', null, 0, 8, 1, '2015-08-13 08:24:45'),
 (4, 2, 'lgpl-3.0.txt', null, 0, 0, 1, '2015-08-13 08:24:45'),
 (5, 1, 'admidio-readme.md', null, 0, 134, 1, '2015-07-01 10:05:23'),
-(6, 1, 'admidio-logo.png', null, 0, 45, 1, '2015-07-01 10:07:23');
+(6, 1, 'admidio-logo.png', null, 0, 45, 1, '2015-07-01 10:07:23'),
+(7, 3, '20160511_meeting.txt', null, 0, 45, 354, '2015-07-01 10:07:23'),
+(100, 100, 'admidio-readme.md', null, 0, 14, 1, '2015-07-01 10:05:23'),
+(101, 100, 'admidio-logo.png', null, 0, 6, 1, '2015-07-01 10:07:23');
 
 --
 -- Data for table adm_guestbook
 --
 
 INSERT INTO %PREFIX%_guestbook (gbo_id, gbo_org_id, gbo_name, gbo_text, gbo_email, gbo_homepage, gbo_ip_address, gbo_locked, gbo_usr_id_create, gbo_timestamp_create, gbo_usr_id_change, gbo_timestamp_change) VALUES
-(1, 1, 'Paul Webmaster', 'DEMO_GBO_WEBMASTER_WELCOME', 'webmaster@admidio.org', 'http://www.admidio.org', '84.63.38.55', 0, 1, '2011-12-25 12:14:42', NULL, NULL),
+(1, 1, 'Paul Schmidt', 'DEMO_GBO_WEBMASTER_WELCOME', 'webmaster@admidio.org', 'https://www.admidio.org/', '84.63.38.55', 0, 1, '2011-12-25 12:14:42', NULL, NULL),
 (2, 1, 'Sepp Mayerchen', 'DEMO_GBO_GUEST_ENTRY1', NULL, NULL, '84.63.38.55', 0, NULL, '2012-01-03 20:16:42', NULL, NULL);
 
 --
@@ -580,35 +660,35 @@ INSERT INTO %PREFIX%_guestbook (gbo_id, gbo_org_id, gbo_name, gbo_text, gbo_emai
 --
 
 INSERT INTO %PREFIX%_guestbook_comments (gbc_id, gbc_gbo_id, gbc_name, gbc_text, gbc_email, gbc_ip_address, gbc_locked, gbc_usr_id_create, gbc_timestamp_create, gbc_usr_id_change, gbc_timestamp_change) VALUES
-(1, 2, 'Paul Webmaster', 'DEMO_GBO_WEBMASTER_COMMENT1', 'webmaster@admidio.org', '84.63.38.55', 0, 1, '2012-01-04 16:23:12', NULL, NULL);
+(1, 2, 'Paul Schmidt', 'DEMO_GBO_WEBMASTER_COMMENT1', 'webmaster@admidio.org', '84.63.38.55', 0, 1, '2012-01-04 16:23:12', NULL, NULL);
 
 --
 -- Data for table adm_links
 --
 
 INSERT INTO %PREFIX%_links (lnk_id, lnk_cat_id, lnk_name, lnk_description, lnk_url, lnk_counter, lnk_usr_id_create, lnk_timestamp_create, lnk_usr_id_change, lnk_timestamp_change) VALUES
-(1, 7, 'DEMO_LNK_SAMPLE_PAGE', 'DEMO_LNK_SAMPLE_PAGE_CONTENT', 'http://www.example.com', 6, 1, '2012-01-04 22:13:26', 1, '2012-01-05 21:16:32'),
-(2, 9, 'Admidio', 'DEMO_LNK_ADMIDIO_CONTENT', 'http://www.admidio.org', 157, 1, '2012-01-08 11:12:05', NULL, NULL),
-(3, 9, 'DEMO_LNK_FORUM', 'DEMO_LNK_FORUM_CONTENT', 'http://forum.admidio.org', 46, 1, '2012-01-04 21:15:44', NULL, NULL),
-(4, 9, 'DEMO_LNK_DOCUMENTATION', 'DEMO_LNK_DOCUMENTATION_CONTENT', 'http://www.admidio.org/dokuwiki', 21, 1, '2012-04-05 14:13:23', NULL, NULL);
+(1, 7, 'DEMO_LNK_SAMPLE_PAGE', 'DEMO_LNK_SAMPLE_PAGE_CONTENT', 'https://www.example.com', 6, 1, '2012-01-04 22:13:26', 1, '2012-01-05 21:16:32'),
+(2, 9, 'Admidio', 'DEMO_LNK_ADMIDIO_CONTENT', 'https://www.admidio.org/', 157, 1, '2012-01-08 11:12:05', NULL, NULL),
+(3, 9, 'DEMO_LNK_FORUM', 'DEMO_LNK_FORUM_CONTENT', 'https://forum.admidio.org/', 46, 1, '2012-01-04 21:15:44', NULL, NULL),
+(4, 9, 'DEMO_LNK_DOCUMENTATION', 'DEMO_LNK_DOCUMENTATION_CONTENT', 'https://www.admidio.org/dokuwiki', 21, 1, '2012-04-05 14:13:23', NULL, NULL);
 
 --
 -- Data for table adm_lists
 --
 
-INSERT INTO %PREFIX%_lists (lst_id, lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global, lst_default) VALUES
-(1, 1, 1, 'INS_ADDRESS_LIST', '2009-02-27 21:50:57', 1, 1),
-(2, 1, 1, 'INS_PHONE_LIST', '2009-02-27 21:50:57', 1, 0),
-(3, 1, 1, 'SYS_CONTACT_DETAILS', '2009-02-27 21:50:57', 1, 0),
-(4, 1, 1, 'INS_MEMBERSHIP', '2009-02-27 21:50:57', 1, 0),
-(5, 1, 1, 'SYS_SOCIAL_NETWORKS', '2009-02-27 21:56:52', 0, 0),
-(6, 1, 1, 'SYS_BIRTHDAY', '2009-02-27 21:57:38', 0, 0),
-(7, 1, 351, 'SYS_WEBSITE', '2009-02-27 22:34:28', 0, 0),
-(8, 1, 351, NULL, '2009-02-27 22:34:47', 0, 0),
-(9, 2, 1, 'INS_ADDRESS_LIST', '2012-02-27 21:50:57', 1, 1),
-(10, 2, 1, 'INS_PHONE_LIST', '2012-02-27 21:50:57', 1, 0),
-(11, 2, 1, 'SYS_CONTACT_DETAILS', '2012-02-27 21:50:57', 1, 0),
-(12, 2, 1, 'INS_MEMBERSHIP', '2012-02-27 21:50:57', 1, 0);
+INSERT INTO %PREFIX%_lists (lst_id, lst_org_id, lst_usr_id, lst_name, lst_timestamp, lst_global) VALUES
+(1, 1, 1, 'INS_ADDRESS_LIST', '2009-02-27 21:50:57', 1),
+(2, 1, 1, 'INS_PHONE_LIST', '2009-02-27 21:50:57', 1),
+(3, 1, 1, 'SYS_CONTACT_DETAILS', '2009-02-27 21:50:57', 1),
+(4, 1, 1, 'INS_MEMBERSHIP', '2009-02-27 21:50:57', 1),
+(5, 1, 1, 'SYS_SOCIAL_NETWORKS', '2009-02-27 21:56:52', 0),
+(6, 1, 1, 'SYS_BIRTHDAY', '2009-02-27 21:57:38', 0),
+(7, 1, 351, 'SYS_WEBSITE', '2009-02-27 22:34:28', 0),
+(8, 1, 351, NULL, '2009-02-27 22:34:47', 0),
+(9, 2, 1, 'INS_ADDRESS_LIST', '2012-02-27 21:50:57', 1),
+(10, 2, 1, 'INS_PHONE_LIST', '2012-02-27 21:50:57', 1),
+(11, 2, 1, 'SYS_CONTACT_DETAILS', '2012-02-27 21:50:57', 1),
+(12, 2, 1, 'INS_MEMBERSHIP', '2012-02-27 21:50:57', 1);
 
 --
 -- Data for table adm_list_columns
@@ -693,206 +773,209 @@ INSERT INTO %PREFIX%_list_columns (lsc_id, lsc_lst_id, lsc_number, lsc_usf_id, l
 -- Data for table adm_members
 --
 
-INSERT INTO %PREFIX%_members (mem_id, mem_rol_id, mem_usr_id, mem_begin, mem_end, mem_leader, mem_usr_id_create, mem_timestamp_create, mem_usr_id_change, mem_timestamp_change) VALUES
-(1, 1, 1, '2008-04-20', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(2, 2, 1, '2008-04-20', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(3, 4, 1, '2008-04-20', '2009-10-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(4, 6, 1, '2009-04-20', '9999-12-31', 0, 354, '2008-05-03 09:43:02', NULL, NULL),
-(5, 7, 1, '2009-04-20', '9999-12-31', 0, 354, '2008-05-03 09:43:02', NULL, NULL),
-(10, 7, 2, '2008-04-20', '9999-12-31', 0, NULL, '2008-05-03 09:43:02', NULL, NULL),
-(11, 7, 2, '2008-04-20', '9999-12-31', 0, NULL, '2008-05-03 09:43:02', NULL, NULL),
-(201, 2, 202, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(202, 2, 203, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(203, 2, 204, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(204, 2, 205, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(205, 2, 206, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(206, 2, 207, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(207, 2, 208, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(208, 2, 209, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(209, 2, 210, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(211, 2, 212, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(212, 2, 213, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(213, 2, 214, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(214, 2, 215, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(215, 2, 216, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(216, 2, 217, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(217, 2, 218, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(218, 2, 219, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(219, 2, 220, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(220, 2, 221, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(221, 2, 222, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(222, 2, 223, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(223, 2, 224, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(224, 2, 225, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(225, 2, 226, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(226, 2, 227, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(227, 2, 228, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(228, 2, 229, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(229, 2, 230, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(230, 2, 231, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(231, 2, 232, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(232, 2, 233, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(233, 2, 234, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(234, 2, 235, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(235, 2, 236, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(236, 2, 237, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(237, 2, 238, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(238, 2, 239, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(239, 2, 240, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(240, 2, 241, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(241, 2, 242, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(242, 2, 243, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(243, 2, 244, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(244, 2, 245, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(245, 2, 246, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(246, 2, 247, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(247, 2, 248, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(248, 2, 249, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(249, 2, 250, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(250, 2, 251, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(251, 2, 252, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(252, 2, 253, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(253, 2, 254, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(254, 2, 255, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(255, 2, 256, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(256, 2, 257, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(257, 2, 258, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(258, 2, 259, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(259, 2, 260, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(260, 2, 261, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(261, 2, 262, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(262, 2, 263, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(263, 2, 264, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(264, 2, 265, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(265, 2, 266, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(266, 2, 267, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(267, 2, 268, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(268, 2, 269, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(269, 2, 270, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(270, 2, 271, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(271, 2, 272, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(272, 2, 273, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(273, 2, 274, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(274, 2, 275, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(275, 2, 276, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(276, 2, 277, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(277, 2, 278, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(278, 2, 279, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(279, 2, 280, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(280, 2, 281, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(281, 2, 282, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(282, 2, 283, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(283, 2, 284, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(284, 2, 285, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(285, 2, 286, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(286, 2, 287, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(287, 2, 288, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(288, 2, 289, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(289, 2, 290, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(290, 2, 291, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(291, 2, 292, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(292, 2, 293, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(293, 2, 294, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(294, 2, 295, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(295, 2, 296, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(296, 2, 297, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(297, 2, 298, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(298, 2, 299, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(299, 2, 300, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(300, 2, 301, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(301, 2, 302, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(302, 2, 303, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(303, 2, 304, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(304, 2, 305, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(305, 2, 306, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(306, 2, 307, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(307, 2, 308, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(308, 2, 309, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(309, 2, 310, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(310, 2, 311, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(311, 2, 312, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(312, 2, 313, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(313, 2, 314, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(314, 2, 315, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(315, 2, 316, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(316, 2, 317, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(317, 2, 318, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(318, 2, 319, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(319, 2, 320, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(320, 2, 321, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(321, 2, 322, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(322, 2, 323, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(323, 2, 324, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(324, 2, 325, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(325, 2, 326, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(326, 2, 327, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(327, 2, 328, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(328, 2, 329, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(329, 2, 330, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(330, 2, 331, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(331, 2, 332, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(332, 2, 333, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(333, 2, 334, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(334, 2, 335, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(335, 2, 336, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(336, 2, 337, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(337, 2, 338, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(338, 2, 339, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(339, 2, 340, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(340, 2, 341, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(341, 2, 342, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(342, 2, 343, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(343, 2, 344, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(346, 2, 347, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(347, 2, 348, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(348, 2, 349, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(349, 2, 350, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(350, 2, 351, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(351, 3, 351, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(352, 3, 1, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(353, 4, 255, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(354, 4, 262, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(355, 4, 271, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(356, 4, 273, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(357, 4, 275, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(358, 4, 289, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(359, 4, 292, '2008-05-03', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(360, 4, 341, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(361, 4, 347, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(362, 4, 351, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL),
-(363, 4, 204, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL),
-(364, 5, 212, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(365, 5, 214, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(366, 5, 220, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL),
-(367, 5, 226, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(368, 5, 263, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(369, 5, 269, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(370, 5, 283, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(371, 5, 290, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(372, 5, 294, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(373, 5, 325, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(374, 5, 326, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(375, 5, 342, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(376, 5, 350, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(377, 3, 213, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(378, 3, 240, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(379, 2, 354, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(380, 3, 354, '2009-06-12', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL),
-(381, 2, 355, '2009-07-12', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(382, 5, 355, '2012-11-03', '9999-12-31', 1, 2, '2014-08-25 19:13:52', NULL, NULL),
-(400, 7, 205, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(401, 7, 211, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(402, 7, 290, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(403, 7, 291, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(404, 7, 292, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(405, 7, 293, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(406, 7, 345, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(407, 7, 351, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(500, 8, 1, '2012-01-04', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL),
-(501, 8, 223, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(502, 8, 255, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(503, 8, 302, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL),
-(504, 8, 328, '2012-01-07', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL);
+INSERT INTO %PREFIX%_members (mem_id, mem_rol_id, mem_usr_id, mem_begin, mem_end, mem_leader, mem_usr_id_create, mem_timestamp_create, mem_usr_id_change, mem_timestamp_change, mem_approved) VALUES
+(1, 1, 1, '2008-04-20', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(2, 2, 1, '2008-04-20', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(3, 4, 1, '2008-04-20', '2009-10-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(4, 6, 1, '2009-04-20', '9999-12-31', 0, 354, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(5, 7, 1, '2009-04-20', '9999-12-31', 0, 354, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(6, 9, 1, '2008-04-20', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(10, 7, 2, '2008-04-20', '9999-12-31', 0, NULL, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(11, 7, 2, '2008-04-20', '9999-12-31', 0, NULL, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(201, 2, 202, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(202, 2, 203, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(203, 2, 204, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(204, 2, 205, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(205, 2, 206, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(206, 2, 207, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(207, 2, 208, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(208, 2, 209, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(209, 2, 210, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(211, 2, 212, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(212, 2, 213, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(213, 2, 214, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(214, 2, 215, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(215, 2, 216, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(216, 2, 217, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(217, 2, 218, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(218, 2, 219, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(219, 2, 220, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(220, 2, 221, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(221, 2, 222, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(222, 2, 223, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(223, 2, 224, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(224, 2, 225, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(225, 2, 226, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(226, 2, 227, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(227, 2, 228, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(228, 2, 229, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(229, 2, 230, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(230, 2, 231, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(231, 2, 232, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(232, 2, 233, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(233, 2, 234, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(234, 2, 235, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(235, 2, 236, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(236, 2, 237, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(237, 2, 238, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(238, 2, 239, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(239, 2, 240, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(240, 2, 241, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(241, 2, 242, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(242, 2, 243, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(243, 2, 244, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(244, 2, 245, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(245, 2, 246, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(246, 2, 247, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(247, 2, 248, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(248, 2, 249, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(249, 2, 250, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(250, 2, 251, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(251, 2, 252, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(252, 2, 253, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(253, 2, 254, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(254, 2, 255, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(255, 2, 256, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(256, 2, 257, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(257, 2, 258, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(258, 2, 259, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(259, 2, 260, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(260, 2, 261, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(261, 2, 262, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(262, 2, 263, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(263, 2, 264, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(264, 2, 265, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(265, 2, 266, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(266, 2, 267, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(267, 2, 268, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(268, 2, 269, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(269, 2, 270, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(270, 2, 271, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(271, 2, 272, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(272, 2, 273, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(273, 2, 274, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(274, 2, 275, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(275, 2, 276, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(276, 2, 277, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(277, 2, 278, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(278, 2, 279, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(279, 2, 280, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(280, 2, 281, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(281, 2, 282, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(282, 2, 283, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(283, 2, 284, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(284, 2, 285, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(285, 2, 286, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(286, 2, 287, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(287, 2, 288, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(288, 2, 289, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(289, 2, 290, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(290, 2, 291, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(291, 2, 292, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(292, 2, 293, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(293, 2, 294, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(294, 2, 295, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(295, 2, 296, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(296, 2, 297, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(297, 2, 298, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(298, 2, 299, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(299, 2, 300, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(300, 2, 301, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(301, 2, 302, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(302, 2, 303, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(303, 2, 304, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(304, 2, 305, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(305, 2, 306, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(306, 2, 307, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(307, 2, 308, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(308, 2, 309, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(309, 2, 310, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(310, 2, 311, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(311, 2, 312, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(312, 2, 313, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(313, 2, 314, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(314, 2, 315, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(315, 2, 316, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(316, 2, 317, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(317, 2, 318, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(318, 2, 319, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(319, 2, 320, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(320, 2, 321, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(321, 2, 322, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(322, 2, 323, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(323, 2, 324, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(324, 2, 325, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(325, 2, 326, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(326, 2, 327, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(327, 2, 328, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(328, 2, 329, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(329, 2, 330, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(330, 2, 331, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(331, 2, 332, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(332, 2, 333, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(333, 2, 334, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(334, 2, 335, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(335, 2, 336, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(336, 2, 337, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(337, 2, 338, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(338, 2, 339, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(339, 2, 340, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(340, 2, 341, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(341, 2, 342, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(342, 2, 343, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(343, 2, 344, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(346, 2, 347, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(347, 2, 348, '2008-04-26', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(348, 2, 349, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(349, 2, 350, '2008-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(350, 2, 351, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(351, 3, 351, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(352, 3, 1, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(353, 4, 255, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(354, 4, 262, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(355, 4, 271, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(356, 4, 273, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(357, 4, 275, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(358, 4, 289, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(359, 4, 292, '2008-05-03', '2008-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(360, 4, 341, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(361, 4, 347, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(362, 4, 351, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(363, 4, 204, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(364, 5, 212, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(365, 5, 214, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(366, 5, 220, '2008-05-03', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(367, 5, 226, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(368, 5, 263, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(369, 5, 269, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(370, 5, 283, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(371, 5, 290, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(372, 5, 294, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(373, 5, 325, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(374, 5, 326, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(375, 5, 342, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(376, 5, 350, '2008-05-03', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(377, 3, 213, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(378, 3, 240, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(379, 2, 354, '2008-05-28', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(380, 3, 354, '2009-06-12', '9999-12-31', 1, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(381, 2, 355, '2009-07-12', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(382, 5, 355, '2012-11-03', '9999-12-31', 1, 2, '2014-08-25 19:13:52', NULL, NULL, NULL),
+(400, 7, 205, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(401, 7, 211, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(402, 7, 290, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(403, 7, 291, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(404, 7, 292, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(405, 7, 293, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(406, 7, 345, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(407, 7, 351, '2010-04-26', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(500, 8, 1, '2012-01-04', '9999-12-31', 1, 2, '2008-05-03 09:43:02', 1, '2017-01-21 10:21:02', null),
+(501, 8, 223, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(502, 8, 255, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(503, 8, 302, '2012-01-06', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(504, 8, 328, '2012-01-07', '9999-12-31', 0, 2, '2008-05-03 09:43:02', 328, '2017-02-01 23:04:21', null),
+(505, 2, 356, '2015-07-12', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL),
+(506, 2, 357, '2015-07-12', '9999-12-31', 0, 2, '2008-05-03 09:43:02', NULL, NULL, NULL);
 
 
 --
@@ -909,11 +992,11 @@ INSERT INTO %PREFIX%_registrations (reg_id, reg_org_id, reg_usr_id, reg_timestam
 -- Data for table adm_photos
 --
 
-INSERT INTO %PREFIX%_photos (pho_id, pho_org_shortname, pho_quantity, pho_name, pho_begin, pho_end, pho_photographers, pho_locked, pho_pho_id_parent, pho_usr_id_create, pho_timestamp_create, pho_usr_id_change, pho_timestamp_change) VALUES
-(1, 'DEMO', 0, 'DEMO_PHO_CROATIA', '2009-10-05', '2009-10-11', 'DEMO_PHO_STEVEN_SMITH', 0, NULL, 1, '2009-10-23 18:15:37', NULL, NULL),
-(2, 'DEMO', 3, 'DEMO_PHO_PLITVICE_LAKES', '2009-10-05', '2009-10-07', 'DEMO_PHO_STEVEN_SMITH', 0, 1, 1, '2009-10-23 18:17:44', NULL, NULL),
-(3, 'DEMO', 3, 'Krka', '2009-10-08', '2009-10-11', 'DEMO_PHO_STEVEN_SMITH', 0, 1, 1, '2009-10-23 18:18:44', NULL, NULL),
-(4, 'DEMO', 5, 'Machu Picchu', '2009-09-14', '2009-09-17', 'Admin', 0, NULL, 1, '2009-10-23 18:20:50', NULL, NULL);
+INSERT INTO %PREFIX%_photos (pho_id, pho_org_id, pho_quantity, pho_name, pho_begin, pho_end, pho_photographers, pho_locked, pho_pho_id_parent, pho_usr_id_create, pho_timestamp_create, pho_usr_id_change, pho_timestamp_change) VALUES
+(1, 1, 0, 'DEMO_PHO_CROATIA', '2009-10-05', '2009-10-11', 'DEMO_PHO_STEVEN_SMITH', 0, NULL, 1, '2009-10-23 18:15:37', NULL, NULL),
+(2, 1, 3, 'DEMO_PHO_PLITVICE_LAKES', '2009-10-05', '2009-10-07', 'DEMO_PHO_STEVEN_SMITH', 0, 1, 1, '2009-10-23 18:17:44', NULL, NULL),
+(3, 1, 3, 'Krka', '2009-10-08', '2009-10-11', 'DEMO_PHO_STEVEN_SMITH', 0, 1, 1, '2009-10-23 18:18:44', NULL, NULL),
+(4, 1, 5, 'Machu Picchu', '2009-09-14', '2009-09-17', 'Admin', 0, NULL, 1, '2009-10-23 18:20:50', NULL, NULL);
 
 
 --
@@ -937,12 +1020,12 @@ INSERT INTO %PREFIX%_sessions (ses_id, ses_usr_id, ses_org_id, ses_session_id, s
 
 INSERT INTO %PREFIX%_texts (txt_id, txt_org_id, txt_name, txt_text) VALUES
 (1, 1, 'SYSMAIL_REGISTRATION_USER', 'SYS_SYSMAIL_REGISTRATION_USER'),
-(2, 1, 'SYSMAIL_REGISTRATION_WEBMASTER', 'SYS_SYSMAIL_REGISTRATION_WEBMASTER'),
+(2, 1, 'SYSMAIL_REGISTRATION_WEBMASTER', 'SYS_SYSMAIL_REGISTRATION_ADMINISTRATOR'),
 (3, 1, 'SYSMAIL_NEW_PASSWORD', 'SYS_SYSMAIL_NEW_PASSWORD'),
 (4, 1, 'SYSMAIL_ACTIVATION_LINK', 'SYS_SYSMAIL_ACTIVATION_LINK'),
 (5, 1, 'SYSMAIL_REFUSE_REGISTRATION', 'SYS_SYSMAIL_REFUSE_REGISTRATION'),
 (101, 2, 'SYSMAIL_REGISTRATION_USER', 'SYS_SYSMAIL_REGISTRATION_USER'),
-(102, 2, 'SYSMAIL_REGISTRATION_WEBMASTER', 'SYS_SYSMAIL_REGISTRATION_WEBMASTER'),
+(102, 2, 'SYSMAIL_REGISTRATION_WEBMASTER', 'SYS_SYSMAIL_REGISTRATION_ADMINISTRATOR'),
 (103, 2, 'SYSMAIL_NEW_PASSWORD', 'SYS_SYSMAIL_NEW_PASSWORD'),
 (104, 2, 'SYSMAIL_ACTIVATION_LINK', 'SYS_SYSMAIL_ACTIVATION_LINK'),
 (105, 2, 'SYSMAIL_REFUSE_REGISTRATION', 'SYS_SYSMAIL_REFUSE_REGISTRATION');
@@ -953,7 +1036,7 @@ INSERT INTO %PREFIX%_texts (txt_id, txt_org_id, txt_name, txt_text) VALUES
 --
 
 INSERT INTO %PREFIX%_user_data (usd_id, usd_usr_id, usd_usf_id, usd_value) VALUES
-(1, 1, 1, 'Webmaster'),
+(1, 1, 1, 'Schmidt'),
 (2, 1, 2, 'Paul'),
 (3, 1, 3, 'Unter den Linden 45'),
 (4, 1, 4, '10117'),
@@ -963,7 +1046,7 @@ INSERT INTO %PREFIX%_user_data (usd_id, usd_usr_id, usd_usf_id, usd_value) VALUE
 (8, 1, 10, '1968-04-16'),
 (9, 1, 11, '1'),
 (10, 1, 12, 'webmaster@admidio.org'),
-(11, 1, 13, 'http://www.admidio.org'),
+(11, 1, 13, 'https://www.admidio.org/'),
 (12, 1, 20, '001'),
 (13, 1, 21, 'blau'),
 (13000, 1, 22, 'Admidio'),
@@ -2748,7 +2831,7 @@ INSERT INTO %PREFIX%_user_data (usd_id, usd_usr_id, usd_usf_id, usd_value) VALUE
 (1787, 351, 10, '1973-12-24'),
 (1788, 351, 11, '1'),
 (1789, 351, 12, 'demo@admidio.org'),
-(1790, 351, 13, 'http://demo.admidio.org'),
+(1790, 351, 13, 'https://demo.admidio.org/'),
 (1791, 351, 14, 'Demouser'),
 (1792, 351, 20, '4711'),
 (17921, 351, 25, '3'),
@@ -2777,11 +2860,29 @@ INSERT INTO %PREFIX%_user_data (usd_id, usd_usr_id, usd_usf_id, usd_value) VALUE
 (1813, 354, 12, 'DEMO_CHAIRMAN@example.com'),
 (18131, 354, 22, 'Admidio'),
 (18132, 354, 25, '9'),
-(1814, 355, 1, 'SYS_MEMBER'),
+(1814, 355, 1, 'Schmidt'),
 (1815, 355, 2, 'Jennifer'),
+(1821, 355, 3, 'Unter den Linden 45'),
+(1822, 355, 4, '10117'),
+(1823, 355, 5, 'Berlin'),
 (1816, 355, 6, 'DEU'),
 (1817, 355, 11, '2'),
 (1818, 355, 12, 'SYS_MEMBER@example.com'),
 (1819, 355, 23, 'Admidio'),
-(1820, 355, 25, '12');
-
+(1820, 355, 25, '12'),
+(1900, 356, 1, 'Schmidt'),
+(1901, 356, 2, 'Silke'),
+(1902, 356, 3, 'Unter den Linden 45'),
+(1903, 356, 4, '10117'),
+(1904, 356, 5, 'Berlin'),
+(1905, 356, 6, 'DEU'),
+(1906, 356, 10, '2011-07-15'),
+(1907, 356, 11, '2'),
+(1910, 357, 1, 'Schmidt'),
+(1911, 357, 2, 'Stefan'),
+(1912, 357, 3, 'Unter den Linden 45'),
+(1913, 357, 4, '10117'),
+(1914, 357, 5, 'Berlin'),
+(1915, 357, 6, 'DEU'),
+(1916, 357, 10, '2014-01-21'),
+(1917, 357, 11, '1');

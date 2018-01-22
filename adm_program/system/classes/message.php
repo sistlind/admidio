@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -22,41 +22,58 @@
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID'));
  *
  * // show a message and set a link to a page that should be shown after user click ok
- * $gMessage->setForwardUrl('http://www.example.de/mypage.php');
+ * $gMessage->setForwardUrl('https://www.example.com/mypage.php');
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID'));
  *
  * // show a message with yes and no button and set a link to a page that should be shown after user click yes
- * $gMessage->setForwardYesNo('http://www.example.de/mypage.php');
+ * $gMessage->setForwardYesNo('https://www.example.com/mypage.php');
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID')); @endcode
  */
 class Message
 {
-    private $inline;            // wird ermittelt, ob bereits eine Ausgabe an den Browser erfolgt ist
-    private $forwardUrl;        // Url auf die durch den Weiter-Button verwiesen wird
-    private $timer;             // Anzahl ms bis automatisch zu forwardUrl weitergeleitet wird
-    private $includeThemeBody;  ///< Includes the header and body of the theme to the message. This will be included as default.
-    private $showTextOnly;      ///< If set to true then no html elements will be shown, only the pure text message.
-    private $showHtmlTextOnly;  ///< If set to true then only the message with their html elements will be shown.
-
-    private $showButtons;       // Buttons werden angezeigt
-    private $showYesNoButtons;  // Anstelle von Weiter werden Ja/Nein-Buttons angezeigt
-    private $modalWindowMode;   ///< If this is set to true than the message will be show with html of the bootstrap modal window
+    /**
+     * @var bool wird ermittelt, ob bereits eine Ausgabe an den Browser erfolgt ist
+     */
+    private $inline = false;
+    /**
+     * @var string Url auf die durch den Weiter-Button verwiesen wird
+     */
+    private $forwardUrl = '';
+    /**
+     * @var int Anzahl ms bis automatisch zu forwardUrl weitergeleitet wird
+     */
+    private $timer = 0;
+    /**
+     * @var bool Includes the header and body of the theme to the message. This will be included as default.
+     */
+    private $includeThemeBody = true;
+    /**
+     * @var bool If set to true then no html elements will be shown, only the pure text message.
+     */
+    private $showTextOnly = false;
+    /**
+     * @var bool If set to true then only the message with their html elements will be shown.
+     */
+    private $showHtmlTextOnly = false;
+    /**
+     * @var bool Buttons werden angezeigt
+     */
+    private $showButtons = true;
+    /**
+     * @var bool Anstelle von Weiter werden Ja/Nein-Buttons angezeigt
+     */
+    private $showYesNoButtons = false;
+    /**
+     * @var bool If this is set to true than the message will be show with html of the bootstrap modal window
+     */
+    private $modalWindowMode = false;
 
     /**
      * Constructor that initialize the class member parameters
      */
     public function __construct()
     {
-        $this->inline           = false;
-        $this->forwardUrl       = '';
-        $this->timer            = 0;
-        $this->includeThemeBody = true;
-        $this->showTextOnly     = false;
-        $this->showHtmlTextOnly = false;
 
-        $this->showButtons      = true;
-        $this->showYesNoButtons = false;
-        $this->modalWindowMode  = false;
     }
 
     /**
@@ -70,7 +87,7 @@ class Message
     /**
      * If this is set to true than the message will be show with html of the bootstrap modal window.
      */
-    public function showInModaleWindow()
+    public function showInModalWindow()
     {
         $this->modalWindowMode = true;
         $this->inline = true;
@@ -86,15 +103,7 @@ class Message
     public function setForwardUrl($url, $timer = 0)
     {
         $this->forwardUrl = $url;
-
-        if(is_numeric($timer) && $timer > 0)
-        {
-            $this->timer = $timer;
-        }
-        else
-        {
-            $this->timer = 0;
-        }
+        $this->timer      = $timer;
     }
 
     /**
@@ -151,12 +160,15 @@ class Message
             // forward to next page after x seconds
             if ($this->timer > 0)
             {
-                $page->addJavascript('window.setTimeout("window.location.href=\''. $this->forwardUrl. '\'", '. $this->timer. ');');
+                $page->addJavascript('
+                    setTimeout(function() {
+                        window.location.href = "'. $this->forwardUrl. '";
+                    }, '. $this->timer. ');'
+                );
             }
         }
         elseif(!$this->modalWindowMode)
         {
-            header('Content-type: text/html; charset=utf-8');
             $html .= '<h1>'.$headline.'</h1>';
         }
 
@@ -170,12 +182,12 @@ class Message
                 if($this->showYesNoButtons)
                 {
                     $htmlButtons .= '
-                        <button id="admButtonYes" class="btn" type="button" onclick="self.location.href=\''. $this->forwardUrl. '\'">
-                            <img src="'. THEME_PATH. '/icons/ok.png" alt="'.$gL10n->get('SYS_YES').'" />
+                        <button id="admButtonYes" class="btn" type="button" onclick="self.location.href = \"'. $this->forwardUrl. '\"">
+                            <img src="'. THEME_URL. '/icons/ok.png" alt="'.$gL10n->get('SYS_YES').'" />
                             &nbsp;&nbsp;'.$gL10n->get('SYS_YES').'&nbsp;&nbsp;&nbsp;
                         </button>
                         <button id="admButtonNo" class="btn" type="button" onclick="history.back()">
-                            <img src="'. THEME_PATH. '/icons/error.png" alt="'.$gL10n->get('SYS_NO').'" />
+                            <img src="'. THEME_URL. '/icons/error.png" alt="'.$gL10n->get('SYS_NO').'" />
                             &nbsp;'.$gL10n->get('SYS_NO').'
                         </button>';
                 }
@@ -184,7 +196,7 @@ class Message
                     // Wenn weitergeleitet wird, dann auch immer einen Weiter-Button anzeigen
                     $htmlButtons .= '
                         <a class="btn" href="'. $this->forwardUrl. '">'.$gL10n->get('SYS_NEXT').'
-                            <img src="'. THEME_PATH. '/icons/forward.png" alt="'.$gL10n->get('SYS_NEXT').'"
+                            <img src="'. THEME_URL. '/icons/forward.png" alt="'.$gL10n->get('SYS_NEXT').'"
                                 title="'.$gL10n->get('SYS_NEXT').'" />
                         </a>';
                 }
@@ -196,8 +208,8 @@ class Message
                 if(!$this->modalWindowMode)
                 {
                     $htmlButtons .= '
-                        <a class="btn" href="javascript:history.back()">
-                            <img src="'.THEME_PATH.'/icons/back.png" alt="'.$gL10n->get('SYS_BACK').'"
+                        <a class="btn" href="javascript:void(0)" onclick="history.back()">
+                            <img src="'.THEME_URL.'/icons/back.png" alt="'.$gL10n->get('SYS_BACK').'"
                                 title="'.$gL10n->get('SYS_BACK').'" />'.
                             $gL10n->get('SYS_BACK').
                         '</a>';
@@ -278,5 +290,19 @@ class Message
     public function showTextOnly($showText)
     {
         $this->showTextOnly = $showText;
+    }
+
+    /**
+     * If this is set to true than the message will be show with html of the bootstrap modal window.
+     * @deprecated 3.3.0:4.0.0 Switch to new method (showInModalWindow()).
+     */
+    public function showInModaleWindow()
+    {
+        global $gLogger;
+
+        $gLogger->warning('DEPRECATED: "$message->showInModaleWindow()" is deprecated, use "$message->showInModalWindow()" instead!');
+
+        $this->modalWindowMode = true;
+        $this->inline = true;
     }
 }

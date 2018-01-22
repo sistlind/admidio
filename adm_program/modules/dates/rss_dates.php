@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * RSS feed of events
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -21,99 +21,111 @@
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 // Initialize and check the parameters
 $getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string', array('defaultValue' => $gL10n->get('DAT_DATES')));
 
 // Nachschauen ob RSS ueberhaupt aktiviert ist bzw. das Modul oeffentlich zugaenglich ist
-if ($gPreferences['enable_rss'] != 1)
+if (!$gSettingsManager->getBool('enable_rss'))
 {
     $gMessage->setForwardUrl($gHomepage);
     $gMessage->show($gL10n->get('SYS_RSS_DISABLED'));
+    // => EXIT
 }
 
-// pruefen ob das Modul ueberhaupt aktiviert ist
-if ($gPreferences['enable_dates_module'] != 1)
+// check if the module is enabled and disallow access if it's disabled
+if ((int) $gSettingsManager->get('enable_dates_module') !== 1)
 {
-    // das Modul ist deaktiviert
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
 
 // create Object
 $dates = new ModuleDates();
+$dates->setDateRange();
 
 // read events for output
-$datesResult = $dates->getDataset(0, 10);
+$datesResult = $dates->getDataSet(0, 10);
 
 // ab hier wird der RSS-Feed zusammengestellt
 
+$orgLongname = $gCurrentOrganization->getValue('org_longname');
 // create RSS feed object with channel information
-$rss  = new RSSfeed($gCurrentOrganization->getValue('org_longname'). ' - '. $getHeadline,
-            $gCurrentOrganization->getValue('org_homepage'),
-            $gL10n->get('DAT_CURRENT_DATES_OF_ORGA', $gCurrentOrganization->getValue('org_longname')),
-            $gCurrentOrganization->getValue('org_longname'));
+$rss  = new RSSfeed(
+    $orgLongname . ' - ' . $getHeadline,
+    $gCurrentOrganization->getValue('org_homepage'),
+    $gL10n->get('DAT_CURRENT_DATES_OF_ORGA', array($orgLongname)),
+    $orgLongname
+);
 $date = new TableDate($gDb);
 
 // Dem RSSfeed-Objekt jetzt die RSSitems zusammenstellen und hinzufuegen
-if($datesResult['numResults'] > 0)
+if ($datesResult['numResults'] > 0)
 {
     $date = new TableDate($gDb);
-    foreach($datesResult['recordset'] as $row)
+    foreach ($datesResult['recordset'] as $row)
     {
-
         // ausgelesene Termindaten in Date-Objekt schieben
         $date->clear();
         $date->setArray($row);
 
+        $dateId       = (int) $date->getValue('dat_id');
+        $dateFrom     = $date->getValue('dat_begin', $gSettingsManager->getString('system_date'));
+        $dateTo       = $date->getValue('dat_end', $gSettingsManager->getString('system_date'));
+        $dateLocation = $date->getValue('dat_location');
+
         // set data for attributes of this entry
-        $title = $date->getValue('dat_begin', $gPreferences['system_date']);
-        if($date->getValue('dat_begin', $gPreferences['system_date']) != $date->getValue('dat_end', $gPreferences['system_date']))
+        $title = $dateFrom;
+        if ($dateFrom !== $dateTo)
         {
-            $title = $title. ' - '. $date->getValue('dat_end', $gPreferences['system_date']);
+            $title .= ' - ' . $dateTo;
         }
-        $title   = $title. ' '. $date->getValue('dat_headline');
-        $link    = $g_root_path.'/adm_program/modules/dates/dates.php?id='. $date->getValue('dat_id');
-        $author  = $row['create_name'];
-        $pubDate = date('r', strtotime($date->getValue('dat_timestamp_create')));
+        $title  .= ' ' . $date->getValue('dat_headline');
 
         // add additional information about the event to the description
+        $descDateFrom = $dateFrom;
         $descDateTo   = '';
-        $descDateFrom = $date->getValue('dat_begin', $gPreferences['system_date']);
         $description  = $descDateFrom;
 
         if ($date->getValue('dat_all_day') == 0)
         {
-            $descDateFrom = $descDateFrom. ' '. $date->getValue('dat_begin', $gPreferences['system_time']).' '.$gL10n->get('SYS_CLOCK');
+            $descDateFrom .= ' ' . $date->getValue('dat_begin', $gSettingsManager->getString('system_time')) . ' ' . $gL10n->get('SYS_CLOCK');
 
-            if($date->getValue('dat_begin', $gPreferences['system_date']) != $date->getValue('dat_end', $gPreferences['system_date']))
+            if ($dateFrom !== $dateTo)
             {
-                $descDateTo = $date->getValue('dat_end', $gPreferences['system_date']). ' ';
+                $descDateTo = $dateTo . ' ';
             }
-            $descDateTo  = $descDateTo. ' '. $date->getValue('dat_end', $gPreferences['system_time']). ' '.$gL10n->get('SYS_CLOCK');
-            $description = $gL10n->get('SYS_DATE_FROM_TO', $descDateFrom, $descDateTo);
+            $descDateTo  .= ' ' . $date->getValue('dat_end', $gSettingsManager->getString('system_time')) . ' ' . $gL10n->get('SYS_CLOCK');
+            $description = $gL10n->get('SYS_DATE_FROM_TO', array($descDateFrom, $descDateTo));
         }
         else
         {
-            if($date->getValue('dat_begin', $gPreferences['system_date']) != $date->getValue('dat_end', $gPreferences['system_date']))
+            if ($dateFrom !== $dateTo)
             {
-                $description = $gL10n->get('SYS_DATE_FROM_TO', $descDateFrom, $date->getValue('dat_end', $gPreferences['system_date']));
+                $description = $gL10n->get('SYS_DATE_FROM_TO', array($descDateFrom, $dateTo));
             }
         }
 
-        if ($date->getValue('dat_location') !== '')
+        if ($dateLocation !== '')
         {
-            $description = $description. '<br /><br />'.$gL10n->get('DAT_LOCATION').':&nbsp;'. $date->getValue('dat_location');
+            $description .= '<br /><br />' . $gL10n->get('DAT_LOCATION') . ': ' . $dateLocation;
         }
 
-        $description = $description. '<br /><br />'. $date->getValue('dat_description');
+        $description .= '<br /><br />' . $date->getValue('dat_description');
 
         // i-cal downloadlink
-        $description = $description. '<br /><br /><a href="'.$g_root_path.'/adm_program/modules/dates/dates_function.php?dat_id='.$date->getValue('dat_id').'&mode=6">'.$gL10n->get('DAT_ADD_DATE_TO_CALENDAR').'</a>';
+        $description .= '<br /><br /><a href="' . safeUrl(ADMIDIO_URL . FOLDER_MODULES . '/dates/dates_function.php', array('dat_id' => $dateId, 'mode' => '6')).'">' . $gL10n->get('DAT_ADD_DATE_TO_CALENDAR') . '</a>';
 
         // add entry to RSS feed
-        $rss->addItem($title, $description, $link, $author, $pubDate);
+        $rss->addItem(
+            $title,
+            $description,
+            safeUrl(ADMIDIO_URL . FOLDER_MODULES . '/dates/dates.php', array('id' => $dateId, 'view' => 'detail')),
+            $row['create_name'],
+            \DateTime::createFromFormat('Y-m-d H:i:s', $date->getValue('dat_timestamp_create'))->format('r')
+        );
     }
 }
 // jetzt nur noch den Feed generieren lassen
-$rss->buildFeed();
+$rss->getRssFeed();

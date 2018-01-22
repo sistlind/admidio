@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Konfigurationsdatei fuer Admidio-Plugin Sidebar-Announcements
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -14,8 +14,14 @@ $plg_announcements_count = 2;
 
 // Soll ein Vorschau-Text der Ankündigung gezeigt werden?
 // 0 = keine Voranzeige
-// >0 = Anzahl Zeichen des Vorschau-Textes
+// 70 = Anzahl Zeichen des Vorschau-Textes
 $plg_show_preview = 70;
+
+// If this option is set to true (1) than the full content of the
+// description will be shown. Also images and other html content.
+// 0 = only show text preview of description
+// 1 = show full html content of description
+$plgShowFullDescription = 0;
 
 // Name einer CSS-Klasse fuer Links
 // Nur noetig, falls die Links ein anderes Aussehen bekommen sollen
@@ -33,3 +39,7 @@ $plg_max_char_per_word = 0;
 // 1 = (Default) Überschrift wird angezeigt
 // 0 = Überschrift wird nicht angezeigt
 $plg_show_headline = 1;
+
+// Set a custom headline for the plugin and also for the announcements module.
+// The headline could also be a translation string e.g. SYS_HEADLINE
+$plg_headline = '';

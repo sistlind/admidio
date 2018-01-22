@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Backup
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -14,38 +14,40 @@
  * filename : Der Name der Datei, welche heruntergeladen werden soll
  ***********************************************************************************************
  */
-require('../../system/common.php');
-require('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
 $getJob      = admFuncVariableIsValid($_GET, 'job',      'string', array('requireValue' => true, 'validValues' => array('delete', 'get_file')));
 $getFilename = admFuncVariableIsValid($_GET, 'filename', 'file',   array('requireValue' => true));
 
-// nur Webmaster duerfen ein Backup starten
-if(!$gCurrentUser->isWebmaster())
+// only administrators are allowed to create backups
+if(!$gCurrentUser->isAdministrator())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
-$backupAbsolutePath = SERVER_PATH. '/adm_my_files/backup/'; // make sure to include trailing slash
+$backupAbsolutePath = ADMIDIO_PATH . FOLDER_DATA . '/backup/'; // make sure to include trailing slash
 
 // kompletten Pfad der Datei holen
 $completePath = $backupAbsolutePath.$getFilename;
 
 // pruefen ob File ueberhaupt physikalisch existiert
-if(!file_exists($completePath))
+if(!is_file($completePath))
 {
     $gMessage->show($gL10n->get('SYS_FILE_NOT_EXIST'));
+    // => EXIT
 }
 
 switch($getJob)
 {
     case 'get_file':
         // Dateigroese ermitteln
-        $fileSize   = filesize($completePath);
+        $fileSize = filesize($completePath);
 
         // for IE the filename must have special chars in hexadecimal
-        if (preg_match('/MSIE/', $_SERVER['HTTP_USER_AGENT']))
+        if (admStrContains($_SERVER['HTTP_USER_AGENT'], 'MSIE'))
         {
             $getFilename = urlencode($getFilename);
         }
@@ -60,7 +62,7 @@ switch($getJob)
         header('Pragma: public');
 
         // Datei ausgeben.
-        echo readfile($completePath);
+        readfile($completePath);
         break;
 
     case 'delete':

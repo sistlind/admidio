@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -33,8 +33,6 @@
  *                     [cat_name_intern] => COMMON
  *                     [4] => Allgemein
  *                     [cat_name] => Allgemein
- *                     [5] => 0
- *                     [cat_hidden] => 0
  *                     [6] => 0
  *                     [cat_system] => 0
  *                     [7] => 0
@@ -57,8 +55,8 @@
  *                     [lnk_name] => Beispielseite
  *                     [16] => Auf dieser Seite gibt es nicht viele Neuigkeiten :(
  *                     [lnk_description] => Auf dieser Seite gibt es nicht viele Neuigkeiten :(
- *                     [17] => http://www.example.com
- *                     [lnk_url] => http://www.example.com
+ *                     [17] => https://www.example.com
+ *                     [lnk_url] => https://www.example.com
  *                     [18] => 6
  *                     [lnk_counter] => 6
  *                     [19] => 1
@@ -103,80 +101,53 @@
  */
 class ModuleWeblinks extends Modules
 {
-    protected $getConditions;       ///< String with SQL condition
-
-    /**
-     * creates an new ModuleWeblink object
-     */
-    public function __construct()
-    {
-        global $gValidLogin;
-        global $gL10n;
-
-        // get parent instance with all parameters from $_GET Array
-        parent::__construct();
-    }
-
     /**
      * Function returns a set of links with corresponding information
-     * @param int      $startElement Start element of result. First (and default) is 0.
-     * @param int|null $limit        Number of elements returned max. Default NULL will take number from preferences.
-     * @return array with links and corresponding information
+     * @param int $startElement Start element of result. First (and default) is 0.
+     * @param int $limit        Number of elements returned max. Default NULL will take number from preferences.
+     * @return array<string,mixed> with links and corresponding information
      */
     public function getDataSet($startElement = 0, $limit = null)
     {
-        global $gCurrentOrganization, $gPreferences, $gProfileFields, $gDb, $gValidLogin;
+        global $gCurrentUser, $gSettingsManager, $gDb;
 
         // Parameter
-        if($limit == null)
+        if($limit === null)
         {
-            $limit = $gPreferences['weblinks_per_page'];
+            $limit = $gSettingsManager->getInt('weblinks_per_page');
         }
 
-        // Bedingungen
-        if($this->getParameter('id') > 0)
-        {
-            $this->getConditions = ' AND lnk_id = '. $this->getParameter('id');
-        }
-        if($this->getParameter('cat_id') > 0)
-        {
-            $this->getConditions = ' AND cat_id = '. $this->getParameter('cat_id');
-        }
-        if(!$gValidLogin)
-        {
-            // if user isn't logged in, then don't show hidden categories
-            $this->getConditions .= ' AND cat_hidden = 0 ';
-        }
+        $catIdParams = array_merge(array(0), $gCurrentUser->getAllVisibleCategories('LNK'));
+        $sqlConditions = $this->getSqlConditions();
 
         // Weblinks aus der DB fischen...
-        $sql = 'SELECT cat.*, lnk.*
-                  FROM '. TBL_CATEGORIES .' cat, '. TBL_LINKS. ' lnk
-                 WHERE lnk_cat_id = cat_id
-                   AND cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                   AND cat_type = \'LNK\'
-                   '.$this->getConditions.'
-                 ORDER BY cat_sequence, lnk_name, lnk_timestamp_create DESC';
+        $sql = 'SELECT *
+                  FROM '.TBL_LINKS.'
+            INNER JOIN '.TBL_CATEGORIES.'
+                    ON cat_id = lnk_cat_id
+                 WHERE cat_id IN ('.replaceValuesArrWithQM($catIdParams).')
+                       '.$sqlConditions['sql'].'
+              ORDER BY cat_sequence, lnk_name, lnk_timestamp_create DESC';
+
         if($limit > 0)
         {
             $sql .= ' LIMIT '.$limit;
         }
-        if($startElement != 0)
+        if($startElement > 0)
         {
             $sql .= ' OFFSET '.$startElement;
         }
 
-        $weblinksStatement = $gDb->query($sql);
+        $pdoStatement = $gDb->queryPrepared($sql, array_merge($catIdParams, $sqlConditions['params'])); // TODO add more params
 
         // array for results
-        $weblinks['recordset']  = $weblinksStatement->fetchAll();
-        $weblinks['numResults'] = $weblinksStatement->rowCount();
-        $weblinks['limit']      = $limit;
-        $weblinks['totalCount'] = $this->getDataSetCount();
-
-        // Push parameter to array
-        $weblinks['parameter'] = $this->getParameters();
-
-        return $weblinks;
+        return array(
+            'recordset'  => $pdoStatement->fetchAll(),
+            'numResults' => $pdoStatement->rowCount(),
+            'limit'      => $limit,
+            'totalCount' => $this->getDataSetCount(),
+            'parameter'  => $this->getParameters()
+        );
     }
 
     /**
@@ -185,17 +156,20 @@ class ModuleWeblinks extends Modules
      */
     public function getDataSetCount()
     {
-        global $gCurrentOrganization;
-        global $gDb;
+        global $gCurrentUser, $gDb;
 
-        $sql = 'SELECT COUNT(*) AS count FROM '. TBL_LINKS. ', '. TBL_CATEGORIES .'
-                WHERE lnk_cat_id = cat_id
-                AND cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
-                AND cat_type = \'LNK\'
-        '.$this->getConditions;
-        $statement = $gDb->query($sql);
-        $row = $statement->fetch();
-        return $row['count'];
+        $catIdParams = array_merge(array(0), $gCurrentUser->getAllVisibleCategories('LNK'));
+        $sqlConditions = $this->getSqlConditions();
+
+        $sql = 'SELECT COUNT(*) AS count
+                  FROM '.TBL_LINKS.'
+            INNER JOIN '.TBL_CATEGORIES.'
+                    ON cat_id = lnk_cat_id
+                 WHERE cat_id IN (' . replaceValuesArrWithQM($catIdParams) . ')
+                       '.$sqlConditions['sql'];
+        $pdoStatement = $gDb->queryPrepared($sql, array_merge($catIdParams, $sqlConditions['params']));
+
+        return (int) $pdoStatement->fetchColumn();
     }
 
     /**
@@ -207,12 +181,44 @@ class ModuleWeblinks extends Modules
     {
         global $gDb;
 
+        $catId = (int) $this->getParameter('cat_id');
         // set headline with category name
-        if($this->getParameter('cat_id') > 0)
+        if($catId > 0)
         {
-            $category  = new TableCategory($gDb, $this->getParameter('cat_id'));
+            $category  = new TableCategory($gDb, $catId);
             $headline .= ' - '. $category->getValue('cat_name');
         }
         return $headline;
+    }
+
+    /**
+     * Add several conditions to an SQL string that could later be used as additional conditions in other SQL queries.
+     * @return array<string,string|array<int,int>> Returns an array of a SQL string with additional conditions and it's query params.
+     */
+    private function getSqlConditions()
+    {
+        $sqlConditions = '';
+        $params = array();
+
+        $id    = (int) $this->getParameter('id');
+        $catId = (int) $this->getParameter('cat_id');
+
+        // In case ID was permitted and user has rights
+        if($id > 0)
+        {
+            $sqlConditions .= ' AND lnk_id = ? '; // $id
+            $params[] = $id;
+        }
+        // show all weblinks from category
+        elseif($catId > 0)
+        {
+            $sqlConditions .= ' AND cat_id = ? '; // $catId
+            $params[] = $catId;
+        }
+
+        return array(
+            'sql'    => $sqlConditions,
+            'params' => $params
+        );
     }
 }

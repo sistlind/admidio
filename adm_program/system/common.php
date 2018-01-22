@@ -4,141 +4,89 @@
  * Basic script for all other Admidio scripts with all the necessary data und
  * variables to run a script in the Admidio environment
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 if (basename($_SERVER['SCRIPT_FILENAME']) === 'common.php')
 {
-    exit('This page may not be called directly !');
+    exit('This page may not be called directly!');
 }
 
-// embed config and constants file
-require_once(substr(__FILE__, 0, strpos(__FILE__, 'adm_program') - 1) . '/adm_my_files/config.php');
-require_once(substr(__FILE__, 0, strpos(__FILE__, 'adm_program') - 1) . '/adm_program/system/constants.php');
-
-// if there is no debug flag in config.php than set debug to false
-if(!isset($gDebug) || $gDebug !== 1)
-{
-    $gDebug = 0;
-}
-
-if($gDebug)
-{
-    // write actual script with parameters in log file
-    error_log('--------------------------------------------------------------------------------'."\n" .
-              $_SERVER['SCRIPT_FILENAME'] . "\n? " . $_SERVER['QUERY_STRING']);
-    error_log('memory_used::' . memory_get_usage());
-}
-
-// default prefix is set to 'adm' because of compatibility to old versions
-if($g_tbl_praefix === '')
-{
-    $g_tbl_praefix = 'adm';
-}
-
-// includes WITHOUT database connections
-require_once(SERVER_PATH . '/adm_program/libs/htmlawed/htmlawed.php');
-require_once(SERVER_PATH . '/adm_program/system/function.php');
-require_once(SERVER_PATH . '/adm_program/system/string.php');
-
-// remove HTML & PHP-Code from all parameters
-$_GET    = admStrStripTagsSpecial($_GET);
-$_POST   = admStrStripTagsSpecial($_POST);
-$_COOKIE = admStrStripTagsSpecial($_COOKIE);
-
-// escape all quotes so db queries are save
-if(!get_magic_quotes_gpc())
-{
-    $_GET    = strAddSlashesDeep($_GET);
-    $_POST   = strAddSlashesDeep($_POST);
-    $_COOKIE = strAddSlashesDeep($_COOKIE);
-}
+// load config and init bootstrapping
+$rootPath = substr(__FILE__, 0, strpos(__FILE__, DIRECTORY_SEPARATOR . 'adm_program'));
+require_once($rootPath . '/adm_my_files/config.php');
+require_once($rootPath . '/adm_program/system/bootstrap.php');
 
 // global parameters
 $gValidLogin = false;
-$gLayout     = array();
-
- // create database object and establish connection to database
-if(!isset($gDbType))
-{
-    $gDbType = 'mysql';
-}
 
 try
 {
-    $gDb = new Database($gDbType, $g_adm_srv, null, $g_adm_db, $g_adm_usr, $g_adm_pw);
+    $gDb = new Database($gDbType, $g_adm_srv, $g_adm_port, $g_adm_db, $g_adm_usr, $g_adm_pw);
 }
 catch(AdmException $e)
 {
     $e->showText();
+    // => EXIT
 }
-
-// create an installation unique cookie prefix and remove special characters
-$gCookiePraefix = 'ADMIDIO_' . $g_organization . '_' . $g_adm_db . '_' . $g_tbl_praefix;
-$gCookiePraefix = strtr($gCookiePraefix, ' .,;:[]', '_______');
 
 /*********************************************************************************
  Create and validate sessions, check auto login, read session variables
 /********************************************************************************/
 
 // start PHP session
-if(!headers_sent())
+try
 {
-    session_name($gCookiePraefix . '_PHP_ID');
-    session_start();
+    Session::start(COOKIE_PREFIX);
+}
+catch (\RuntimeException $exception)
+{
+    // TODO
 }
 
 // determine session id
-if(array_key_exists($gCookiePraefix . '_ID', $_COOKIE))
+if(array_key_exists(COOKIE_PREFIX . '_SESSION_ID', $_COOKIE))
 {
-    $gSessionId = $_COOKIE[$gCookiePraefix . '_ID'];
+    $gSessionId = $_COOKIE[COOKIE_PREFIX . '_SESSION_ID'];
 }
 else
 {
     $gSessionId = session_id();
 }
 
-// if auto login is set and session is new or a user assigned then check then create valid login
-$userIdAutoLogin = 0;
-
-// create language object to handle translation texts
-$gL10n = new Language();
-
 // Session handling
-if(array_key_exists('gCurrentSession', $_SESSION))
+if(array_key_exists('gCurrentSession', $_SESSION) && $_SESSION['gCurrentSession']->hasObject('gCurrentOrganization'))
 {
     // read session object from PHP session
+    /**
+     * @var Session $gCurrentSession
+     */
     $gCurrentSession = $_SESSION['gCurrentSession'];
-    $gCurrentSession->setDatabase($gDb);
     // reload session data and if necessary the organization object
     $gCurrentSession->refreshSession();
     // read system component
+    /**
+     * @var Component $gSystemComponent
+     */
     $gSystemComponent =& $gCurrentSession->getObject('gSystemComponent');
     // read language data from session and assign them to the language object
-    $gL10n->addLanguageData($gCurrentSession->getObject('gLanguageData'));
+    /**
+     * @var LanguageData $gLanguageData
+     */
+    $gLanguageData =& $gCurrentSession->getObject('gLanguageData');
     // read organization data from session object
+    /**
+     * @var Organization $gCurrentOrganization
+     */
     $gCurrentOrganization =& $gCurrentSession->getObject('gCurrentOrganization');
-    $gPreferences = $gCurrentOrganization->getPreferences();
-
-    // compute time in ms from last activity in session until now
-    $time_gap = time() - strtotime($gCurrentSession->getValue('ses_timestamp', 'Y-m-d H:i:s'));
-
-    // if cookie ADMIDIO_DATA is set and last user activity is longer ago, then create auto login if possible
-    if(array_key_exists($gCookiePraefix . '_DATA', $_COOKIE) && $time_gap > $gPreferences['logout_minutes'] * 60
-    && $gCurrentSession->hasObject('gCurrentUser'))
-    {
-        // restore user from auto login session
-        $autoLogin = new AutoLogin($gDb, $gSessionId);
-        $autoLogin->setValidLogin($gCurrentSession, $_COOKIE[$gCookiePraefix . '_DATA']);
-        $userIdAutoLogin = $autoLogin->getValue('atl_usr_id');
-    }
+    $gSettingsManager =& $gCurrentOrganization->getSettingsManager();
 }
 else
 {
     // create new session object and store it in PHP session
-    $gCurrentSession = new Session($gDb, $gSessionId);
+    $gCurrentSession = new Session($gDb, $gSessionId, COOKIE_PREFIX);
     $_SESSION['gCurrentSession'] = $gCurrentSession;
 
     // create system component
@@ -146,59 +94,58 @@ else
     $gSystemComponent->readDataByColumns(array('com_type' => 'SYSTEM', 'com_name_intern' => 'CORE'));
     $gCurrentSession->addObject('gSystemComponent', $gSystemComponent);
 
-    // if cookie ADMIDIO_DATA is set then there could be an auto login
-    // the auto login must be done here because after that the corresponding organization must be set
-    if(array_key_exists($gCookiePraefix . '_DATA', $_COOKIE))
+    // create object of the organization of config file with their preferences
+    if($gCurrentSession->getOrganizationId() > 0)
     {
-        // restore user from auto login session
-        $autoLogin = new AutoLogin($gDb, $gSessionId);
-        $autoLogin->setValidLogin($gCurrentSession, $_COOKIE[$gCookiePraefix . '_DATA']);
-        $userIdAutoLogin = $autoLogin->getValue('atl_usr_id');
-
-        // create object of the organization of config file with their preferences
-        if($autoLogin->getValue('atl_org_id') > 0)
-        {
-            $gCurrentOrganization = new Organization($gDb, $autoLogin->getValue('atl_org_id'));
-        }
-        else
-        {
-            $gCurrentOrganization = new Organization($gDb, $g_organization);
-        }
+        $gCurrentOrganization = new Organization($gDb, $gCurrentSession->getOrganizationId());
     }
     else
     {
-        // create object of the organization of config file with their preferences
         $gCurrentOrganization = new Organization($gDb, $g_organization);
     }
 
-    if($gCurrentOrganization->getValue('org_id') === 0)
+    if((int) $gCurrentOrganization->getValue('org_id') === 0)
     {
+        $gLogger->error('Organization could not be found!', array('$g_organization' => $g_organization));
+
         // organization not found
         exit('<div style="color: #cc0000;">Error: The organization of the config.php could not be found in the database!</div>');
     }
     // add the organization to the session
-    $gPreferences = $gCurrentOrganization->getPreferences();
+    $gSettingsManager =& $gCurrentOrganization->getSettingsManager();
     $gCurrentSession->addObject('gCurrentOrganization', $gCurrentOrganization);
     $gCurrentSession->setValue('ses_org_id', $gCurrentOrganization->getValue('org_id'));
 
     // create a language data object and assign it to the language object
-    $gLanguageData = new LanguageData($gPreferences['system_language']);
-    $gL10n->addLanguageData($gLanguageData);
+    $gLanguageData = new LanguageData($gSettingsManager->getString('system_language'));
     $gCurrentSession->addObject('gLanguageData', $gLanguageData);
 
     // delete old entries in session table
-    $gCurrentSession->tableCleanup($gPreferences['logout_minutes']);
+    $gCurrentSession->tableCleanup($gSettingsManager->getInt('logout_minutes'));
 }
+
+$gL10n = new Language($gLanguageData);
+
+// Deprecated: backwards compatibility
+$gPreferences = $gSettingsManager->getAll();
+
+$orgId    = (int) $gCurrentOrganization->getValue('org_id');
+$sesUsrId = (int) $gCurrentSession->getValue('ses_usr_id');
 
 // now if auto login is done, read global user data
 if($gCurrentSession->hasObject('gCurrentUser'))
 {
+    /**
+     * @var ProfileFields $gProfileFields
+     */
     $gProfileFields =& $gCurrentSession->getObject('gProfileFields');
-    $gCurrentUser   =& $gCurrentSession->getObject('gCurrentUser');
-    $gCurrentUser->mProfileFieldsData->setDatabase($gDb);
+    /**
+     * @var User $gCurrentUser
+     */
+    $gCurrentUser =& $gCurrentSession->getObject('gCurrentUser');
 
     // checks if user in database session is the same as in php session
-    if($gCurrentUser->getValue('usr_id') !== $gCurrentSession->getValue('ses_usr_id'))
+    if((int) $gCurrentUser->getValue('usr_id') !== $sesUsrId)
     {
         $gCurrentUser->clear();
         $gCurrentSession->setValue('ses_usr_id', '');
@@ -207,28 +154,38 @@ if($gCurrentSession->hasObject('gCurrentUser'))
 else
 {
     // create object with current user field structure und user object
-    $gProfileFields = new ProfileFields($gDb, $gCurrentOrganization->getValue('org_id'));
-    $gCurrentUser   = new User($gDb, $gProfileFields, $userIdAutoLogin);
+    $gProfileFields = new ProfileFields($gDb, $orgId);
+    $gCurrentUser   = new User($gDb, $gProfileFields, $sesUsrId);
+
+    // if session is created with auto login then update user login data
+    // if user object is created and session has usr_id then this is an auto login
+    // and we should update the login data and count logins
+    if($sesUsrId > 0)
+    {
+        $gCurrentUser->updateLoginData();
+    }
 
     // save all data in session
     $gCurrentSession->addObject('gProfileFields', $gProfileFields);
     $gCurrentSession->addObject('gCurrentUser', $gCurrentUser);
 }
 
+$sesRenew = (int) $gCurrentSession->getValue('ses_renew');
+$usrId    = (int) $gCurrentUser->getValue('usr_id');
+
 // check if organization or user object must be renewed if data was changed by other users
-$sesRenew = $gCurrentSession->getValue('ses_renew');
 if($sesRenew === 1 || $sesRenew === 3)
 {
     // read new field structure in object and than create new user object with new field structure
-    $gProfileFields->readProfileFields($gCurrentOrganization->getValue('org_id'));
-    $gCurrentUser->readDataById($gCurrentUser->getValue('usr_id'));
+    $gProfileFields->readProfileFields($orgId);
+    $gCurrentUser->readDataById($usrId);
     $gCurrentSession->setValue('ses_renew', 0);
 }
 
 // check session if user login is valid
-if($gCurrentSession->getValue('ses_usr_id') > 0)
+if($sesUsrId > 0)
 {
-    if($gCurrentSession->isValidLogin($gCurrentUser->getValue('usr_id')))
+    if($gCurrentSession->isValidLogin($usrId))
     {
         $gValidLogin = true;
     }
@@ -241,24 +198,18 @@ if($gCurrentSession->getValue('ses_usr_id') > 0)
 // update session recordset (i.a. refresh timestamp)
 $gCurrentSession->save();
 
-// if session is created with auto login then update user login data
-if($userIdAutoLogin > 0 && $gCurrentUser->getValue('usr_id'))
-{
-    // count logins and save login date
-    $gCurrentUser->updateLoginData();
-}
-
-/*********************************************************************************
- create necessary objects and parameters
-/********************************************************************************/
+// create necessary objects and parameters
 
 // set default theme if no theme was set
-if(!array_key_exists('theme', $gPreferences))
+if ($gSettingsManager->has('theme'))
 {
-    $gPreferences['theme'] = 'modern';
+    $gSettingsManager->set('theme', 'modern');
 }
-define('THEME_SERVER_PATH', SERVER_PATH . '/adm_themes/' . $gPreferences['theme']);
-define('THEME_PATH', $g_root_path . '/adm_themes/' . $gPreferences['theme']);
+
+define('THEME_ADMIDIO_PATH', ADMIDIO_PATH . FOLDER_THEMES . '/' . $gSettingsManager->getString('theme')); // Will get "THEME_PATH" in v4.0
+define('THEME_URL', ADMIDIO_URL . FOLDER_THEMES . '/' . $gSettingsManager->getString('theme'));
+define('THEME_SERVER_PATH', THEME_ADMIDIO_PATH); // TODO deprecated: Remove in Admidio 4.0
+define('THEME_PATH', THEME_URL); // TODO deprecated: Remove in Admidio 4.0
 
 // Create message object which can be called if a message should be shown
 $gMessage = new Message();
@@ -267,7 +218,10 @@ $gMessage = new Message();
 // Every URL will be stored in a stack and can be called if user want's to navigate back
 if($gCurrentSession->hasObject('gNavigation'))
 {
-    $gNavigation = $gCurrentSession->getObject('gNavigation');
+    /**
+     * @var Navigation $gNavigation
+     */
+    $gNavigation =& $gCurrentSession->getObject('gNavigation');
 }
 else
 {
@@ -282,15 +236,17 @@ try
 }
 catch(AdmException $e)
 {
-    $e->showHtml();
+    $gMessage->showThemeBody(false);
+    $gMessage->hideButtons();
+    $gMessage->show($e->getText(), 'Admidio - '.$gL10n->get('INS_UPDATE'));
 }
 
 // set default homepage
 if($gValidLogin)
 {
-    $gHomepage = $g_root_path . '/' . $gPreferences['homepage_login'];
+    $gHomepage = ADMIDIO_URL . '/' . $gSettingsManager->getString('homepage_login');
 }
 else
 {
-    $gHomepage = $g_root_path . '/' . $gPreferences['homepage_logout'];
+    $gHomepage = ADMIDIO_URL . '/' . $gSettingsManager->getString('homepage_logout');
 }

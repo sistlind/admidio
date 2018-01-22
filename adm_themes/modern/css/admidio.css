@@ -1,8 +1,8 @@
 /******************************************************************************
  * Cascading-Style-Sheets file for Admidio
  *
- * Copyright    : (c) 2004 - 2015 The Admidio Team
- * Homepage     : http://www.admidio.org
+ * Copyright    : (c) 2004 - 2017 The Admidio Team
+ * Homepage     : https://www.admidio.org/
  * License      : GNU Public License 2 https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Here you can edit the look and feel of Admidio
@@ -163,6 +163,10 @@ h2 {
 
 h3 {
     font-size: 110%;
+}
+
+h4 {
+    font-size: 100%;
 }
 
 @media (min-width: 768px) {
@@ -617,7 +621,7 @@ input[type="time"] {
 
 /* Information block with user and timestamp who created and edited the data */
 
-.admidio-admidio-info-created-edited {
+.admidio-info-created-edited {
     font-size: 8pt;
     margin-top: 8px;
 }
@@ -651,9 +655,10 @@ input[type="time"] {
 
 
 .panel-primary > .panel-footer {
-    padding: 0;
+    padding: 5px 0 0 0;
     background-color: white;
     border-top: 2px solid #c1dce6;
+    font-size: 8pt;
 }
 
 .admidio-panel-heading-icon {
@@ -695,7 +700,6 @@ input[type="time"] {
 }
 
 .table tbody > tr > td {
-    word-break: break-all;
     word-wrap: break-word;
 }
 
@@ -746,6 +750,10 @@ input[type="time"] {
     display: inline;
 }
 
+#profile_authorizations_box_body div {
+    margin-bottom: 5px;
+}
+
 .admidio-list-roles-assign li,
 .admidio-list-roles-assign-pos li {
     border-width: 0;
@@ -762,6 +770,18 @@ input[type="time"] {
 
 .admidio-list-roles-assign-pos li {
     padding: 0 0 5px 0;
+}
+
+#admidio-password-strength {
+    margin-top: 10px;
+}
+
+#admidio-password-strength-minimum {
+    position: absolute;
+    border: 9px solid transparent;
+    border-left-color: #555555;
+    border-right-width: 0;
+    margin-top: 1px;
 }
 
 /* Fullscreen mode for lists */
@@ -820,4 +840,10 @@ tr.admidio-event-highlight,
 
 .panel-primary.admidio-event-highlight > .panel-heading {
     border-bottom: 2px solid #ff9c00;
+}
+
+/* Plugin area */
+
+.admidio-plugin-content > div > a {
+    white-space: normal;
 }

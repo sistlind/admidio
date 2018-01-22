@@ -1,7 +1,7 @@
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -233,19 +233,19 @@ alter table %PREFIX%_texts add constraint %PREFIX%_FK_TXT_ORG foreign key (txt_o
 
 -- manipulate data
 UPDATE %PREFIX%_user_fields SET usf_system = 0, usf_name = 'SYS_GENDER', usf_type = 'RADIO_BUTTON', usf_value_list = 'male.png|SYS_MALE\r\nfemale.png|SYS_FEMALE'
- WHERE usf_name_intern LIKE 'GENDER';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_LASTNAME' WHERE usf_name_intern LIKE 'LAST_NAME';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_FIRSTNAME' WHERE usf_name_intern LIKE 'FIRST_NAME';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_ADDRESS' WHERE usf_name_intern LIKE 'ADDRESS';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_POSTCODE' WHERE usf_name_intern LIKE 'POSTCODE';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_CITY' WHERE usf_name_intern LIKE 'CITY';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_COUNTRY' WHERE usf_name_intern LIKE 'COUNTRY';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_PHONE' WHERE usf_name_intern LIKE 'PHONE';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_MOBILE' WHERE usf_name_intern LIKE 'MOBILE';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_FAX' WHERE usf_name_intern LIKE 'FAX';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_BIRTHDAY' WHERE usf_name_intern LIKE 'BIRTHDAY';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_EMAIL' WHERE usf_name_intern LIKE 'EMAIL';
-UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_WEBSITE' WHERE usf_name_intern LIKE 'WEBSITE';
+ WHERE usf_name_intern = 'GENDER';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_LASTNAME' WHERE usf_name_intern = 'LAST_NAME';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_FIRSTNAME' WHERE usf_name_intern = 'FIRST_NAME';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_ADDRESS' WHERE usf_name_intern = 'ADDRESS';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_POSTCODE' WHERE usf_name_intern = 'POSTCODE';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_CITY' WHERE usf_name_intern = 'CITY';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_COUNTRY' WHERE usf_name_intern = 'COUNTRY';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_PHONE' WHERE usf_name_intern = 'PHONE';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_MOBILE' WHERE usf_name_intern = 'MOBILE';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_FAX' WHERE usf_name_intern = 'FAX';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_BIRTHDAY' WHERE usf_name_intern = 'BIRTHDAY';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_EMAIL' WHERE usf_name_intern = 'EMAIL';
+UPDATE %PREFIX%_user_fields SET usf_name = 'SYS_WEBSITE' WHERE usf_name_intern = 'WEBSITE';
 
 UPDATE %PREFIX%_preferences SET prf_value = 'da' WHERE prf_name like 'system_language' AND prf_value like 'dk';
 DELETE FROM %PREFIX%_preferences WHERE prf_name like 'captcha_font_size';
@@ -256,7 +256,7 @@ DELETE FROM %PREFIX%_preferences WHERE prf_name like 'ecard_text_font';
 DELETE FROM %PREFIX%_preferences WHERE prf_name like 'ecard_text_size';
 DELETE FROM %PREFIX%_preferences WHERE prf_name like 'ecard_text_color';
 UPDATE %PREFIX%_preferences SET prf_name = 'captcha_font_size' WHERE prf_name like 'captcha_text_size';
-UPDATE %PREFIX%_organizations SET org_homepage = 'http://' || org_homepage WHERE lower( substring( org_homepage, 1, 4 ) ) NOT LIKE 'http';
+UPDATE %PREFIX%_organizations SET org_homepage = 'http://' || org_homepage WHERE lower( substring( org_homepage, 1, 4 ) ) <> 'http';
 
 -- replace category name with translation id
 UPDATE %PREFIX%_categories SET cat_name = 'SYS_MASTER_DATA' WHERE cat_name_intern = 'MASTER_DATA';
@@ -264,7 +264,7 @@ UPDATE %PREFIX%_categories SET cat_name = 'SYS_COMMON', cat_name_intern = 'COMMO
 UPDATE %PREFIX%_categories SET cat_name = 'INS_GROUPS', cat_name_intern = 'GROUPS' WHERE cat_name_intern IN ('GROUPS', 'GRUPPEN');
 UPDATE %PREFIX%_categories SET cat_name = 'INS_COURSES', cat_name_intern = 'COURSES' WHERE cat_name_intern IN ('COURSES', 'KURSE');
 UPDATE %PREFIX%_categories SET cat_name = 'INS_TEAMS', cat_name_intern = 'TEAMS' WHERE cat_name_intern IN ('TEAMS', 'MANNSCHAFTEN');
-UPDATE %PREFIX%_categories SET cat_name = 'SYS_CONFIRMATION_OF_PARTICIPATION' WHERE cat_name_intern = 'CONFIRMATION_OF_PARTICIPATION';
+UPDATE %PREFIX%_categories SET cat_name = 'SYS_EVENTS_CONFIRMATION_OF_PARTICIPATION' WHERE cat_name_intern = 'CONFIRMATION_OF_PARTICIPATION';
 UPDATE %PREFIX%_categories SET cat_name = 'INS_INTERN' WHERE cat_name_intern = 'INTERN';
 UPDATE %PREFIX%_categories SET cat_name = 'INS_TRAINING' WHERE cat_name_intern = 'TRAINING';
 UPDATE %PREFIX%_categories SET cat_name = 'INS_ADDIDIONAL_DATA', cat_name_intern = 'ADDIDIONAL_DATA' WHERE cat_name_intern IN ('ADDIDIONAL_DATA', 'ZUSÄTZLICHE_DATEN');

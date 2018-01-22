@@ -3,28 +3,36 @@
  ***********************************************************************************************
  * Klasse erweitert das PHP-DateTime-Objekt um einige nuetzliche Funktionen
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
 /**
- * Class DateTimeExtended
+ * @class DateTimeExtended
  */
 class DateTimeExtended extends DateTime
 {
+    /**
+     * @var bool
+     */
     private $valid;
 
     /**
      * es muss das Datum und das dazugehoerige Format uebergeben werden
-     * @param string $date     String mit dem Datum
-     * @param string $format   das zum Datum passende Format (Schreibweise aus date())
-     * @param object $timezone DateTimeZone
+     * @deprecated 3.2.0:4.0.0 Switched to native DateTime method. Use \DateTime::createFromFormat()
+     * @param string        $date     String mit dem Datum
+     * @param string        $format   das zum Datum passende Format (Schreibweise aus date())
+     * @param \DateTimeZone $timezone DateTimeZone
      */
-    public function __construct($date, $format, $timezone = null)
+    public function __construct($date, $format, \DateTimeZone $timezone = null)
     {
-        $datetime = DateTime::createFromFormat($format, $date);
+        global $gLogger;
+
+        $gLogger->warning('DEPRECATED: "new DateTimeExtended()" is deprecated, use "\DateTime::createFromFormat()" instead!');
+
+        $datetime = \DateTime::createFromFormat($format, $date);
 
         if ($datetime === false)
         {
@@ -40,28 +48,37 @@ class DateTimeExtended extends DateTime
 
     /**
      * gibt true oder false zurueck, je nachdem ob DateTime gueltig ist
+     * @deprecated 3.2.0:4.0.0 Switched to native DateTime method. Use \DateTime::createFromFormat() === false
      * @return bool
      */
     public function isValid()
     {
+        global $gLogger;
+
+        $gLogger->warning('DEPRECATED: "$dateTimeExtended->isValid()" is deprecated, use "\DateTime::createFromFormat() === false" instead!');
+
         return $this->valid;
     }
 
     /**
      * berechnet aus dem Datum das Alter einer Person
+     * @deprecated 3.2.0:4.0.0 Switched to native DateTime method.
+     *             Use \DateTime::createFromFormat()->diff(new \DateTime('now'))->y
      * @return int
      */
     public function getAge()
     {
-        $interval = $this->diff(new DateTime('now'));
-        $age = $interval->y;
+        global $gLogger;
 
-        return $age;
+        $gLogger->warning('DEPRECATED: "$dateTimeExtended->getAge()" is deprecated, use "\DateTime::createFromFormat()->diff(new \DateTime(\'now\'))->y" instead!');
+
+        $now = new \DateTime('now');
+        return $this->diff($now)->y;
     }
 
     /**
      * Returns an array with all 7 weekdays with full name in the specific language.
-     * @param  int             $weekday The number of the weekday for which the name should be returned (1 = Monday ...)
+     * @param int $weekday The number of the weekday for which the name should be returned (1 = Monday ...)
      * @return string|string[] with all 7 weekday or if param weekday is set than the full name of that weekday
      */
     public static function getWeekdays($weekday = 0)
@@ -82,10 +99,8 @@ class DateTimeExtended extends DateTime
         {
             return $weekdays[$weekday];
         }
-        else
-        {
-            return $weekdays;
-        }
+
+        return $weekdays;
     }
 
     /**
@@ -93,8 +108,8 @@ class DateTimeExtended extends DateTime
      * to a syntax that is known by the bootstrap datepicker plugin.
      * e.g.: input: 'd.m.Y' output: 'dd.mm.yyyy'
      * e.g.: input: 'j.n.y' output: 'd.m.yy'
-     * @param  string $format Optional a format could be given in the date() syntax that should be transformed.
-     *                        If no format is set then the format of the class constructor will be used.
+     * @param string $format Optional a format could be given in the date() syntax that should be transformed.
+     *                       If no format is set then the format of the class constructor will be used.
      * @return string Return the transformed format that is valid for the datepicker.
      */
     public static function getDateFormatForDatepicker($format = 'Y-m-d')
@@ -104,7 +119,7 @@ class DateTimeExtended extends DateTime
 
         foreach ($formatArray as $formatChar)
         {
-            switch($formatChar)
+            switch ($formatChar)
             {
                 case 'd':
                     $destFormat .= 'dd';

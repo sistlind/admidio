@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Common functions for update and installation
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -27,39 +27,39 @@ function showNotice($message, $url, $buttonText, $buttonIcon, $update = false)
     // show dialog with success notification
     $form = new HtmlFormInstallation('installation-form', $url);
 
-    if($update)
+    if ($update)
     {
         $form->setUpdateModus();
     }
 
-    if($buttonText === $gL10n->get('INS_UPDATE_DATABASE'))
+    if ($buttonText === $gL10n->get('INS_UPDATE_DATABASE'))
     {
         $onClickText = $gL10n->get('INS_DATABASE_IS_UPDATED');
     }
 
     $form->setFormDescription($message);
     $form->addSubmitButton('next_page', $buttonText, array('icon' => $buttonIcon, 'onClickText' => $onClickText));
-    $form->show();
+    echo $form->show();
     exit();
 }
 
 /**
  * prueft, ob die Mindestvoraussetzungen bei PHP und MySQL eingehalten werden
- * @param  object $db
+ * @param Database $database
  * @return string
  */
-function checkDatabaseVersion(&$db)
+function checkDatabaseVersion(Database $database)
 {
     global $gL10n;
 
     $message = '';
 
     // check database version
-    if(version_compare($db->getVersion(), $db->getMinimumRequiredVersion()) === -1)
+    if (version_compare($database->getVersion(), $database->getMinimumRequiredVersion(), '<'))
     {
-        $message = $gL10n->get('SYS_DATABASE_VERSION').': <strong>'.$db->getVersion().'</strong><br /><br />'.
-                   $gL10n->get('INS_WRONG_MYSQL_VERSION', ADMIDIO_VERSION_TEXT, $db->getMinimumRequiredVersion(),
-                               '<a href="http://www.admidio.org/index.php?page=download">', '</a>');
+        $message = $gL10n->get('SYS_DATABASE_VERSION') . ': <strong>' . $database->getVersion() . '</strong><br /><br />' .
+                   $gL10n->get('INS_WRONG_MYSQL_VERSION', array(ADMIDIO_VERSION_TEXT, $database->getMinimumRequiredVersion(),
+                               '<a href="' . ADMIDIO_HOMEPAGE . 'download.php">', '</a>'));
     }
 
     return $message;
@@ -72,15 +72,91 @@ function checkDatabaseVersion(&$db)
 function checkPhpVersion()
 {
     global $gL10n;
+
     $message = '';
 
     // check PHP version
-    if(version_compare(phpversion(), MIN_PHP_VERSION) === -1)
+    if (version_compare(PHP_VERSION, MIN_PHP_VERSION, '<'))
     {
-        $message = $gL10n->get('SYS_PHP_VERSION').': <strong>'.phpversion().'</strong><br /><br />'.
-                   $gL10n->get('INS_WRONG_PHP_VERSION', ADMIDIO_VERSION_TEXT, MIN_PHP_VERSION,
-                               '<a href="http://www.admidio.org/index.php?page=download">', '</a>');
+        $message = $gL10n->get('SYS_PHP_VERSION') . ': <strong>' . PHP_VERSION . '</strong><br /><br />' .
+                   $gL10n->get('INS_WRONG_PHP_VERSION', array(ADMIDIO_VERSION_TEXT, MIN_PHP_VERSION,
+                               '<a href="' . ADMIDIO_HOMEPAGE . 'download.php">', '</a>'));
     }
 
     return $message;
+}
+
+/**
+ * Read data from sql file and execute all statements to the current database
+ * @param Database $db
+ * @param string   $sqlFileName
+ * @return true|string Returns true no error occurs ales error message is returned
+ */
+function querySqlFile(Database $db, $sqlFileName)
+{
+    global $gL10n, $g_tbl_praefix;
+
+    $sqlPath = ADMIDIO_PATH . '/adm_program/installation/db_scripts/';
+    $sqlFilePath = $sqlPath . $sqlFileName;
+
+    if (!is_file($sqlFilePath))
+    {
+        return $gL10n->get('INS_DATABASE_FILE_NOT_FOUND', array($sqlFileName, $sqlPath));
+    }
+
+    $fileHandler = fopen($sqlFilePath, 'rb');
+
+    if ($fileHandler === false)
+    {
+        return $gL10n->get('INS_ERROR_OPEN_FILE', array($sqlFilePath));
+    }
+
+    $content = fread($fileHandler, filesize($sqlFilePath));
+    fclose($fileHandler);
+
+    $sqlArr = explode(';', $content);
+
+    foreach ($sqlArr as $sql)
+    {
+        $sql = trim($sql);
+        if ($sql !== '')
+        {
+            // replace prefix with installation specific table prefix
+            $sql = str_replace('%PREFIX%', $g_tbl_praefix, $sql);
+            // now execute update sql
+            $db->queryPrepared($sql);
+        }
+    }
+
+    return true;
+}
+
+/**
+ * @param Database $db
+ */
+function disableSoundexSearchIfPgSql(Database $db)
+{
+    global $gDbType;
+
+    if ($gDbType === Database::PDO_ENGINE_PGSQL || $gDbType === 'postgresql') // for backwards compatibility "postgresql"
+    {
+        // soundex is not a default function in PostgreSQL
+        $sql = 'UPDATE ' . TBL_PREFERENCES . '
+                   SET prf_value = \'0\'
+                 WHERE prf_name = \'system_search_similar\'';
+        $db->queryPrepared($sql);
+    }
+}
+
+/**
+ * @param string $message
+ * @return string
+ */
+function getErrorMessage($message)
+{
+    return '
+        <div class="alert alert-danger alert-small" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            <strong>' . $message . '</strong>
+        </div>';
 }

@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Create and edit weblinks
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -14,28 +14,44 @@
  *             (Default) LNK_WEBLINKS
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
-$getLinkId   = admFuncVariableIsValid($_GET, 'lnk_id',   'numeric');
+$getLinkId   = admFuncVariableIsValid($_GET, 'lnk_id',   'int');
 $getHeadline = admFuncVariableIsValid($_GET, 'headline', 'string', array('defaultValue' => $gL10n->get('LNK_WEBLINKS')));
 
 // check if the module is enabled for use
-if ($gPreferences['enable_weblinks_module'] == 0)
+if ((int) $gSettingsManager->get('enable_weblinks_module') === 0)
 {
     // module is disabled
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
 
-// Ist ueberhaupt das Recht vorhanden?
-if (!$gCurrentUser->editWeblinksRight())
+// create weblink object
+$link = new TableWeblink($gDb);
+
+if($getLinkId > 0)
 {
-    $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
-}
+    $link->readDataById($getLinkId);
 
-// Weblinkobjekt anlegen
-$link = new TableWeblink($gDb, $getLinkId);
+    // check if the current user could edit this weblink
+    if(!$link->editable())
+    {
+        $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        // => EXIT
+    }
+}
+else
+{
+    // check if the user has the right to edit at least one category
+    if(count($gCurrentUser->getAllEditableCategories('LNK')) === 0)
+    {
+        $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+        // => EXIT
+    }
+}
 
 if(isset($_SESSION['links_request']))
 {
@@ -48,11 +64,11 @@ if(isset($_SESSION['links_request']))
 // Html-Kopf ausgeben
 if($getLinkId > 0)
 {
-    $headline = $gL10n->get('SYS_EDIT_VAR', $getHeadline);
+    $headline = $gL10n->get('SYS_EDIT_VAR', array($getHeadline));
 }
 else
 {
-    $headline = $gL10n->get('SYS_CREATE_VAR', $getHeadline);
+    $headline = $gL10n->get('SYS_CREATE_VAR', array($getHeadline));
 }
 
 // add current url to navigation stack
@@ -76,15 +92,29 @@ else
 }
 
 // show form
-$form = new HtmlForm('weblinks_edit_form', $g_root_path.'/adm_program/modules/links/links_function.php?lnk_id='. $getLinkId. '&amp;headline='. $getHeadline. '&amp;mode='.$modeEditOrCreate, $page);
-$form->addInput('lnk_name', $gL10n->get('LNK_LINK_NAME'), $link->getValue('lnk_name'), array('maxLength' => 250, 'property' => FIELD_REQUIRED));
-$form->addInput('lnk_url', $gL10n->get('LNK_LINK_ADDRESS'), $link->getValue('lnk_url'), array('maxLength' => 2000, 'property' => FIELD_REQUIRED));
-$form->addSelectBoxForCategories('lnk_cat_id', $gL10n->get('SYS_CATEGORY'), $gDb, 'LNK', 'EDIT_CATEGORIES',
-                                 array('property' => FIELD_REQUIRED, 'defaultValue' => $link->getValue('lnk_cat_id')));
-$form->addEditor('lnk_description', $gL10n->get('SYS_DESCRIPTION'), $link->getValue('lnk_description'), array('height' => '150px'));
+$form = new HtmlForm('weblinks_edit_form', safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/links/links_function.php', array('lnk_id' => $getLinkId, 'headline' => $getHeadline, 'mode' => $modeEditOrCreate)), $page);
+$form->addInput(
+    'lnk_name', $gL10n->get('LNK_LINK_NAME'), noHTML($link->getValue('lnk_name')),
+    array('maxLength' => 250, 'property' => HtmlForm::FIELD_REQUIRED)
+);
+$form->addInput(
+    'lnk_url', $gL10n->get('LNK_LINK_ADDRESS'), $link->getValue('lnk_url'),
+    array('maxLength' => 2000, 'property' => HtmlForm::FIELD_REQUIRED)
+);
+$form->addSelectBoxForCategories(
+    'lnk_cat_id', $gL10n->get('SYS_CATEGORY'), $gDb, 'LNK', HtmlForm::SELECT_BOX_MODUS_EDIT,
+    array('property' => HtmlForm::FIELD_REQUIRED, 'defaultValue' => $link->getValue('lnk_cat_id'))
+);
+$form->addEditor(
+    'lnk_description', $gL10n->get('SYS_DESCRIPTION'), $link->getValue('lnk_description'),
+    array('height' => '150px')
+);
+$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_URL.'/icons/disk.png'));
 
-$form->addSubmitButton('btn_save', $gL10n->get('SYS_SAVE'), array('icon' => THEME_PATH.'/icons/disk.png'));
-$form->addHtml(admFuncShowCreateChangeInfoById($link->getValue('lnk_usr_id_create'), $link->getValue('lnk_timestamp_create'), $link->getValue('lnk_usr_id_change'), $link->getValue('lnk_timestamp_change')));
+$form->addHtml(admFuncShowCreateChangeInfoById(
+    (int) $link->getValue('lnk_usr_id_create'), $link->getValue('lnk_timestamp_create'),
+    (int) $link->getValue('lnk_usr_id_change'), $link->getValue('lnk_timestamp_change')
+));
 
 // add form to html page and show page
 $page->addHtml($form->show(false));

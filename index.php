@@ -3,62 +3,53 @@
  ***********************************************************************************************
  * Set the correct startpage for Admidio
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
-if(file_exists('adm_my_files/config.php'))
+// if config file doesn't exists, than show installation dialog
+if (!is_file(__DIR__ . '/adm_my_files/config.php'))
 {
-    require_once('adm_my_files/config.php');
+    header('Location: adm_program/installation/index.php');
+    exit();
+}
 
-    // default prefix is set to 'adm' because of compatibility to old versions
-    if(!isset($g_tbl_praefix))
-    {
-        $g_tbl_praefix = 'adm';
-    }
+// include only bootstrap because we could not include common.php at this point
+// to be backward compatible with older versions
+require_once(__DIR__ . '/adm_my_files/config.php');
+require_once(__DIR__ . '/adm_program/system/bootstrap.php');
 
-    // create database object and establish connection to database
-    if(!isset($gDbType))
-    {
-        $gDbType = 'mysql';
-    }
+// connect to database
+try
+{
+    $gDb = new Database($gDbType, $g_adm_srv, $g_adm_port, $g_adm_db, $g_adm_usr, $g_adm_pw);
+}
+catch (AdmException $e)
+{
+    $e->showText();
+    // => EXIT
+}
 
-    require_once('adm_program/system/constants.php');
-    require_once('adm_program/system/function.php');
+// if database doesn't contain the components table then link to update wizard
+// because database Admidio version is lower then 3.0
+$sql = 'SELECT 1 FROM ' . TBL_COMPONENTS;
+if ($gDb->queryPrepared($sql, array(), false) === false)
+{
+    admRedirect(ADMIDIO_URL . '/adm_program/installation/update.php');
+    // => EXIT
+}
 
-    // connect to database
-    try
-    {
-        $gDb = new Database($gDbType, $g_adm_srv, null, $g_adm_db, $g_adm_usr, $g_adm_pw);
-    }
-    catch(AdmException $e)
-    {
-        $e->showText();
-    }
+require_once(__DIR__ . '/adm_program/system/common.php');
 
-    // if database doesn't contain the components table then link to update wizard
-    // because database Admidio version is lower then 3.0
-    if($gDb->query('SELECT 1 FROM '.TBL_COMPONENTS, false) == false)
-    {
-        header('Location: adm_program/installation/update.php');
-    }
-
-    // if config file exists then show stored homepage
-    require_once('adm_program/system/common.php');
-
-    if(isset($gHomepage))
-    {
-        header('Location: '.$gHomepage);
-    }
-    else
-    {
-        // if parameter gHomepage doesn't exists then show default page
-        header('Location: adm_program/index.php');
-    }
+if (isset($gHomepage))
+{
+    admRedirect($gHomepage);
+    // => EXIT
 }
 else
 {
-    // config file doesn't exists then show installation wizard
-    header('Location: adm_program/installation/index.php');
+    // if parameter gHomepage doesn't exists then show default page
+    admRedirect(ADMIDIO_URL . '/adm_program/index.php');
+    // => EXIT
 }

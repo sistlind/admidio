@@ -7,13 +7,12 @@
  *            then you must set these values for every organization
  *            in the update scripts
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
-$orga_preferences = array(
-
+$defaultOrgPreferences = array(
     // System
     'enable_rss'                     => '1',
     'enable_auto_login'              => '1',
@@ -32,18 +31,19 @@ $orga_preferences = array(
     'system_organization_select'     => '0',
     'system_search_similar'          => '1',
     'system_time'                    => 'H:i',
+    'password_min_strength'          => '1',
     'system_browser_update_check'    => '0',
     'system_hashing_cost'            => '10',
 
     // Registration
-    'registration_mode'              => '1',
+    'registration_enable_module'     => '1',
     'enable_registration_captcha'    => '1',
     'enable_registration_admin_mail' => '1',
 
     // E-mail dispatch
     'mail_send_method'               => 'phpmail',
     'mail_bcc_count'                 => '50',
-    'mail_sender_into_to'            => '0',
+    'mail_recipients_with_roles'     => '0',
     'mail_character_encoding'        => 'utf-8',
     'mail_smtp_host'                 => '',
     'mail_smtp_auth'                 => '1',
@@ -55,28 +55,31 @@ $orga_preferences = array(
 
     // System notifications
     'enable_system_mails'         => '1',
-    'email_administrator'         => 'webmaster@'. $_SERVER['HTTP_HOST'],
+    'email_administrator'         => 'webmaster@'. DOMAIN,
     'enable_email_notification'   => '0',
 
     // Captcha
-    'captcha_background_color'    => '#FFEFC4',
-    'captcha_font_size'           => '20',
-    'captcha_fonts'               => 'Theme',
-    'captcha_width'               => '250',
-    'captcha_height'              => '60',
-    'captcha_signs'               => '23456789ABCDEFGHJKLMNPQRSTUVWXYZ',
-    'captcha_signature'           => 'POWERED  BY   A D M I D I O . O R G',
-    'captcha_signature_font_size' => '13',
     'captcha_type'                => 'pic',
+    'captcha_fonts'               => 'AHGBold.ttf',
+    'captcha_width'               => '215',
+    'captcha_lines_numbers'       => '5',
+    'captcha_perturbation'        => '0.75',
+    'captcha_background_image'    => '',
+    'captcha_background_color'    => '#B6D6DB',
+    'captcha_text_color'          => '#707070',
+    'captcha_line_color'          => '#707070',
+    'captcha_charset'             => '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxy',
+    'captcha_signature'           => 'Powered by Admidio.org',
 
     // Announcements
     'enable_announcements_module' => '1',
     'announcements_per_page'      => '10',
 
     // User management
-    'members_users_per_page'      => '25',
-    'members_days_field_history'  => '365',
-    'members_show_all_users'      => '1',
+    'members_users_per_page'        => '25',
+    'members_days_field_history'    => '365',
+    'members_show_all_users'        => '1',
+    'members_enable_user_relations' => '1',
 
     // Downloads
     'enable_download_module' => '1',
@@ -91,7 +94,7 @@ $orga_preferences = array(
     'photo_thumbs_scale'     => '160',
     'photo_show_width'       => '640',
     'photo_show_height'      => '400',
-    'photo_image_text'       => '© '.$_SERVER['HTTP_HOST'],
+    'photo_image_text'       => '© '.DOMAIN,
     'photo_image_text_size'  => '40',
     'photo_keep_original'    => '0',
     'photo_download_enabled' => '0',
@@ -106,10 +109,12 @@ $orga_preferences = array(
     'enable_guestbook_moderation'    => '0',
 
     // Lists
+    'lists_enable_module'         => '1',
     'lists_roles_per_page'        => '10',
     'lists_members_per_page'      => '25',
     'lists_hide_overview_details' => '0',
-    'lists_default_configuation'  => '',
+    'lists_default_configuration' => '',
+    'lists_show_former_members'   => '2',
 
     // Messages
     'enable_mail_module'          => '1',
@@ -141,21 +146,20 @@ $orga_preferences = array(
     'profile_photo_storage'     => '0',
 
     // Events
-    'enable_dates_module'       => '1',
-    'dates_per_page'            => '10',
-    'dates_view'                => 'detail',
-    'dates_show_map_link'       => '1',
-    'dates_show_rooms'          => '0',
-    'enable_dates_ical'         => '1',
-    'dates_ical_days_past'      => '30',
-    'dates_ical_days_future'    => '365',
+    'enable_dates_module'               => '1',
+    'dates_per_page'                    => '10',
+    'dates_view'                        => 'detail',
+    'dates_show_map_link'               => '1',
+    'dates_show_rooms'                  => '0',
+    'enable_dates_ical'                 => '1',
+    'dates_ical_days_past'              => '30',
+    'dates_ical_days_future'            => '365',
+    'dates_default_list_configuration'  => '',
+    'dates_save_all_confirmations'      => '1',
 
     // Weblinks
     'enable_weblinks_module'    => '1',
     'weblinks_per_page'         => '0',
     'weblinks_redirect_seconds' => '10',
-    'weblinks_target'           => '_blank',
-
-    // Inventory
-    'enable_inventory_module'   => '0'
- );
+    'weblinks_target'           => '_blank'
+);

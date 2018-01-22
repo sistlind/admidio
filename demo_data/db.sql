@@ -2,10 +2,9 @@
  ***********************************************************************************************
  * SQL script with database structure
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
- *
  ***********************************************************************************************
  */
 
@@ -16,7 +15,6 @@ drop table if exists %PREFIX%_components cascade;
 drop table if exists %PREFIX%_date_role cascade;
 drop table if exists %PREFIX%_dates cascade;
 drop table if exists %PREFIX%_files cascade;
-drop table if exists %PREFIX%_folder_roles cascade;
 drop table if exists %PREFIX%_folders cascade;
 drop table if exists %PREFIX%_guestbook_comments cascade;
 drop table if exists %PREFIX%_guestbook cascade;
@@ -32,11 +30,15 @@ drop table if exists %PREFIX%_preferences cascade;
 drop table if exists %PREFIX%_registrations cascade;
 drop table if exists %PREFIX%_role_dependencies cascade;
 drop table if exists %PREFIX%_roles cascade;
+drop table if exists %PREFIX%_roles_rights cascade;
+drop table if exists %PREFIX%_roles_rights_data cascade;
 drop table if exists %PREFIX%_list_columns cascade;
 drop table if exists %PREFIX%_lists cascade;
 drop table if exists %PREFIX%_rooms cascade;
 drop table if exists %PREFIX%_sessions cascade;
 drop table if exists %PREFIX%_texts cascade;
+drop table if exists %PREFIX%_user_relations cascade;
+drop table if exists %PREFIX%_user_relation_types cascade;
 drop table if exists %PREFIX%_user_log cascade;
 drop table if exists %PREFIX%_user_data cascade;
 drop table if exists %PREFIX%_user_fields cascade;
@@ -52,9 +54,9 @@ drop table if exists %PREFIX%_ids cascade;
 create table %PREFIX%_announcements
 (
     ann_id                         integer       unsigned not null AUTO_INCREMENT,
-    ann_org_shortname              varchar(10)   not null,
-    ann_global                     boolean       not null default '0',
+    ann_cat_id                     integer       unsigned not null,
     ann_headline                   varchar(100)  not null,
+    ann_global                     boolean       not null default '0',
     ann_description                text,
     ann_usr_id_create              integer       unsigned,
     ann_timestamp_create           timestamp     not null default CURRENT_TIMESTAMP,
@@ -74,11 +76,13 @@ collate = utf8_unicode_ci;
 create table %PREFIX%_auto_login
 (
     atl_id                         integer       unsigned not null AUTO_INCREMENT,
-    atl_session_id                 varchar(35)   not null,
+    atl_auto_login_id              varchar(255)  not null,
+    atl_session_id                 varchar(255)  not null,
     atl_org_id                     integer       unsigned not null,
     atl_usr_id                     integer       unsigned not null,
-    atl_last_login                 timestamp        null default null,
+    atl_last_login                 timestamp     null default null,
     atl_ip_address                 varchar(39)   not null,
+    atl_number_invalid             smallint      not null default 0,
     primary key (atl_id)
 )
 engine = InnoDB
@@ -158,8 +162,8 @@ create table %PREFIX%_dates
     dat_id                         integer       unsigned not null AUTO_INCREMENT,
     dat_cat_id                     integer       unsigned not null,
     dat_rol_id                     integer       unsigned,
-    dat_room_id                    integer       unsigned,
     dat_global                     boolean       not null default '0',
+    dat_room_id                    integer       unsigned,
     dat_begin                      timestamp     null default null,
     dat_end                        timestamp     null default null,
     dat_all_day                    boolean       not null default '0',
@@ -202,20 +206,6 @@ collate = utf8_unicode_ci;
 
 
 /*==============================================================*/
-/* Table: adm_folder_roles                                      */
-/*==============================================================*/
-create table %PREFIX%_folder_roles
-(
-    flr_fol_id                     integer       unsigned not null,
-    flr_rol_id                     integer       unsigned not null,
-    primary key (flr_fol_id, flr_rol_id)
-)
-engine = InnoDB
-default character set = utf8
-collate = utf8_unicode_ci;
-
-
-/*==============================================================*/
 /* Table: adm_folders                                           */
 /*==============================================================*/
 create table %PREFIX%_folders
@@ -248,7 +238,7 @@ create table %PREFIX%_guestbook
     gbo_org_id                     integer       unsigned not null,
     gbo_name                       varchar(60)   not null,
     gbo_text                       text          not null,
-    gbo_email                      varchar(50),
+    gbo_email                      varchar(254),
     gbo_homepage                   varchar(50),
     gbo_ip_address                 varchar(39)   not null,
     gbo_locked                     boolean       not null default '0',
@@ -273,7 +263,7 @@ create table %PREFIX%_guestbook_comments
     gbc_gbo_id                     integer       unsigned not null,
     gbc_name                       varchar(60)   not null,
     gbc_text                       text          not null,
-    gbc_email                      varchar(50),
+    gbc_email                      varchar(254),
     gbc_ip_address                 varchar(39)   not null,
     gbc_locked                     boolean       not null default '0',
     gbc_usr_id_create              integer       unsigned,
@@ -361,7 +351,7 @@ create table %PREFIX%_invent
     inv_text                       text,
     inv_for_loan                   boolean       not null default '0',
     inv_last_lent                  timestamp     null default null,
-    inv_usr_id_lent                integer         unsigned,
+    inv_usr_id_lent                integer       unsigned,
     inv_lent_until                 timestamp     null default null,
     inv_number_lent                integer       not null default 0,
     inv_usr_id_create              integer       unsigned,
@@ -386,7 +376,7 @@ create table %PREFIX%_links
     lnk_cat_id                     integer       unsigned not null,
     lnk_name                       varchar(255)  not null,
     lnk_description                text,
-    lnk_url                        varchar(2000)  not null,
+    lnk_url                        varchar(2000) not null,
     lnk_counter                    integer       not null default 0,
     lnk_usr_id_create              integer       unsigned,
     lnk_timestamp_create           timestamp     not null default CURRENT_TIMESTAMP,
@@ -411,7 +401,6 @@ create table %PREFIX%_lists
     lst_name                       varchar(255),
     lst_timestamp                  timestamp     not null default CURRENT_TIMESTAMP,
     lst_global                     boolean       not null default '0',
-    lst_default                    boolean       not null default '0',
     primary key (lst_id)
 )
 engine = InnoDB
@@ -471,15 +460,15 @@ create index IDX_%PREFIX%_MEM_ROL_USR_ID on %PREFIX%_members (mem_rol_id, mem_us
 /*==============================================================*/
 /* Table: adm_messages                                          */
 /*==============================================================*/
-CREATE TABLE %PREFIX%_messages
+create table %PREFIX%_messages
 (
-    msg_id                        integer         unsigned NOT NULL AUTO_INCREMENT,
-    msg_type                      varchar(10)     NOT NULL,
-    msg_subject                   varchar(256)    NOT NULL,
-    msg_usr_id_sender             integer         unsigned NOT NULL,
-    msg_usr_id_receiver           varchar(256)    NOT NULL,
-    msg_timestamp                 timestamp       NOT NULL default CURRENT_TIMESTAMP,
-    msg_read                      smallint        NOT NULL DEFAULT 0,
+    msg_id                        integer         unsigned not null AUTO_INCREMENT,
+    msg_type                      varchar(10)     not null,
+    msg_subject                   varchar(256)    not null,
+    msg_usr_id_sender             integer         unsigned not null,
+    msg_usr_id_receiver           varchar(256)    not null,
+    msg_timestamp                 timestamp       not null default CURRENT_TIMESTAMP,
+    msg_read                      smallint        not null default 0,
     primary key (msg_id)
 )
 engine = InnoDB
@@ -489,14 +478,14 @@ collate = utf8_unicode_ci;
 /*==============================================================*/
 /* Table: adm_messages_content                                  */
 /*==============================================================*/
-CREATE TABLE %PREFIX%_messages_content
+create table %PREFIX%_messages_content
 (
-    msc_id                        integer         unsigned NOT NULL AUTO_INCREMENT,
-    msc_msg_id                    integer         unsigned NOT NULL,
-    msc_part_id                   integer         unsigned NOT NULL,
+    msc_id                        integer         unsigned not null AUTO_INCREMENT,
+    msc_msg_id                    integer         unsigned not null,
+    msc_part_id                   integer         unsigned not null,
     msc_usr_id                    integer         unsigned,
-    msc_message                   text            NOT NULL,
-    msc_timestamp                 timestamp       NOT NULL default CURRENT_TIMESTAMP,
+    msc_message                   text            not null,
+    msc_timestamp                 timestamp       not null default CURRENT_TIMESTAMP,
     primary key (msc_id)
 )
 engine = InnoDB
@@ -531,8 +520,8 @@ create unique index ak_%PREFIX%_shortname on %PREFIX%_organizations (org_shortna
 create table %PREFIX%_photos
 (
     pho_id                         integer       unsigned not null AUTO_INCREMENT,
-    pho_org_shortname              varchar(10)   not null,
-    pho_quantity                   integer        unsigned not null default 0,
+    pho_org_id                     integer       unsigned not null,
+    pho_quantity                   integer       unsigned not null default 0,
     pho_name                       varchar(50)   not null,
     pho_begin                      date          not null,
     pho_end                        date          not null,
@@ -649,13 +638,48 @@ create table %PREFIX%_roles
     rol_valid                      boolean       not null default '1',
     rol_system                     boolean       not null default '0',
     rol_visible                    boolean       not null default '1',
-    rol_webmaster                  boolean       not null default '0',
+    rol_administrator              boolean       not null default '0',
     primary key (rol_id)
 )
 engine = InnoDB
 auto_increment = 1
 default character set = utf8
 collate = utf8_unicode_ci;
+
+
+/*==============================================================*/
+/* Table: adm_roles_rights                                      */
+/*==============================================================*/
+create table %PREFIX%_roles_rights
+(
+    ror_id                         integer       unsigned not null AUTO_INCREMENT,
+    ror_name_intern                varchar(50)   not null,
+    ror_table                      varchar(50)   not null,
+    primary key (ror_id)
+)
+engine = InnoDB
+default character set = utf8
+collate = utf8_unicode_ci;
+
+
+/*==============================================================*/
+/* Table: adm_roles_rights_data                                 */
+/*==============================================================*/
+create table %PREFIX%_roles_rights_data
+(
+    rrd_id                         integer       unsigned not null AUTO_INCREMENT,
+    rrd_ror_id                     integer       unsigned not null,
+    rrd_rol_id                     integer       unsigned not null,
+    rrd_object_id                  integer       unsigned not null,
+    rrd_usr_id_create              integer       unsigned,
+    rrd_timestamp_create           timestamp     not null default CURRENT_TIMESTAMP,
+    primary key (rrd_id)
+)
+engine = InnoDB
+default character set = utf8
+collate = utf8_unicode_ci;
+
+create unique index IDX_%PREFIX%_RRD_ROR_ROL_OBJECT_ID on %PREFIX%_roles_rights_data (rrd_ror_id, rrd_rol_id, rrd_object_id);
 
 
 /*==============================================================*/
@@ -690,8 +714,7 @@ create table %PREFIX%_sessions
     ses_usr_id                     integer       unsigned default NULL,
     ses_org_id                     integer       unsigned not null,
     ses_session_id                 varchar(255)  not null,
-    ses_device_id                  varchar(255),
-    ses_begin                      timestamp        null default null,
+    ses_begin                      timestamp     null default null,
     ses_timestamp                  timestamp     not null default CURRENT_TIMESTAMP,
     ses_ip_address                 varchar(39)   not null,
     ses_binary                     blob,
@@ -777,21 +800,22 @@ create unique index IDX_%PREFIX%_USD_USR_USF_ID on %PREFIX%_user_data (usd_usr_i
 /*==============================================================*/
 /* Table: adm_user_log                                             */
 /*==============================================================*/
-CREATE TABLE %PREFIX%_user_log (
-  usl_id                INTEGER                  NOT NULL AUTO_INCREMENT ,
-  usl_usr_id            INTEGER         unsigned NOT NULL ,
-  usl_usf_id            INTEGER         unsigned NOT NULL ,
-  usl_value_old         VARCHAR(4000)             NULL ,
-  usl_value_new         VARCHAR(4000)             NULL ,
-  usl_usr_id_create     INTEGER         unsigned NULL ,
-  usl_timestamp_create  TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-  usl_comment           VARCHAR(255) NULL ,
-  PRIMARY KEY (usl_id)
+create table %PREFIX%_user_log
+(
+    usl_id                         integer       not null AUTO_INCREMENT,
+    usl_usr_id                     integer       unsigned not null,
+    usl_usf_id                     integer       unsigned not null,
+    usl_value_old                  varchar(4000) null,
+    usl_value_new                  varchar(4000) null,
+    usl_usr_id_create              integer       unsigned null,
+    usl_timestamp_create           timestamp     not null default CURRENT_TIMESTAMP,
+    usl_comment                    varchar(255)  null,
+    primary key (usl_id)
 )
-ENGINE = InnoDB
+engine = InnoDB
 auto_increment = 1
-DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_unicode_ci;
+default character set = utf8
+collate = utf8_unicode_ci;
 
 /*==============================================================*/
 /* Table: adm_users                                             */
@@ -800,8 +824,8 @@ create table %PREFIX%_users
 (
     usr_id                         integer       unsigned not null AUTO_INCREMENT,
     usr_login_name                 varchar(35),
-    usr_password                   varchar(60),
-    usr_new_password               varchar(60),
+    usr_password                   varchar(255),
+    usr_new_password               varchar(255),
     usr_photo                      blob,
     usr_text                       text,
     usr_activation_code            varchar(10),
@@ -825,10 +849,56 @@ collate = utf8_unicode_ci;
 create unique index IDX_%PREFIX%_USR_LOGIN_NAME on %PREFIX%_users (usr_login_name);
 
 /*==============================================================*/
+/* Table: adm_user_relation_types                               */
+/*==============================================================*/
+create table %PREFIX%_user_relation_types
+(
+    urt_id integer unsigned not null AUTO_INCREMENT,
+    urt_name varchar(100) not null,
+    urt_name_male varchar(100) not null,
+    urt_name_female varchar(100) not null,
+    urt_id_inverse integer unsigned default null,
+    urt_usr_id_create integer unsigned default null,
+    urt_timestamp_create timestamp not null default CURRENT_TIMESTAMP,
+    urt_usr_id_change integer unsigned default null,
+    urt_timestamp_change timestamp null default null,
+    primary key (urt_id)
+)
+engine = InnoDB
+auto_increment = 1
+default character set = utf8
+collate = utf8_unicode_ci;
+
+create unique index %PREFIX%_IDX_URE_URT_NAME on %PREFIX%_user_relation_types (urt_name);
+
+/*==============================================================*/
+/* Table: adm_user_relation_types                               */
+/*==============================================================*/
+
+create table %PREFIX%_user_relations
+(
+    ure_id integer unsigned not null AUTO_INCREMENT,
+    ure_urt_id integer unsigned not null,
+    ure_usr_id1 integer unsigned not null,
+    ure_usr_id2 integer unsigned not null,
+    ure_usr_id_create integer unsigned default null,
+    ure_timestamp_create timestamp not null default CURRENT_TIMESTAMP,
+    ure_usr_id_change integer unsigned default null,
+    ure_timestamp_change timestamp null default null,
+    primary key (ure_id)
+)
+engine = InnoDB
+auto_increment = 1
+default character set = utf8
+collate = utf8_unicode_ci;
+
+create unique index %PREFIX%_IDX_URE_URT_USR on %PREFIX%_user_relations (ure_urt_id,ure_usr_id1,ure_usr_id2);
+
+/*==============================================================*/
 /* Constraints                                                  */
 /*==============================================================*/
-alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_ORG foreign key (ann_org_shortname)
-      references %PREFIX%_organizations (org_shortname) on delete restrict on update restrict;
+alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_CAT foreign key (ann_cat_id)
+      references %PREFIX%_categories (cat_id) on delete restrict on update restrict;
 alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_USR_CREATE foreign key (ann_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_announcements add constraint %PREFIX%_FK_ANN_USR_CHANGE foreign key (ann_usr_id_change)
@@ -866,11 +936,6 @@ alter table %PREFIX%_files add constraint %PREFIX%_FK_FIL_FOL foreign key (fil_f
       references %PREFIX%_folders (fol_id) on delete restrict on update restrict;
 alter table %PREFIX%_files add constraint %PREFIX%_FK_FIL_USR foreign key (fil_usr_id)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
-
-alter table %PREFIX%_folder_roles add constraint %PREFIX%_FK_FLR_FOL foreign key (flr_fol_id)
-      references %PREFIX%_folders (fol_id) on delete restrict on update restrict;
-alter table %PREFIX%_folder_roles add constraint %PREFIX%_FK_FLR_ROL foreign key (flr_rol_id)
-      references %PREFIX%_roles (rol_id) on delete restrict on update restrict;
 
 alter table %PREFIX%_folders add constraint %PREFIX%_FK_FOL_ORG foreign key (fol_org_id)
       references %PREFIX%_organizations (org_id) on delete restrict on update restrict;
@@ -935,8 +1000,8 @@ alter table %PREFIX%_organizations add constraint %PREFIX%_FK_ORG_ORG_PARENT for
 
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_PHO_PARENT foreign key (pho_pho_id_parent)
       references %PREFIX%_photos (pho_id) on delete set null on update restrict;
-alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_ORG foreign key (pho_org_shortname)
-      references %PREFIX%_organizations (org_shortname) on delete restrict on update restrict;
+alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_ORG foreign key (pho_org_id)
+      references %PREFIX%_organizations (org_id) on delete restrict on update restrict;
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_USR_CREATE foreign key (pho_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_photos add constraint %PREFIX%_FK_PHO_USR_CHANGE foreign key (pho_usr_id_change)
@@ -964,6 +1029,13 @@ alter table %PREFIX%_roles add constraint %PREFIX%_FK_ROL_LST_ID foreign key (ro
 alter table %PREFIX%_roles add constraint %PREFIX%_FK_ROL_USR_CREATE foreign key (rol_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_roles add constraint %PREFIX%_FK_ROL_USR_CHANGE foreign key (rol_usr_id_change)
+      references %PREFIX%_users (usr_id) on delete set null on update restrict;
+
+alter table %PREFIX%_roles_rights_data add constraint %PREFIX%_FK_RRD_ROR foreign key (rrd_ror_id)
+      references %PREFIX%_roles_rights (ror_id) on delete restrict on update restrict;
+alter table %PREFIX%_roles_rights_data add constraint %PREFIX%_FK_RRD_ROL foreign key (rrd_rol_id)
+      references %PREFIX%_roles (rol_id) on delete restrict on update restrict;
+alter table %PREFIX%_roles_rights_data add constraint %PREFIX%_FK_RRD_USR_CREATE foreign key (rrd_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 
 alter table %PREFIX%_rooms add constraint %PREFIX%_FK_ROOM_USR_CREATE foreign key (room_usr_id_create)
@@ -1001,4 +1073,22 @@ alter table %PREFIX%_user_log add CONSTRAINT %PREFIX%_FK_USER_LOG_3 FOREIGN KEY 
 alter table %PREFIX%_users add constraint %PREFIX%_FK_USR_USR_CREATE foreign key (usr_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;
 alter table %PREFIX%_users add constraint %PREFIX%_FK_USR_USR_CHANGE foreign key (usr_usr_id_change)
+      references %PREFIX%_users (usr_id) on delete set null on update restrict;
+
+alter table %PREFIX%_user_relation_types add constraint %PREFIX%_FK_URT_ID_INVERSE foreign key (urt_id_inverse)
+      references %PREFIX%_user_relation_types (urt_id) on delete cascade on update restrict;
+alter table %PREFIX%_user_relation_types add constraint %PREFIX%_FK_URT_USR_CHANGE foreign key (urt_usr_id_change)
+      references %PREFIX%_users (usr_id) on delete set null on update restrict;
+alter table %PREFIX%_user_relation_types add constraint %PREFIX%_FK_URT_USR_CREATE foreign key (urt_usr_id_create)
+      references %PREFIX%_users (usr_id) on delete set null on update restrict;
+
+alter table %PREFIX%_user_relations add constraint %PREFIX%_FK_URE_URT foreign key (ure_urt_id)
+      references %PREFIX%_user_relation_types (urt_id) on delete cascade on update restrict;
+alter table %PREFIX%_user_relations add constraint %PREFIX%_FK_URE_USR1 foreign key (ure_usr_id1)
+      references %PREFIX%_users (usr_id) on delete cascade on update restrict;
+alter table %PREFIX%_user_relations add constraint %PREFIX%_FK_URE_USR2 foreign key (ure_usr_id2)
+      references %PREFIX%_users (usr_id) on delete cascade on update restrict;
+alter table %PREFIX%_user_relations add constraint %PREFIX%_FK_URE_USR_CHANGE foreign key (ure_usr_id_change)
+      references %PREFIX%_users (usr_id) on delete set null on update restrict;
+alter table %PREFIX%_user_relations add constraint %PREFIX%_FK_URE_USR_CREATE foreign key (ure_usr_id_create)
       references %PREFIX%_users (usr_id) on delete set null on update restrict;

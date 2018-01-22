@@ -3,13 +3,14 @@
  ***********************************************************************************************
  * Class manages display of menus
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
-/******************************************************************************
+/**
+ * @class Menu
  * Create, modify and display menus. Each menu item is defined by
  *
  *      - $id   : identifier of the menu item
@@ -19,14 +20,21 @@
  *      - $icon : URL, relative to the theme plugin, starting with a /
  *              : or full URL with http or https protocol
  *      - $desc : (optional) long description of the menu item
- *
- *****************************************************************************/
+ */
 class Menu
 {
+    /**
+     * @var string
+     */
     protected $id;
+    /**
+     * @var string
+     */
     protected $title;
-    protected $items;
-    protected $root_path;
+    /**
+     * @var array<string,array<string,string|array<string,string>>>
+     */
+    protected $items = array();
 
     /**
      * constructor
@@ -35,36 +43,39 @@ class Menu
      */
     public function __construct($id, $title)
     {
-        global $g_root_path;
-
-        $this->id        = $id;
-        $this->title     = $title;
-        $this->items     = array();
-        $this->root_path = $g_root_path;
+        $this->id    = $id;
+        $this->title = $title;
     }
 
     /**
-     * @param  string $id
-     * @param  string $link
-     * @param  string $text
-     * @param  string $icon
-     * @param  string $desc
-     * @return array
+     * @param string $id
+     * @param string $link
+     * @param string $text
+     * @param string $icon
+     * @param string $desc
+     * @return array<string,string|array>
      */
-    private function mkItem($id, $link, $text, $icon, $desc = '')
+    private function buildItem($id, $link, $text, $icon, $desc = '')
     {
         // add root path to link unless the full URL is given
         if (preg_match('/^http(s?):\/\//', $link) === 0)
         {
-            $link = $this->root_path . $link;
+            $link = ADMIDIO_URL . $link;
         }
-        // add THEME_PATH to images unless the full URL is given
+        // add THEME_URL to images unless the full URL is given
         if (preg_match('/^http(s?):\/\//', $icon) === 0)
         {
-            $icon = THEME_PATH . $icon;
+            $icon = THEME_URL . $icon;
         }
 
-        return array('id' => $id, 'link' => $link, 'text' => $text, 'icon' => $icon, 'desc' => $desc, 'subitems' => array());
+        return array(
+            'id'       => $id,
+            'link'     => $link,
+            'text'     => $text,
+            'icon'     => $icon,
+            'desc'     => $desc,
+            'subitems' => array()
+        );
     }
 
     /**
@@ -76,7 +87,7 @@ class Menu
      */
     public function addItem($id, $link, $text, $icon, $desc = '')
     {
-        $this->items[$id] = $this->mkItem($id, $link, $text, $icon, $desc);
+        $this->items[$id] = $this->buildItem($id, $link, $text, $icon, $desc);
     }
 
     /**
@@ -90,7 +101,7 @@ class Menu
         // add root path to link unless the full URL is given
         if (preg_match('/^http(s?):\/\//', $link) === 0)
         {
-            $link = $this->root_path . $link;
+            $link = ADMIDIO_URL . $link;
         }
 
         $this->items[$parentId]['subitems'][$id] = array('link' => $link, 'text' => $text);
@@ -98,49 +109,37 @@ class Menu
 
     /**
      * gets the position of a given ID in the menu
-     * @param  string    $id
+     * @param string $id
      * @return int|false
      */
     public function getPosition($id)
     {
         $keys = array_keys($this->items);
-        $key = array_search($id, $keys, true);
-
-        return $key;
+        return array_search($id, $keys, true);
     }
 
     /**
      * inserts a new menu entry before the named position
-     * @param  int    $position
-     * @param  string $id
-     * @param  string $link
-     * @param  string $text
-     * @param  string $icon
-     * @param  string $desc
-     * @return bool
+     * @param int    $position
+     * @param string $id
+     * @param string $link
+     * @param string $text
+     * @param string $icon
+     * @param string $desc
      */
     public function insertItem($position, $id, $link, $text, $icon, $desc = '')
     {
-        if (!is_numeric($position))
-        {
-            return false;
-        }
-        else
-        {
-            $item = $this->mkItem($id, $link, $text, $icon, $desc);
-            $insert = array($id => $item);
-            $this->items = array_splice($this->items, $position, 0, $insert);
-
-            return true;
-        }
+        $item = $this->buildItem($id, $link, $text, $icon, $desc);
+        $insert = array($id => $item);
+        $this->items = array_splice($this->items, $position, 0, $insert);
     }
 
     /**
      * Create the html menu from the internal array that must be filled before.
      * You have the option to create a simple menu with icon and link or
      * a more complex menu with submenu and description text.
-     * @param  bool   $complex Create a @b simple menu as default. If you set the param to @b true
-     *                         then you will create a menu with submenus and description
+     * @param bool $complex Create a @b simple menu as default. If you set the param to @b true
+     *                      then you will create a menu with submenus and description
      * @return string Return the html code of the form.
      */
     public function show($complex = false)
@@ -208,9 +207,7 @@ class Menu
         {
             return $html;
         }
-        else
-        {
-            return '';
-        }
+
+        return '';
     }
 }

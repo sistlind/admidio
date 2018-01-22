@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Download Script
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -12,42 +12,38 @@
  * file_id      :  Die Id der Datei, welche heruntergeladen werden soll
  ***********************************************************************************************
  */
-require('../../system/common.php');
+require_once(__DIR__ . '/../../system/common.php');
 
 // Initialize and check the parameters
-$getFileId = admFuncVariableIsValid($_GET, 'file_id', 'numeric', array('requireValue' => true));
+$getFileId = admFuncVariableIsValid($_GET, 'file_id', 'int', array('requireValue' => true));
 
-// pruefen ob das Modul ueberhaupt aktiviert ist
-if ($gPreferences['enable_download_module'] != 1)
+// check if the module is enabled and disallow access if it's disabled
+if (!$gSettingsManager->getBool('enable_download_module'))
 {
-    // das Modul ist deaktiviert
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
-}
-// nur von eigentlicher OragHompage erreichbar
-if($gCurrentOrganization->getValue('org_shortname')!= $g_organization)
-{
-    // das Modul ist deaktiviert
-    $gMessage->show($gL10n->get('SYS_MODULE_ACCESS_FROM_HOMEPAGE_ONLY', $g_organization));
+    // => EXIT
 }
 
 try
 {
-    // get recordset of current file from databse
+    // get recordset of current file from database
     $file = new TableFile($gDb);
     $file->getFileForDownload($getFileId);
 }
 catch(AdmException $e)
 {
     $e->showHtml();
+    // => EXIT
 }
 
 // kompletten Pfad der Datei holen
-$completePath = $file->getCompletePathOfFile();
+$completePath = $file->getFullFilePath();
 
 // pruefen ob File ueberhaupt physikalisch existiert
-if (!file_exists($completePath))
+if (!is_file($completePath))
 {
     $gMessage->show($gL10n->get('SYS_FILE_NOT_EXIST'));
+    // => EXIT
 }
 
 // Downloadcounter inkrementieren
@@ -55,11 +51,11 @@ $file->setValue('fil_counter', $file->getValue('fil_counter') + 1);
 $file->save();
 
 // Dateigroese ermitteln
-$fileSize   = filesize($completePath);
-$filename   = $file->getValue('fil_name');
+$fileSize = filesize($completePath);
+$filename = $file->getValue('fil_name');
 
 // for IE the filename must have special chars in hexadecimal
-if (preg_match('/MSIE/', $_SERVER['HTTP_USER_AGENT']))
+if (admStrContains($_SERVER['HTTP_USER_AGENT'], 'MSIE'))
 {
     $filename = urlencode($filename);
 }
@@ -73,5 +69,6 @@ header('Content-Disposition: attachment; filename="'.$filename.'"');
 header('Cache-Control: private');
 header('Pragma: public');
 
-// Datei ausgeben.
-echo readfile($completePath);
+// file output
+// use this function because of problems with big files
+readfile($completePath);

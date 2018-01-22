@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Show history of profile field changes
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -16,16 +16,16 @@
  *             if no date information is delivered
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // calculate default date from which the profile fields history should be shown
-$filterDateFrom = new DateTimeExtended(DATE_NOW, 'Y-m-d');
-$filterDateFrom->modify('-'.$gPreferences['members_days_field_history'].' day');
+$filterDateFrom = \DateTime::createFromFormat('Y-m-d', DATE_NOW);
+$filterDateFrom->modify('-'.$gSettingsManager->getInt('members_days_field_history').' day');
 
 // Initialize and check the parameters
-$getUserId   = admFuncVariableIsValid($_GET, 'usr_id',           'numeric');
-$getDateFrom = admFuncVariableIsValid($_GET, 'filter_date_from', 'date', array('defaultValue' => $filterDateFrom->format($gPreferences['system_date'])));
+$getUserId   = admFuncVariableIsValid($_GET, 'usr_id',           'int');
+$getDateFrom = admFuncVariableIsValid($_GET, 'filter_date_from', 'date', array('defaultValue' => $filterDateFrom->format($gSettingsManager->getString('system_date'))));
 $getDateTo   = admFuncVariableIsValid($_GET, 'filter_date_to',   'date', array('defaultValue' => DATE_NOW));
 
 // create a user object from the user parameter
@@ -34,23 +34,21 @@ $user = new User($gDb, $gProfileFields, $getUserId);
 // set headline of the script
 if($getUserId > 0)
 {
-    $headline = $gL10n->get('MEM_CHANGE_HISTORY_OF', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME'));
+    $headline = $gL10n->get('MEM_CHANGE_HISTORY_OF', array($user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME')));
 }
 else
 {
     $headline = $gL10n->get('MEM_CHANGE_HISTORY');
 }
 
-// Initialize local parameteres
-$sqlConditions  = '';
-
 // if profile log is activated and current user is allowed to edit users
 // then the profile field history will be shown otherwise show error
-if ($gPreferences['profile_log_edit_fields'] == 0
-    || ($getUserId == 0 && !$gCurrentUser->editUsers())
-    || ($getUserId > 0  && !$gCurrentUser->hasRightEditProfile($user)))
+if (!$gSettingsManager->getBool('profile_log_edit_fields')
+    || ($getUserId === 0 && !$gCurrentUser->editUsers())
+    || ($getUserId > 0   && !$gCurrentUser->hasRightEditProfile($user)))
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
 // add page to navigation history
@@ -58,74 +56,86 @@ $gNavigation->addUrl(CURRENT_URL, $headline);
 
 // filter_date_from and filter_date_to can have different formats
 // now we try to get a default format for intern use and html output
-$objDateFrom = DateTime::createFromFormat('Y-m-d', $getDateFrom);
+$objDateFrom = \DateTime::createFromFormat('Y-m-d', $getDateFrom);
 if($objDateFrom === false)
 {
     // check if date has system format
-    $objDateFrom = DateTime::createFromFormat($gPreferences['system_date'], $getDateFrom);
+    $objDateFrom = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $getDateFrom);
     if($objDateFrom === false)
     {
-        $objDateFrom = DateTime::createFromFormat($gPreferences['system_date'], '1970-01-01');
+        $objDateFrom = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), '1970-01-01');
     }
 }
 
-$objDateTo = DateTime::createFromFormat('Y-m-d', $getDateTo);
+$objDateTo = \DateTime::createFromFormat('Y-m-d', $getDateTo);
 if($objDateTo === false)
 {
     // check if date has system format
-    $objDateTo = DateTime::createFromFormat($gPreferences['system_date'], $getDateTo);
+    $objDateTo = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), $getDateTo);
     if($objDateTo === false)
     {
-        $objDateTo = DateTime::createFromFormat($gPreferences['system_date'], '1970-01-01');
+        $objDateTo = \DateTime::createFromFormat($gSettingsManager->getString('system_date'), '1970-01-01');
     }
 }
 
-// DateTo should be greater than DateFrom (Timestamp must be less)
-if($objDateFrom < $objDateTo)
+// DateTo should be greater than DateFrom
+if($objDateFrom > $objDateTo)
 {
     $gMessage->show($gL10n->get('SYS_DATE_END_BEFORE_BEGIN'));
+    // => EXIT
 }
 
 $dateFromIntern = $objDateFrom->format('Y-m-d');
-$dateFromHtml   = $objDateFrom->format($gPreferences['system_date']);
+$dateFromHtml   = $objDateFrom->format($gSettingsManager->getString('system_date'));
 $dateToIntern   = $objDateTo->format('Y-m-d');
-$dateToHtml     = $objDateTo->format($gPreferences['system_date']);
+$dateToHtml     = $objDateTo->format($gSettingsManager->getString('system_date'));
 
 // create sql conditions
+$sqlConditions = '';
+$queryParamsConditions = array();
 if($getUserId > 0)
 {
-    $sqlConditions .= ' AND usl_usr_id = '.$getUserId;
+    $sqlConditions = ' AND usl_usr_id = ? -- $getUserId';
+    $queryParamsConditions = array($getUserId);
 }
 
 // get total count of relevant profile field changes
-$sql = 'SELECT COUNT(1) as count
+$sql = 'SELECT COUNT(*) AS count
           FROM '.TBL_USER_LOG.'
-         WHERE 1 = 1 '.
-               $sqlConditions;
-$pdoStatement = $gDb->query($sql);
-$row = $pdoStatement->fetch();
-$countChanges = $row['count'];
+         WHERE 1 = 1
+               '.$sqlConditions;
+$pdoStatement = $gDb->queryPrepared($sql, $queryParamsConditions);
+$countChanges = (int) $pdoStatement->fetchColumn();
 
 // create select statement with all necessary data
-$sql = 'SELECT usl_usr_id, last_name.usd_value as last_name, first_name.usd_value as first_name, usl_usf_id, usl_value_old, usl_value_new,
-               usl_usr_id_create, create_last_name.usd_value as create_last_name, create_first_name.usd_value as create_first_name, usl_timestamp_create
+$sql = 'SELECT usl_usr_id, last_name.usd_value AS last_name, first_name.usd_value AS first_name, usl_usf_id,
+               usl_value_old, usl_value_new, usl_usr_id_create, create_last_name.usd_value AS create_last_name,
+               create_first_name.usd_value AS create_first_name, usl_timestamp_create
           FROM '.TBL_USER_LOG.'
-          JOIN '. TBL_USER_DATA. ' as last_name
+    INNER JOIN '.TBL_USER_DATA.' AS last_name
             ON last_name.usd_usr_id = usl_usr_id
-           AND last_name.usd_usf_id = '. $gProfileFields->getProperty('LAST_NAME', 'usf_id').'
-          JOIN '. TBL_USER_DATA. ' as first_name
+           AND last_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'LAST_NAME\', \'usf_id\')
+    INNER JOIN '.TBL_USER_DATA.' AS first_name
             ON first_name.usd_usr_id = usl_usr_id
-           AND first_name.usd_usf_id = '. $gProfileFields->getProperty('FIRST_NAME', 'usf_id').'
-          JOIN '. TBL_USER_DATA. ' as create_last_name
+           AND first_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'FIRST_NAME\', \'usf_id\')
+    INNER JOIN '.TBL_USER_DATA.' AS create_last_name
             ON create_last_name.usd_usr_id = usl_usr_id_create
-           AND create_last_name.usd_usf_id = '. $gProfileFields->getProperty('LAST_NAME', 'usf_id').'
-          JOIN '. TBL_USER_DATA. ' as create_first_name
+           AND create_last_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'LAST_NAME\', \'usf_id\')
+    INNER JOIN '.TBL_USER_DATA.' AS create_first_name
             ON create_first_name.usd_usr_id = usl_usr_id_create
-           AND create_first_name.usd_usf_id = '. $gProfileFields->getProperty('FIRST_NAME', 'usf_id').'
-         WHERE usl_timestamp_create BETWEEN \''.$dateFromIntern.' 00:00:00\' AND \''.$dateToIntern.' 23:59:59\' '.
-               $sqlConditions.'
-         ORDER BY usl_timestamp_create DESC ';
-$fieldHistoryStatement = $gDb->query($sql);
+           AND create_first_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'FIRST_NAME\', \'usf_id\')
+         WHERE usl_timestamp_create BETWEEN ? AND ? -- $dateFromIntern AND $dateToIntern
+               '.$sqlConditions.'
+      ORDER BY usl_timestamp_create DESC';
+$queryParams = array(
+    $gProfileFields->getProperty('LAST_NAME', 'usf_id'),
+    $gProfileFields->getProperty('FIRST_NAME', 'usf_id'),
+    $gProfileFields->getProperty('LAST_NAME', 'usf_id'),
+    $gProfileFields->getProperty('FIRST_NAME', 'usf_id'),
+    $dateFromIntern . ' 00:00:00',
+    $dateToIntern . ' 23:59:59'
+);
+$fieldHistoryStatement = $gDb->queryPrepared($sql, array_merge($queryParams, $queryParamsConditions));
 
 if($fieldHistoryStatement->rowCount() === 0)
 {
@@ -135,11 +145,13 @@ if($fieldHistoryStatement->rowCount() === 0)
     // show message if there were no changes for users
     if($getUserId > 0)
     {
-        $gMessage->show($gL10n->get('MEM_NO_CHANGES_PROFIL', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME')));
+        $gMessage->show($gL10n->get('MEM_NO_CHANGES_PROFIL', array($user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME'))));
+        // => EXIT
     }
     else
     {
         $gMessage->show($gL10n->get('MEM_NO_CHANGES'));
+        // => EXIT
     }
 }
 
@@ -151,19 +163,20 @@ $profileFieldHistoryMenu = $page->getMenu();
 $profileFieldHistoryMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
 
 // create filter menu with input elements for Startdate and Enddate
-$FilterNavbar = new HtmlNavbar('menu_profile_field_history_filter', null, null, 'filter');
-$form = new HtmlForm('navbar_filter_form', $g_root_path.'/adm_program/modules/members/profile_field_history.php?usr_id='.$getUserId, $page, array('type' => 'navbar', 'setFocus' => false));
+$filterNavbar = new HtmlNavbar('menu_profile_field_history_filter', null, null, 'filter');
+$form = new HtmlForm('navbar_filter_form', ADMIDIO_URL.FOLDER_MODULES.'/members/profile_field_history.php', $page, array('type' => 'navbar', 'setFocus' => false));
+$form->addInput('usr_id', '', $getUserId, array('property' => HtmlForm::FIELD_HIDDEN));
 $form->addInput('filter_date_from', $gL10n->get('SYS_START'), $dateFromHtml, array('type' => 'date', 'maxLength' => 10));
 $form->addInput('filter_date_to', $gL10n->get('SYS_END'), $dateToHtml, array('type' => 'date', 'maxLength' => 10));
 $form->addSubmitButton('btn_send', $gL10n->get('SYS_OK'));
-$FilterNavbar->addForm($form->show(false));
-$page->addHtml($FilterNavbar->show(false));
+$filterNavbar->addForm($form->show(false));
+$page->addHtml($filterNavbar->show());
 
 $table = new HtmlTable('profile_field_history_table', $page, true, true);
 
 $columnHeading = array();
 
-if($getUserId == 0)
+if($getUserId === 0)
 {
     $table->setDatatablesOrderColumns(array(array(6, 'desc')));
     $columnHeading[] = $gL10n->get('SYS_NAME');
@@ -183,37 +196,39 @@ $table->addRowHeadingByArray($columnHeading);
 
 while($row = $fieldHistoryStatement->fetch())
 {
-    $timestampCreate = new DateTimeExtended($row['usl_timestamp_create'], 'Y-m-d H:i:s');
+    $timestampCreate = \DateTime::createFromFormat('Y-m-d H:i:s', $row['usl_timestamp_create']);
     $columnValues    = array();
 
-    if($getUserId == 0)
+    if($getUserId === 0)
     {
-        $columnValues[] = '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='.$row['usl_usr_id'].'">'.$row['last_name'].', '.$row['first_name'].'</a>';
+        $columnValues[] = '<a href="'.safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/profile/profile.php', array('user_id' => $row['usl_usr_id'])).'">'.$row['last_name'].', '.$row['first_name'].'</a>';
     }
 
-    $columnValues[] = $gProfileFields->getPropertyById($row['usl_usf_id'], 'usf_name');
-    if(strlen($gProfileFields->getHtmlValue($gProfileFields->getPropertyById($row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_new'], 'html')) > 0)
+    $columnValues[] = $gProfileFields->getPropertyById((int) $row['usl_usf_id'], 'usf_name');
+    $uslValueNew = $gProfileFields->getHtmlValue($gProfileFields->getPropertyById((int) $row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_new']);
+    if($uslValueNew !== '')
     {
-        $columnValues[] = $gProfileFields->getHtmlValue($gProfileFields->getPropertyById($row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_new'], 'html');
+        $columnValues[] = $uslValueNew;
     }
     else
     {
         $columnValues[] = '&nbsp;';
     }
 
-    if(strlen($gProfileFields->getHtmlValue($gProfileFields->getPropertyById($row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_old'], 'html')) > 0)
+    $uslValueOld = $gProfileFields->getHtmlValue($gProfileFields->getPropertyById((int) $row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_old']);
+    if($uslValueOld !== '')
     {
-        $columnValues[] = $gProfileFields->getHtmlValue($gProfileFields->getPropertyById($row['usl_usf_id'], 'usf_name_intern'), $row['usl_value_old'], 'html');
+        $columnValues[] = $uslValueOld;
     }
     else
     {
         $columnValues[] = '&nbsp;';
     }
 
-    $columnValues[] = '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php?user_id='.$row['usl_usr_id_create'].'">'.$row['create_last_name'].', '.$row['create_first_name'].'</a>';
-    $columnValues[] = $timestampCreate->format($gPreferences['system_date'].' '.$gPreferences['system_time']);
+    $columnValues[] = '<a href="'.safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/profile/profile.php', array('user_id' => $row['usl_usr_id_create'])).'">'.$row['create_last_name'].', '.$row['create_first_name'].'</a>';
+    $columnValues[] = $timestampCreate->format($gSettingsManager->getString('system_date').' '.$gSettingsManager->getString('system_time'));
     $table->addRowByArray($columnValues);
 }
 
-$page->addHtml($table->show(false));
+$page->addHtml($table->show());
 $page->show();

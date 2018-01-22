@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Assign or remove membership of roles in profile
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -17,21 +17,21 @@
  *            1 - Edit roles of a new user
  *            2 - (not relevant)
  *            3 - Edit roles of a registration
- * inline   : 0 - Ausgaben werden als eigene Seite angezeigt
- *            1 - nur "body" HTML Code
+ * inline   : false - Ausgaben werden als eigene Seite angezeigt
+ *            true  - nur "body" HTML Code
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
-$getUserId  = admFuncVariableIsValid($_GET, 'usr_id',   'numeric');
-$getNewUser = admFuncVariableIsValid($_GET, 'new_user', 'numeric');
-$getInline  = admFuncVariableIsValid($_GET, 'inline',   'boolean');
+$getUserId  = admFuncVariableIsValid($_GET, 'usr_id',   'int');
+$getNewUser = admFuncVariableIsValid($_GET, 'new_user', 'int');
+$getInline  = admFuncVariableIsValid($_GET, 'inline',   'bool');
 
 // in ajax mode only return simple text on error
-if($getInline == true)
+if($getInline)
 {
     $gMessage->showHtmlTextOnly(true);
 }
@@ -40,75 +40,85 @@ if($getInline == true)
 if(!$gCurrentUser->assignRoles())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
-// detect number of selected roles
-$roleCount = 0;
-foreach($_POST as $key=>$value)
+// if new user or registration than at least 1 role must be assigned
+if($getNewUser > 0)
 {
-    if(preg_match('/^(role-)[0-9]+$/i', $key))
+    // detect number of selected roles
+    $roleCount = 0;
+    foreach($_POST as $key => $value) // TODO possible security issue
     {
-        ++$roleCount;
+        if(preg_match('/^(role-)\d+$/i', $key))
+        {
+            ++$roleCount;
+        }
     }
-}
-
-// if no role is selected than show notice
-if($roleCount == 0)
-{
-    if($getInline == 0)
+    // if no role is selected than show notice
+    if($roleCount === 0)
     {
-        exit($gMessage->show($gL10n->get('PRO_ROLE_NOT_ASSIGNED')));
-    }
-    else
-    {
-        exit($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
+        if(!$getInline)
+        {
+            $gMessage->show($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
+            // => EXIT
+        }
+        else
+        {
+            exit($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
+        }
     }
 }
 
 if($gCurrentUser->manageRoles())
 {
     // Benutzer mit Rollenrechten darf ALLE Rollen zuordnen
-    $sql = 'SELECT rol_id, rol_name, rol_max_members, rol_webmaster, mem_id, mem_begin, mem_end
-              FROM '. TBL_CATEGORIES. ', '. TBL_ROLES. '
-              LEFT JOIN '. TBL_MEMBERS. '
-                ON rol_id      = mem_rol_id
-               AND mem_usr_id  = '.$getUserId.'
-               AND mem_begin <= \''.DATE_NOW.'\'
-               AND mem_end    > \''.DATE_NOW.'\'
+    $sql = 'SELECT rol_id, rol_name, rol_max_members, rol_administrator, mem_id, mem_begin, mem_end
+              FROM '.TBL_ROLES.'
+        INNER JOIN '.TBL_CATEGORIES.'
+                ON cat_id = rol_cat_id
+         LEFT JOIN '.TBL_MEMBERS.'
+                ON mem_rol_id = rol_id
+               AND mem_usr_id = ? -- $getUserId
+               AND mem_begin <= ? -- DATE_NOW
+               AND mem_end    > ? -- DATE_NOW
              WHERE rol_valid   = 1
-               AND rol_visible = 1
-               AND rol_cat_id  = cat_id
-               AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id'). '
+               AND cat_name_intern <> \'EVENTS\'
+               AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
                    OR cat_org_id IS NULL )
-             ORDER BY cat_sequence, rol_name';
+          ORDER BY cat_sequence, rol_name';
+    $queryParams = array($getUserId, DATE_NOW, DATE_NOW, $gCurrentOrganization->getValue('org_id'));
 }
 else
 {
     // Ein Leiter darf nur Rollen zuordnen, bei denen er auch Leiter ist
-    $sql = 'SELECT rol_id, rol_name, rol_max_members, rol_webmaster, mgl.mem_id, mgl.mem_begin, mgl.mem_end
-              FROM '. TBL_MEMBERS. ' bm, '. TBL_CATEGORIES. ', '. TBL_ROLES. '
-              LEFT JOIN '. TBL_MEMBERS. ' mgl
+    $sql = 'SELECT rol_id, rol_name, rol_max_members, rol_administrator, mgl.mem_id, mgl.mem_begin, mgl.mem_end
+              FROM '.TBL_MEMBERS.' AS bm
+        INNER JOIN '.TBL_ROLES.'
+                ON rol_id = bm.mem_rol_id
+        INNER JOIN '.TBL_CATEGORIES.'
+                ON cat_id = rol_cat_id
+         LEFT JOIN '.TBL_MEMBERS.' AS mgl
                 ON rol_id         = mgl.mem_rol_id
-               AND mgl.mem_usr_id = '.$getUserId.'
-               AND mgl.mem_begin <= \''.DATE_NOW.'\'
-               AND mgl.mem_end    > \''.DATE_NOW.'\'
-             WHERE bm.mem_usr_id  = '. $gCurrentUser->getValue('usr_id'). '
-               AND bm.mem_begin  <= \''.DATE_NOW.'\'
-               AND bm.mem_end     > \''.DATE_NOW.'\'
+               AND mgl.mem_usr_id = ? -- $getUserId
+               AND mgl.mem_begin <= ? -- DATE_NOW
+               AND mgl.mem_end    > ? -- DATE_NOW
+             WHERE bm.mem_usr_id  = ? -- $gCurrentUser->getValue(\'usr_id\')
+               AND bm.mem_begin  <= ? -- DATE_NOW
+               AND bm.mem_end     > ? -- DATE_NOW
                AND bm.mem_leader  = 1
-               AND rol_id         = bm.mem_rol_id
                AND rol_leader_rights IN (1,3)
                AND rol_valid      = 1
-               AND rol_visible    = 1
-               AND rol_cat_id     = cat_id
-               AND (  cat_org_id  = '. $gCurrentOrganization->getValue('org_id'). '
+               AND cat_name_intern <> \'EVENTS\'
+               AND (  cat_org_id  = ? -- $gCurrentOrganization->getValue(\'org_id\')
                    OR cat_org_id IS NULL )
-             ORDER BY cat_sequence, rol_name';
+          ORDER BY cat_sequence, rol_name';
+    $queryParams = array($getUserId, DATE_NOW, DATE_NOW, $gCurrentUser->getValue('usr_id'), DATE_NOW, DATE_NOW, $gCurrentOrganization->getValue('org_id'));
 }
-$rolesStatement = $gDb->query($sql);
+$rolesStatement = $gDb->queryPrepared($sql, $queryParams);
 $rolesList      = $rolesStatement->fetchAll();
 
-$count_assigned = 0;
+$assignedCount = 0;
 $parentRoles = array();
 
 // Ergebnisse durchlaufen und kontrollieren ob maximale Teilnehmerzahl ueberschritten wuerde
@@ -117,42 +127,39 @@ foreach($rolesList as $row)
     if($row['rol_max_members'] > 0)
     {
         // erst einmal schauen, ob der Benutzer dieser Rolle bereits zugeordnet ist
-        $sql = 'SELECT COUNT(*)
-                  FROM '. TBL_MEMBERS.'
-                 WHERE mem_rol_id = '.$row['rol_id'].'
-                   AND mem_usr_id = '.$getUserId.'
+        $sql = 'SELECT COUNT(*) AS count
+                  FROM '.TBL_MEMBERS.'
+                 WHERE mem_rol_id = ? -- $row[\'rol_id\']
+                   AND mem_usr_id = ? -- $getUserId
                    AND mem_leader = 0
-                   AND mem_begin <= \''.DATE_NOW.'\'
-                   AND mem_end    > \''.DATE_NOW.'\'';
-        $pdoStatement = $gDb->query($sql);
+                   AND mem_begin <= ? -- DATE_NOW
+                   AND mem_end    > ? -- DATE_NOW';
+        $pdoStatement = $gDb->queryPrepared($sql, array($row['rol_id'], $getUserId, DATE_NOW, DATE_NOW));
 
-        $row_usr = $pdoStatement->fetch();
-
-        if($row_usr[0] == 0)
+        if((int) $pdoStatement->fetchColumn() === 0)
         {
             // Benutzer ist der Rolle noch nicht zugeordnet, dann schauen, ob die Anzahl ueberschritten wird
-            $sql = 'SELECT COUNT(*)
-                      FROM '. TBL_MEMBERS.'
-                     WHERE mem_rol_id = '.$row['rol_id'].'
+            $sql = 'SELECT COUNT(*) AS count
+                      FROM '.TBL_MEMBERS.'
+                     WHERE mem_rol_id = ? -- $row[\'rol_id\']
                        AND mem_leader = 0
-                       AND mem_begin <= \''.DATE_NOW.'\'
-                       AND mem_end    > \''.DATE_NOW.'\'';
-            $pdoStatement = $gDb->query($sql);
-
-            $row_members = $pdoStatement->fetch();
+                       AND mem_begin <= ? -- DATE_NOW
+                       AND mem_end    > ? -- DATE_NOW';
+            $pdoStatement = $gDb->queryPrepared($sql, array($row['rol_id'], DATE_NOW, DATE_NOW));
 
             // Bedingungen fuer Abbruch und Abbruch
-            if($row_members[0] >= $row['rol_max_members']
+            if($pdoStatement->fetchColumn() >= $row['rol_max_members']
             && isset($_POST['leader-'.$row['rol_id']]) && $_POST['leader-'.$row['rol_id']] == false
             && isset($_POST['role-'.$row['rol_id']])   && $_POST['role-'.$row['rol_id']]   == true)
             {
-                if($getInline == 0)
+                if(!$getInline)
                 {
-                    $gMessage->show($gL10n->get('SYS_ROLE_MAX_MEMBERS', $row['rol_name']));
+                    $gMessage->show($gL10n->get('SYS_ROLE_MAX_MEMBERS', array($row['rol_name'])));
+                    // => EXIT
                 }
                 else
                 {
-                    echo $gL10n->get('SYS_ROLE_MAX_MEMBERS', $row['rol_name']);
+                    echo $gL10n->get('SYS_ROLE_MAX_MEMBERS', array($row['rol_name']));
                 }
             }
         }
@@ -164,29 +171,36 @@ $user = new User($gDb, $gProfileFields, $getUserId);
 // Ergebnisse durchlaufen und Datenbankupdate durchfuehren
 foreach($rolesList as $row)
 {
-    // if role is webmaster than only webmaster can add new user,
-    // but don't change their own membership, because there must be at least one webmaster
-    if($row['rol_webmaster'] == 0
-    || ($row['rol_webmaster'] == 1 && $gCurrentUser->isWebmaster()
-        && $getUserId != $gCurrentUser->getValue('usr_id')))
+    // if role is administrator than only administrator can add new user,
+    // but don't change their own membership, because there must be at least one administrator
+    if($row['rol_administrator'] == 0
+    || ($row['rol_administrator'] == 1 && $gCurrentUser->isAdministrator()
+        && $getUserId !== (int) $gCurrentUser->getValue('usr_id')))
     {
-        $roleAssign = 0;
+        $roleAssign = false;
         if(isset($_POST['role-'.$row['rol_id']]) && $_POST['role-'.$row['rol_id']] == 1)
         {
-            $roleAssign = 1;
+            $roleAssign = true;
         }
 
-        $roleLeader = 0;
+        $roleLeader = false;
         if(isset($_POST['leader-'.$row['rol_id']]) && $_POST['leader-'.$row['rol_id']] == 1)
         {
-            $roleLeader = 1;
+            $roleLeader = true;
         }
 
         // update role membership
-        if($roleAssign == 1)
+        if($roleAssign)
         {
-            $user->setRoleMembership($row['rol_id'], DATE_NOW, '9999-12-31', $roleLeader);
-            ++$count_assigned;
+            $roleAssignmentEndDate = DATE_MAX;
+
+            if($row['mem_end'] > date('Y-m-d'))
+            {
+                $roleAssignmentEndDate = $row['mem_end'];
+            }
+
+            $user->setRoleMembership($row['rol_id'], DATE_NOW, $roleAssignmentEndDate, $roleLeader);
+            ++$assignedCount;
 
             // find the parent roles and assign user to parent roles
             $tmpRoles = RoleDependency::getParentRoles($gDb, $row['rol_id']);
@@ -204,7 +218,9 @@ foreach($rolesList as $row)
             if($row['mem_id'] > 0)
             {
                 // subtract one day, so that user leaves role immediately
-                $newEndDate = date('Y-m-d', time() - (24 * 60 * 60));
+                $now = new \DateTime();
+                $oneDayOffset = new \DateInterval('P1D');
+                $newEndDate = $now->sub($oneDayOffset)->format('Y-m-d');
                 $user->editRoleMembership($row['mem_id'], $row['mem_begin'], $newEndDate, $roleLeader);
             }
         }
@@ -217,12 +233,12 @@ if(count($parentRoles) > 0)
 {
     foreach($parentRoles as $actRole)
     {
-        $user->setRoleMembership($actRole, DATE_NOW, '9999-12-31');
+        $user->setRoleMembership($actRole, DATE_NOW, DATE_MAX);
     }
 }
 
 // if role selection was a separate page then delete this page from the navigation stack
-if($getInline == 0)
+if(!$getInline)
 {
     $gNavigation->deleteLastUrl();
 }
@@ -232,12 +248,13 @@ if($getInline == 0)
 $gCurrentSession->renewUserObject();
 
 // Check if a new user get's at least one role
-if($getNewUser > 0 && $count_assigned == 0)
+if($getNewUser > 0 && $assignedCount === 0)
 {
     // Neuem User wurden keine Rollen zugewiesen
-    if($getInline == 0)
+    if(!$getInline)
     {
         $gMessage->show($gL10n->get('PRO_ROLE_NOT_ASSIGNED'));
+        // => EXIT
     }
     else
     {
@@ -246,19 +263,19 @@ if($getNewUser > 0 && $count_assigned == 0)
 }
 
 // zur Ausgangsseite zurueck
-if(strpos($gNavigation->getUrl(), 'new_user_assign.php') > 0)
+if(admStrContains($gNavigation->getUrl(), 'new_user_assign.php'))
 {
     // von hier aus direkt zur Registrierungsuebersicht zurueck
     $gNavigation->deleteLastUrl();
 }
 
-if($getInline == true)
+if($getInline)
 {
     echo 'success';
 }
 else
 {
-    if($getNewUser == 3)
+    if($getNewUser === 3)
     {
         $messageId = 'PRO_ASSIGN_REGISTRATION_SUCCESSFUL';
     }
@@ -269,4 +286,5 @@ else
 
     $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
     $gMessage->show($gL10n->get($messageId));
+    // => EXIT
 }

@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -19,11 +19,11 @@
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID'));
  *
  * // show a message and set a link to a page that should be shown after user click ok
- * $gMessage->setForwardUrl('http://www.example.de/mypage.php');
+ * $gMessage->setForwardUrl('https://www.example.com/mypage.php');
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID'));
  *
  * // show a message with yes and no button and set a link to a page that should be shown after user click yes
- * $gMessage->setForwardYesNo('http://www.example.de/mypage.php');
+ * $gMessage->setForwardYesNo('https://www.example.com/mypage.php');
  * $gMessage->show($gL10n->get('SYS_MESSAGE_TEXT_ID')); @endcode
  */
 class ModuleMessages
@@ -37,135 +37,142 @@ class ModuleMessages
     }
 
     /**
-     * check for Group and give back a string with groupname and if it is active, inactive or both.
-     * @param $groupstring
-     * @return string
+     * Check for roles and give back a string with rolename. If former members or activa and former
+     * members were selected than an additional string will be shown after the rolename.
+     * @param string $roleIdsString A string with several role ids. (e.g: "groupID: 4-2")
+     * @return string Returns the rolename and the status if former members were selected.
      */
-    public function msgGroupNameSplit($groupstring)
+    public function msgGroupNameSplit($roleIdsString)
     {
         global $gCurrentOrganization, $gL10n, $gDb;
 
-        $group = $this->msgGroupSplit($groupstring);
+        $groupInfo = $this->msgGroupSplit($roleIdsString);
 
-        $sql = 'SELECT rol_name, rol_id
-                      FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                     WHERE rol_cat_id    = cat_id
-                       AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
-                           OR cat_org_id IS NULL)
-                       AND rol_id = '.$group[0];
-        $statement = $gDb->query($sql);
-        $row = $statement->fetch();
+        $sql = 'SELECT rol_name
+                  FROM ' . TBL_ROLES . '
+            INNER JOIN ' . TBL_CATEGORIES . '
+                    ON cat_id = rol_cat_id
+                 WHERE rol_id = ? -- $groupInfo[\'id\']
+                   AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
+                       OR cat_org_id IS NULL)';
+        $statement = $gDb->queryPrepared($sql, array($groupInfo['id'], $gCurrentOrganization->getValue('org_id')));
+        $roleName = $statement->fetchColumn();
 
-        if($group[1] == 1)
+        switch ($groupInfo['status'])
         {
-            // only former members
-            $ReceiverNameLong = $row['rol_name'] . ' (' .$gL10n->get('LST_FORMER_MEMBERS') . ')';
+//            case 'active':
+//                return $roleName . ' (' . $gL10n->get('LST_ACTIVE_MEMBERS') . ')';
+            case 'former':
+                return $roleName . ' (' . $gL10n->get('LST_FORMER_MEMBERS') . ')';
+            case 'active_former':
+                return $roleName . ' (' . $gL10n->get('LST_ACTIVE_FORMER_MEMBERS') . ')';
+            default:
+                return $roleName;
         }
-        elseif($group[1] == 2)
-        {
-            // former members and active members
-            $ReceiverNameLong = $row['rol_name'] . ' (' . $gL10n->get('LST_ACTIVE_FORMER_MEMBERS') . ')';
-        }
-        else
-        {
-            // only active members
-            $ReceiverNameLong = $row['rol_name'] . ' (' .$gL10n->get('LST_ACTIVE_MEMBERS') . ')';
-        }
-
-        return $ReceiverNameLong;
     }
 
     /**
      * check for Group and give back a array with group ID[0] and if it is active, inactive or both [1].
-     * @param $groupstring
-     * @return array
+     * @param string $groupString (e.g: "groupID: 4-2")
+     * @return array<string,string|int> Returns the groupId and status
      */
-    public function msgGroupSplit($groupstring)
+    public function msgGroupSplit($groupString)
     {
-        $groupsplit = explode(':', $groupstring);
+        $groupSplit = explode(':', $groupString);
+        $groupIdAndStatus = explode('-', trim($groupSplit[1]));
 
-        if (strpos($groupsplit[1], '-') > 0)
+        if (count($groupIdAndStatus) === 1)
         {
-            $group = explode('-', $groupsplit[1]);
+            $status = 'active';
+        }
+        elseif ($groupIdAndStatus[1] === '1')
+        {
+            $status = 'former';
+        }
+        elseif ($groupIdAndStatus[1] === '2')
+        {
+            $status = 'active_former';
         }
         else
         {
-            $group[0] = $groupsplit[1];
-            $group[1] = 0;
+            $status = 'unknown';
         }
 
-        return $group;
+        return array(
+            'id'     => (int) $groupIdAndStatus[0],
+            'status' => $status
+        );
     }
 
     /**
      * return an array with all Email-Messages of the given user.
-     * @param $user
-     * @return array
+     * @param int $userId
+     * @return \PDOStatement
      */
-    public function msgGetUserEmails($user)
+    public function msgGetUserEmails($userId)
     {
         global $gDb;
 
-        $sql = "SELECT msg_id, msg_usr_id_receiver AS user
-        FROM ". TBL_MESSAGES. "
-         WHERE msg_type = 'EMAIL' and msg_usr_id_sender = ". $user ."
-         ORDER BY msg_id DESC";
+        $sql = 'SELECT msg_id, msg_usr_id_receiver AS user
+                  FROM ' . TBL_MESSAGES . '
+                 WHERE msg_type = \'EMAIL\'
+                   AND msg_usr_id_sender = ? -- $userId
+              ORDER BY msg_id DESC';
 
-        return $gDb->query($sql);
+        return $gDb->queryPrepared($sql, array($userId));
     }
 
     /**
      * return an array with all unread Messages of the given user.
-     * @param $userId
-     * @return array
+     * @param int $userId
+     * @return \PDOStatement
      */
     public function msgGetUserUnread($userId)
     {
         global $gDb;
 
-        $sql = "
-        SELECT msg_id, msg_usr_id_sender, msg_usr_id_receiver
-          FROM ". TBL_MESSAGES. "
-         WHERE msg_type = 'PM'
-           AND msg_usr_id_receiver LIKE '". $userId ."' and msg_read = 1
-         ORDER BY msg_id DESC";
+        $sql = 'SELECT msg_id, msg_usr_id_sender, msg_usr_id_receiver
+                  FROM ' . TBL_MESSAGES . '
+                 WHERE msg_type = \'PM\'
+                   AND msg_usr_id_receiver = ? -- $userId
+                   AND msg_read = 1
+              ORDER BY msg_id DESC';
 
-        return $gDb->query($sql);
+        return $gDb->queryPrepared($sql, array($userId));
     }
 
     /**
      * return an array with all unread Messages of the given user.
-     * @param $userId
-     * @return array
+     * @param int $userId
+     * @return \PDOStatement
      */
     public function msgGetUser($userId)
     {
         global $gDb;
 
-        $sql = "
-        SELECT msg_id, msg_usr_id_sender, msg_usr_id_receiver
-          FROM ". TBL_MESSAGES. "
-         WHERE msg_type = 'PM'
-           AND ( (msg_usr_id_receiver LIKE '". $userId ."' and msg_read <> 1)
-               OR (msg_usr_id_sender = ". $userId ." and msg_read < 2))
-         ORDER BY msg_id DESC";
+        $sql = 'SELECT msg_id, msg_usr_id_sender, msg_usr_id_receiver
+                  FROM ' . TBL_MESSAGES . '
+                 WHERE msg_type = \'PM\'
+                   AND ( (msg_usr_id_receiver = ? AND msg_read <> 1) -- $userId
+                       OR (msg_usr_id_sender  = ? AND msg_read < 2)) -- $userId
+              ORDER BY msg_id DESC';
 
-        return $gDb->query($sql);
+        return $gDb->queryPrepared($sql, array($userId, $userId));
     }
 
     /**
      * return the message ID of the admidio chat.
-     * @return
+     * @return int
      */
     public function msgGetChatId()
     {
         global $gDb;
 
-        $sql = "SELECT msg_id FROM ". TBL_MESSAGES. " WHERE msg_type = 'CHAT'";
-        $statement = $gDb->query($sql);
-        $row = $statement->fetch();
+        $sql = 'SELECT msg_id
+                  FROM ' . TBL_MESSAGES . '
+                 WHERE msg_type = \'CHAT\'';
+        $statement = $gDb->queryPrepared($sql);
 
-        return $row['msg_id'];
+        return (int) $statement->fetchColumn();
     }
-
 }

@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Check message information and save it
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -13,22 +13,30 @@
  * msg_type  - set message type
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
-require_once('../../system/template.php');
+require_once(__DIR__ . '/../../system/common.php');
+require_once(__DIR__ . '/../../system/template.php');
 
 // Initialize and check the parameters
-$getMsgId   = admFuncVariableIsValid($_GET, 'msg_id',   'numeric');
+$getMsgId   = admFuncVariableIsValid($_GET, 'msg_id',   'int');
 $getMsgType = admFuncVariableIsValid($_GET, 'msg_type', 'string');
 
 // Check form values
 $postFrom       = admFuncVariableIsValid($_POST, 'mailfrom', 'string');
-$postName       = admFuncVariableIsValid($_POST, 'name',     'string');
+$postName       = admFuncVariableIsValid($_POST, 'namefrom', 'string');
 $postSubject    = admFuncVariableIsValid($_POST, 'subject',  'html');
 $postSubjectSQL = admFuncVariableIsValid($_POST, 'subject',  'string');
 $postBody       = admFuncVariableIsValid($_POST, 'msg_body', 'html');
 $postBodySQL    = admFuncVariableIsValid($_POST, 'msg_body', 'string');
-$postDeliveryConfirmation = admFuncVariableIsValid($_POST, 'delivery_confirmation', 'boolean');
-$postCaptcha    = admFuncVariableIsValid($_POST, 'captcha', 'string');
+$postDeliveryConfirmation = admFuncVariableIsValid($_POST, 'delivery_confirmation', 'bool');
+$postCaptcha    = admFuncVariableIsValid($_POST, 'captcha_code', 'string');
+$postUserIdList = admFuncVariableIsValid($_POST, 'userIdList',   'string');
+$postListId     = admFuncVariableIsValid($_POST, 'lst_id',       'int');
+
+// save form data in session for back navigation
+$_SESSION['message_request'] = $_POST;
+
+// save page in navigation - to have a check for a navigation back.
+$gNavigation->addUrl(CURRENT_URL);
 
 if (isset($_POST['msg_to']))
 {
@@ -37,96 +45,128 @@ if (isset($_POST['msg_to']))
 else
 {
     // message when no receiver is given
-    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_TO')));
+    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_TO'))));
+    // => EXIT
+}
+
+if ($postSubjectSQL === '')
+{
+    // message when no subject is given
+    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('MAI_SUBJECT'))));
+    // => EXIT
+}
+
+if ($postBodySQL === '')
+{
+    // message when no subject is given
+    $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_MESSAGE'))));
+    // => EXIT
 }
 
 $message = new TableMessage($gDb, $getMsgId);
 
-if ($getMsgId != 0)
+if ($getMsgId > 0)
 {
     $getMsgType = $message->getValue('msg_type');
 }
 
 // if message not PM it must be Email and then directly check the parameters
-if ($getMsgType !== 'PM')
+if ($getMsgType !== TableMessage::MESSAGE_TYPE_PM)
 {
-    $getMsgType = 'EMAIL';
+    $getMsgType = TableMessage::MESSAGE_TYPE_EMAIL;
+}
 
-    // Stop if mail should be send and mail module is disabled
-    if($gPreferences['enable_mail_module'] != 1)
-    {
-        $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
-    }
+// Stop if pm should be send pm module is disabled
+if ($getMsgType === TableMessage::MESSAGE_TYPE_PM && !$gSettingsManager->getBool('enable_pm_module'))
+{
+    $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
+}
 
+// Stop if mail should be send and mail module is disabled
+if ($getMsgType === TableMessage::MESSAGE_TYPE_EMAIL && !$gSettingsManager->getBool('enable_mail_module'))
+{
+    $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
+}
+
+$sendResult = false;
+$currUsrId = (int) $gCurrentUser->getValue('usr_id');
+
+// if message is EMAIL then check the parameters
+if ($getMsgType === TableMessage::MESSAGE_TYPE_EMAIL)
+{
     // allow option to send a copy to your email address only for registered users because of spam abuse
-    if($gValidLogin)
+    $postCarbonCopy = 0;
+    if ($gValidLogin)
     {
-        $postCarbonCopy = admFuncVariableIsValid($_POST, 'carbon_copy', 'boolean');
-    }
-    else
-    {
-        $postCarbonCopy = 0;
+        $postCarbonCopy = admFuncVariableIsValid($_POST, 'carbon_copy', 'bool');
     }
 
-    // if Attachmentsize is higher than max_post_size from php.ini, then $_POST is empty.
-    if(empty($_POST))
+    // if Attachment size is higher than max_post_size from php.ini, then $_POST is empty.
+    if (empty($_POST))
     {
         $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+        // => EXIT
     }
 
     // Check Captcha if enabled and user logged out
-    if (!$gValidLogin && $gPreferences['enable_mail_captcha'] == 1)
+    if (!$gValidLogin && $gSettingsManager->getBool('enable_mail_captcha'))
     {
-        if (!isset($_SESSION['captchacode']) || admStrToUpper($_SESSION['captchacode']) !== admStrToUpper($postCaptcha))
+        try
         {
-            if($gPreferences['captcha_type'] === 'pic')
-            {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CODE_INVALID'));
-            }
-            elseif($gPreferences['captcha_type'] === 'calc')
-            {
-                $gMessage->show($gL10n->get('SYS_CAPTCHA_CALC_CODE_INVALID'));
-            }
+            FormValidation::checkCaptcha($postCaptcha);
+        }
+        catch (AdmException $e)
+        {
+            $e->showHtml();
+            // => EXIT
         }
     }
 }
 
-// Stop if pm should be send pm module is disabled
-if($gPreferences['enable_pm_module'] != 1 && $getMsgType === 'PM')
-{
-    $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
-}
-
 // if user is logged in then show sender name and email
-if ($gCurrentUser->getValue('usr_id') > 0)
+if ($currUsrId > 0)
 {
-    $postName = $gCurrentUser->getValue('FIRST_NAME', 'database'). ' '. $gCurrentUser->getValue('LAST_NAME', 'database');
-    $postFrom = $gCurrentUser->getValue('EMAIL');
+    $postName = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
+    if (!strValidCharacters($postFrom, 'email'))
+    {
+        $postFrom = $gCurrentUser->getValue('EMAIL');
+    }
+}
+else
+{
+    if ($postName === '')
+    {
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('MAI_YOUR_NAME'))));
+        // => EXIT
+    }
+    if (!strValidCharacters($postFrom, 'email'))
+    {
+        $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', array($gL10n->get('MAI_YOUR_EMAIL'))));
+        // => EXIT
+    }
 }
 
 // if no User is set, he is not able to ask for delivery confirmation
-if(!($gCurrentUser->getValue('usr_id') > 0 && $gPreferences['mail_delivery_confirmation'] == 2) && $gPreferences['mail_delivery_confirmation'] != 1)
+if (!($currUsrId > 0 && (int) $gSettingsManager->get('mail_delivery_confirmation') === 2)
+&&  (int) $gSettingsManager->get('mail_delivery_confirmation') !== 1)
 {
-    $postDeliveryConfirmation = 0;
+    $postDeliveryConfirmation = false;
 }
 
 // check if PM or Email and to steps:
-if ($getMsgType === 'EMAIL')
+if ($getMsgType === TableMessage::MESSAGE_TYPE_EMAIL)
 {
-    // put values into SESSION
-    $_SESSION['message_request'] = array(
-        'name'                  => $postName,
-        'msgfrom'               => $postFrom,
-        'subject'               => $postSubject,
-        'msg_body'              => $postBody,
-        'carbon_copy'           => $postCarbonCopy,
-        'delivery_confirmation' => $postDeliveryConfirmation,
-    );
+    $receiver = array();
+    $receiverString = '';
 
     if (isset($postTo))
     {
-        $receiver = array();
-        $ReceiverString = '';
+        if ($postListId > 0) //the id of a list was passed
+        {
+            $postTo = explode(',', $postUserIdList);
+        }
 
         // Create new Email Object
         $email = new Email();
@@ -136,145 +176,160 @@ if ($getMsgType === 'EMAIL')
             // check if role or user is given
             if (strpos($value, ':') > 0)
             {
-                $modulemessages = new ModuleMessages();
-                $group = $modulemessages->msgGroupSplit($value);
+                $moduleMessages = new ModuleMessages();
+                $group = $moduleMessages->msgGroupSplit($value);
 
                 // check if role rights are granted to the User
-                $sql = 'SELECT rol_mail_this_role, rol_name, rol_id
-                          FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-                         WHERE rol_cat_id    = cat_id
-                           AND (  cat_org_id = '. $gCurrentOrganization->getValue('org_id').'
+                $sql = 'SELECT rol_mail_this_role, rol_id
+                          FROM '.TBL_ROLES.'
+                    INNER JOIN '.TBL_CATEGORIES.'
+                            ON cat_id = rol_cat_id
+                           AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
                                OR cat_org_id IS NULL)
-                           AND rol_id = '.$group[0];
-                $statement = $gDb->query($sql);
+                         WHERE rol_id = ? -- $group[\'id\']';
+                $statement = $gDb->queryPrepared($sql, array($gCurrentOrganization->getValue('org_id'), $group['id']));
                 $row = $statement->fetch();
 
-                // logged in user is just allowed to send to role with permission
                 // logged out ones just to role with permission level "all visitors"
+                // logged in user is just allowed to send to role with permission
                 // role must be from actual Organisation
-                if((!$gValidLogin && $row['rol_mail_this_role'] != 3)
-                || ($gValidLogin  && !$gCurrentUser->hasRightSendMailToRole($row['rol_id']))
+                if ((!$gValidLogin && (int) $row['rol_mail_this_role'] !== 3)
+                || ($gValidLogin  && !$gCurrentUser->hasRightSendMailToRole((int) $row['rol_id']))
                 || $row['rol_id'] === null)
                 {
                     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+                    // => EXIT
                 }
 
-                if($group[1] == 1 && $gPreferences['mail_show_former'] == 1)
+                $queryParams = array(
+                    $gProfileFields->getProperty('LAST_NAME', 'usf_id'),
+                    $gProfileFields->getProperty('FIRST_NAME', 'usf_id'),
+                    $group['id'],
+                    $gCurrentOrganization->getValue('org_id')
+                );
+
+                if ($group['status'] === 'former' && $gSettingsManager->getBool('mail_show_former'))
                 {
                     // only former members
-                    $sqlConditions = ' AND mem_end < \''.DATE_NOW.'\' ';
+                    $sqlConditions = ' AND mem_end < ? -- DATE_NOW ';
+                    $queryParams[] = DATE_NOW;
                 }
-                elseif($group[1] == 2 && $gPreferences['mail_show_former'] == 1)
+                elseif ($group['status'] === 'active_former' && $gSettingsManager->getBool('mail_show_former'))
                 {
                     // former members and active members
-                    $sqlConditions = ' AND mem_begin < \''.DATE_NOW.'\' ';
+                    $sqlConditions = ' AND mem_begin < ? -- DATE_NOW ';
+                    $queryParams[] = DATE_NOW;
                 }
                 else
                 {
                     // only active members
-                    $sqlConditions = ' AND mem_begin  <= \''.DATE_NOW.'\'
-                                       AND mem_end     > \''.DATE_NOW.'\' ';
+                    $sqlConditions = ' AND mem_begin <= ? -- DATE_NOW
+                                       AND mem_end    > ? -- DATE_NOW ';
+                    $queryParams[] = DATE_NOW;
+                    $queryParams[] = DATE_NOW;
                 }
 
-                $sql = 'SELECT first_name.usd_value as first_name, last_name.usd_value as last_name,
-                               email.usd_value as email, rol_name
-                          FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. ', '. TBL_MEMBERS. ', '. TBL_USERS. '
-                          JOIN '. TBL_USER_DATA. ' as email
+                $sql = 'SELECT first_name.usd_value AS firstName, last_name.usd_value AS lastName, email.usd_value AS email
+                          FROM '.TBL_MEMBERS.'
+                    INNER JOIN '.TBL_ROLES.'
+                            ON rol_id = mem_rol_id
+                    INNER JOIN '.TBL_CATEGORIES.'
+                            ON cat_id = rol_cat_id
+                    INNER JOIN '.TBL_USERS.'
+                            ON usr_id = mem_usr_id
+                    INNER JOIN '.TBL_USER_DATA.' AS email
                             ON email.usd_usr_id = usr_id
                            AND LENGTH(email.usd_value) > 0
-                          JOIN '.TBL_USER_FIELDS.' as field
+                    INNER JOIN '.TBL_USER_FIELDS.' AS field
                             ON field.usf_id = email.usd_usf_id
                            AND field.usf_type = \'EMAIL\'
-                          LEFT JOIN '. TBL_USER_DATA. ' as last_name
+                     LEFT JOIN '.TBL_USER_DATA.' AS last_name
                             ON last_name.usd_usr_id = usr_id
-                           AND last_name.usd_usf_id = '. $gProfileFields->getProperty('LAST_NAME', 'usf_id'). '
-                          LEFT JOIN '. TBL_USER_DATA. ' as first_name
+                           AND last_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'LAST_NAME\', \'usf_id\')
+                     LEFT JOIN '.TBL_USER_DATA.' AS first_name
                             ON first_name.usd_usr_id = usr_id
-                           AND first_name.usd_usf_id = '. $gProfileFields->getProperty('FIRST_NAME', 'usf_id'). '
-                         WHERE rol_id      = '.$group[0].'
-                           AND rol_cat_id  = cat_id
-                           AND (  cat_org_id  = '. $gCurrentOrganization->getValue('org_id'). '
+                           AND first_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'FIRST_NAME\', \'usf_id\')
+                         WHERE rol_id    = ? -- $group[\'id\']
+                           AND (  cat_org_id = ? -- $gCurrentOrganization->getValue(\'org_id\')
                                OR cat_org_id IS NULL )
-                           AND mem_rol_id  = rol_id
-                           AND mem_usr_id  = usr_id
-                           AND usr_valid   = 1 '.
-                               $sqlConditions;
+                           AND usr_valid = 1
+                               '.$sqlConditions;
 
                 // Wenn der User eingeloggt ist, wird die UserID im Statement ausgeschlossen,
                 // damit er die Mail nicht an sich selber schickt.
                 if ($gValidLogin)
                 {
-                    $sql = $sql. ' AND usr_id <> '. $gCurrentUser->getValue('usr_id');
+                    $sql .= '
+                        AND usr_id <> ? -- $currUsrId';
+                    $queryParams[] = $currUsrId;
                 }
-                $statement = $gDb->query($sql);
+                $statement = $gDb->queryPrepared($sql, $queryParams);
 
-                if($statement->rowCount() > 0)
+                if ($statement->rowCount() > 0)
                 {
-                    // normaly we need no To-address and set "undisclosed recipients", but if
-                    // that won't work than the From-address will be set
-                    if($gPreferences['mail_sender_into_to'] == 1)
+                    // normally we need no To-address and set "undisclosed recipients", but if
+                    // that won't work than the following address will be set
+                    if ((int) $gSettingsManager->get('mail_recipients_with_roles') === 1)
                     {
-                        // always fill recipient if preference is set to prevent problems with provider
+                        // fill recipient with sender address to prevent problems with provider
                         $email->addRecipient($postFrom, $postName);
+                    }
+                    elseif ((int) $gSettingsManager->get('mail_recipients_with_roles') === 2)
+                    {
+                        // fill recipient with administrators address to prevent problems with provider
+                        $email->addRecipient($gSettingsManager->getString('email_administrator'), $gL10n->get('SYS_ADMINISTRATOR'));
                     }
 
                     // all role members will be attached as BCC
                     while ($row = $statement->fetchObject())
                     {
-                        $receiver[] = array($row->email, $row->first_name.' '.$row->last_name);
+                        if (strValidCharacters($row->email, 'email'))
+                        {
+                            $receiver[] = array($row->email, $row->firstName . ' ' . $row->lastName);
+                        }
                     }
-
                 }
-                else
-                {
-                    // error if role has no email addresses or role ID is not existing
-                    $gMessage->show($gL10n->get('MAI_ROLE_NO_EMAILS'));
-                }
-
             }
             else
             {
                 // create user object
                 $user = new User($gDb, $gProfileFields, $value);
 
-                if(!$gCurrentUser->hasRightViewProfile($user))
+                // only send email to user if current user is allowed to view this user and he has a valid email address
+                if ($gCurrentUser->hasRightViewProfile($user) && strValidCharacters($user->getValue('EMAIL'), 'email'))
                 {
-                    $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+                    $receiver[] = array($user->getValue('EMAIL'), $user->getValue('FIRST_NAME') . ' ' . $user->getValue('LAST_NAME'));
                 }
-
-                // error if no valid Email for given user ID
-                if (!strValidCharacters($user->getValue('EMAIL'), 'email'))
-                {
-                    $gMessage->show($gL10n->get('SYS_USER_NO_EMAIL', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME')));
-                }
-
-                $receiver[] = array($user->getValue('EMAIL'), $user->getValue('FIRST_NAME', 'database').' '.$user->getValue('LAST_NAME', 'database'));
             }
-            $ReceiverString .= ' | '.$value;
+            $receiverString .= ' | ' . $value;
         }
-        $ReceiverString = substr($ReceiverString, 3);
+        $receiverString = substr($receiverString, 3);
     }
     else
     {
         // message when no receiver is given
         $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+        // => EXIT
     }
 
-    // save page in navigation - to have a check for a navigation back.
-    $gNavigation->addUrl(CURRENT_URL);
+    // if no valid recipients exists show message
+    if (count($receiver) === 0)
+    {
+        $gMessage->show($gL10n->get('MSG_NO_VALID_RECIPIENTS'));
+        // => EXIT
+    }
 
     // check if name is given
-    if($postName === '')
+    if ($postName === '')
     {
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_NAME')));
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_NAME'))));
+        // => EXIT
     }
 
-    // check sending attributes for user, to be sure that they are correct
-    if ($gValidLogin
-    && ($postFrom !== $gCurrentUser->getValue('EMAIL')
-        || $postName !== $gCurrentUser->getValue('FIRST_NAME', 'database').' '.$gCurrentUser->getValue('LAST_NAME', 'database')))
+    // if valid login then sender should always current user
+    if ($gValidLogin)
     {
-        $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+        $postName = $gCurrentUser->getValue('FIRST_NAME') . ' ' . $gCurrentUser->getValue('LAST_NAME');
     }
 
     // set sending address
@@ -290,27 +345,31 @@ if ($getMsgType === 'EMAIL')
                 if (!$gValidLogin)
                 {
                     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+                    // => EXIT
                 }
                 $attachmentSize = 0;
                 // add now every attachment
-                for($currentAttachmentNo = 0; isset($_FILES['userfile']['name'][$currentAttachmentNo]); ++$currentAttachmentNo)
+                for ($currentAttachmentNo = 0; isset($_FILES['userfile']['name'][$currentAttachmentNo]); ++$currentAttachmentNo)
                 {
                     // check if Upload was OK
-                    if (($_FILES['userfile']['error'][$currentAttachmentNo] != 0) && ($_FILES['userfile']['error'][$currentAttachmentNo] != 4))
+                    if (($_FILES['userfile']['error'][$currentAttachmentNo] !== UPLOAD_ERR_OK)
+                    &&  ($_FILES['userfile']['error'][$currentAttachmentNo] !== UPLOAD_ERR_NO_FILE))
                     {
                         $gMessage->show($gL10n->get('MAI_ATTACHMENT_TO_LARGE'));
+                        // => EXIT
                     }
 
-                    if ($_FILES['userfile']['error'][$currentAttachmentNo] == 0)
+                    if ($_FILES['userfile']['error'][$currentAttachmentNo] === UPLOAD_ERR_OK)
                     {
                         // check the size of the attachment
-                        $attachmentSize = $attachmentSize + $_FILES['userfile']['size'][$currentAttachmentNo];
-                        if($attachmentSize > $email->getMaxAttachementSize('b'))
+                        $attachmentSize += $_FILES['userfile']['size'][$currentAttachmentNo];
+                        if ($attachmentSize > Email::getMaxAttachmentSize())
                         {
                             $gMessage->show($gL10n->get('MAI_ATTACHMENT_TO_LARGE'));
+                            // => EXIT
                         }
 
-                        // set filetyp to standart if not given
+                        // set filetyp to standard if not given
                         if (strlen($_FILES['userfile']['type'][$currentAttachmentNo]) <= 0)
                         {
                             $_FILES['userfile']['type'][$currentAttachmentNo] = 'application/octet-stream';
@@ -319,11 +378,12 @@ if ($getMsgType === 'EMAIL')
                         // add the attachment to the mail
                         try
                         {
-                            $email->AddAttachment($_FILES['userfile']['tmp_name'][$currentAttachmentNo], $_FILES['userfile']['name'][$currentAttachmentNo], $encoding = 'base64', $_FILES['userfile']['type'][$currentAttachmentNo]);
+                            $email->addAttachment($_FILES['userfile']['tmp_name'][$currentAttachmentNo], $_FILES['userfile']['name'][$currentAttachmentNo], $encoding = 'base64', $_FILES['userfile']['type'][$currentAttachmentNo]);
                         }
                         catch (phpmailerException $e)
                         {
                             $gMessage->show($e->errorMessage());
+                            // => EXIT
                         }
                     }
                 }
@@ -331,16 +391,18 @@ if ($getMsgType === 'EMAIL')
         }
         else
         {
-            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('MAI_SUBJECT')));
+            $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('MAI_SUBJECT'))));
+            // => EXIT
         }
     }
     else
     {
-        $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', $gL10n->get('SYS_EMAIL')));
+        $gMessage->show($gL10n->get('SYS_EMAIL_INVALID', array($gL10n->get('SYS_EMAIL'))));
+        // => EXIT
     }
 
     // if possible send html mail
-    if($gValidLogin && $gPreferences['mail_html_registered_users'] == 1)
+    if ($gValidLogin && $gSettingsManager->getBool('mail_html_registered_users'))
     {
         $email->sendDataAsHtml();
     }
@@ -351,17 +413,18 @@ if ($getMsgType === 'EMAIL')
         $email->setCopyToSenderFlag();
 
         // if mail was send to user than show recipients in copy of mail if current user has a valid login
-        if($gValidLogin)
+        if ($gValidLogin)
         {
             $email->setListRecipientsFlag();
         }
     }
 
-    $sendresult = array_map('unserialize', array_unique(array_map('serialize', $receiver)));
-    $receivers = count($sendresult);
-    foreach ($sendresult as $address)
+    // get array with unique receivers
+    $sendResults = array_map('unserialize', array_unique(array_map('serialize', $receiver)));
+    $receivers = count($sendResults);
+    foreach ($sendResults as $address)
     {
-        if ($gPreferences['mail_into_to'] == 1 || $receivers === 1)
+        if ($receivers === 1)
         {
             $email->addRecipient($address[0], $address[1]);
         }
@@ -372,7 +435,7 @@ if ($getMsgType === 'EMAIL')
     }
 
     // add confirmation mail to the sender
-    if($postDeliveryConfirmation == 1)
+    if ($postDeliveryConfirmation)
     {
         $email->ConfirmReadingTo = $gCurrentUser->getValue('EMAIL');
     }
@@ -384,41 +447,20 @@ if ($getMsgType === 'EMAIL')
     // add sender and receiver to email if template include the variables
     $emailTemplate = str_replace('#sender#', $postName, $emailTemplate);
 
-    $modulemessages = new ModuleMessages();
-    $ReceiverName = '';
-    if (strpos($ReceiverString, '|') > 0)
+    require_once(__DIR__ . '/messages_functions.php');
+
+    if ($postListId > 0)
     {
-        $reciversplit = explode('|', $ReceiverString);
-        foreach ($reciversplit as $value)
-        {
-            if (strpos($value, ':') > 0)
-            {
-                $ReceiverName .= '; ' . $modulemessages->msgGroupNameSplit($value);
-            }
-            else
-            {
-                $user = new User($gDb, $gProfileFields, $value);
-                $ReceiverName .= '; ' . $user->getValue('FIRST_NAME', 'database').' '.$user->getValue('LAST_NAME', 'database');
-            }
-        }
+        $showList = new ListConfiguration($gDb, $postListId);
+        $listName = $showList->getValue('lst_name');
+        $receiverString = 'list ' . $gL10n->get('LST_LIST') . ($listName === '' ? '' : ' - ' . $listName);
     }
-    else
-    {
-        if (strpos($ReceiverString, ':') > 0)
-        {
-            $ReceiverName .= '; ' . $modulemessages->msgGroupNameSplit($ReceiverString);
-        }
-        else
-        {
-            $user = new User($gDb, $gProfileFields, $ReceiverString);
-            $ReceiverName .= '; ' . $user->getValue('FIRST_NAME', 'database').' '.$user->getValue('LAST_NAME', 'database');
-        }
-    }
-    $ReceiverName = substr($ReceiverName, 2);
-    $emailTemplate = str_replace('#receiver#', $ReceiverName, $emailTemplate);
+
+    $receiverName = prepareReceivers($receiverString);
+    $emailTemplate = str_replace('#receiver#', $receiverName, $emailTemplate);
 
     // prepare body of email with note of sender and homepage
-    $email->setSenderInText($postName, $ReceiverName);
+    $email->setSenderInText($postName, $receiverName);
 
     // set Text
     $email->setText($emailTemplate);
@@ -426,12 +468,18 @@ if ($getMsgType === 'EMAIL')
     // finally send the mail
     $sendResult = $email->sendEmail();
 
+    // within this mode an smtp protocol will be shown and the header was still send to browser
+    if ($gDebug)
+    {
+        $email->isSMTP();
+        $gMessage->showHtmlTextOnly(true);
+    }
 }
 // ***** PM *****
 else
 {
     // if $postTo is not an Array, it is send from the hidden field.
-    if(!is_array($postTo))
+    if (!is_array($postTo))
     {
         $postTo = array($postTo);
     }
@@ -440,71 +488,69 @@ else
     $user = new User($gDb, $gProfileFields, $postTo[0]);
 
     // check if it is allowed to send to this user
-    if((!$gCurrentUser->editUsers() && !isMember($user->getValue('usr_id'))) || $user->getValue('usr_id') === '')
+    if ((!$gCurrentUser->editUsers() && !isMember($user->getValue('usr_id'))) || $user->getValue('usr_id') === '')
     {
-            $gMessage->show($gL10n->get('SYS_USER_ID_NOT_FOUND'));
+        $gMessage->show($gL10n->get('SYS_USER_ID_NOT_FOUND'));
+        // => EXIT
     }
 
     // check if receiver of message has valid login
-    if($user->getValue('usr_login_name') === '')
+    if ($user->getValue('usr_login_name') === '')
     {
-        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', $gL10n->get('SYS_TO')));
+        $gMessage->show($gL10n->get('SYS_FIELD_EMPTY', array($gL10n->get('SYS_TO'))));
+        // => EXIT
     }
 
     // save page in navigation - to have a check for a navigation back.
     $gNavigation->addUrl(CURRENT_URL);
 
-    if ($getMsgId == 0)
+    if ($getMsgId === 0)
     {
-        $PMId2 = 1;
-
-        $sql = "INSERT INTO ". TBL_MESSAGES. " (msg_type, msg_subject, msg_usr_id_sender, msg_usr_id_receiver, msg_timestamp, msg_read)
-            VALUES ('".$getMsgType."', '".$postSubjectSQL."', '".$gCurrentUser->getValue('usr_id')."', '".$postTo[0]."', CURRENT_TIMESTAMP, '1')";
-
-        $gDb->query($sql);
+        $sql = 'INSERT INTO '. TBL_MESSAGES. '
+                       (msg_type, msg_subject, msg_usr_id_sender, msg_usr_id_receiver, msg_timestamp, msg_read)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, 1) -- $getMsgType, $postSubjectSQL, $currUsrId, $postTo[0]';
+        $gDb->queryPrepared($sql, array($getMsgType, $postSubjectSQL, $currUsrId, $postTo[0]));
         $getMsgId = $gDb->lastInsertId();
     }
     else
     {
-        $PMId2 = $message->countMessageParts() + 1;
-
-        $sql = "UPDATE ". TBL_MESSAGES. " SET  msg_read = '1', msg_timestamp = CURRENT_TIMESTAMP, msg_usr_id_sender = '".$gCurrentUser->getValue('usr_id')."', msg_usr_id_receiver = '".$postTo[0]."'
-                WHERE msg_id = ".$getMsgId;
-
-        $gDb->query($sql);
+        $sql = 'UPDATE '. TBL_MESSAGES. '
+                   SET msg_read = 1
+                     , msg_timestamp = CURRENT_TIMESTAMP
+                     , msg_usr_id_sender = ? -- $currUsrId
+                     , msg_usr_id_receiver = ? -- $postTo[0]
+                 WHERE msg_id = ? -- $getMsgId';
+        $gDb->queryPrepared($sql, array($currUsrId, $postTo[0], $getMsgId));
     }
 
-    $sql = "INSERT INTO ". TBL_MESSAGES_CONTENT. " (msc_msg_id, msc_part_id, msc_usr_id, msc_message, msc_timestamp)
-            VALUES ('".$getMsgId."', '".$PMId2."', '".$gCurrentUser->getValue('usr_id')."', '".$postBodySQL."', CURRENT_TIMESTAMP)";
+    $messagePartNr = $message->countMessageParts() + 1;
 
-    if ($gDb->query($sql))
+    $sql = 'INSERT INTO '. TBL_MESSAGES_CONTENT. '
+                   (msc_msg_id, msc_part_id, msc_usr_id, msc_message, msc_timestamp)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) -- $getMsgId, $messagePartNr, $currUsrId, $postBodySQL';
+
+    if ($gDb->queryPrepared($sql, array($getMsgId, $messagePartNr, $currUsrId, $postBodySQL)))
     {
         $sendResult = true;
     }
 }
 
 // message if send/save is OK
-if ($sendResult)
+if ($sendResult === true) // don't remove check === true. ($sendResult) won't work
 {
     // save mail also to database
-    if ($getMsgType !== 'PM' && $gValidLogin)
+    if ($getMsgType === TableMessage::MESSAGE_TYPE_EMAIL && $gValidLogin)
     {
-        $sql = "INSERT INTO ". TBL_MESSAGES. " (msg_type, msg_subject, msg_usr_id_sender, msg_usr_id_receiver, msg_timestamp, msg_read)
-            VALUES ('".$getMsgType."', '".$postSubjectSQL."', ".$gCurrentUser->getValue('usr_id').", '".$ReceiverString."', CURRENT_TIMESTAMP, 0)";
-
-        $gDb->query($sql);
+        $sql = 'INSERT INTO '. TBL_MESSAGES. '
+                       (msg_type, msg_subject, msg_usr_id_sender, msg_usr_id_receiver, msg_timestamp, msg_read)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, 0) -- $getMsgType, $postSubjectSQL, $currUsrId, $receiverString';
+        $gDb->queryPrepared($sql, array($getMsgType, $postSubjectSQL, $currUsrId, $receiverString));
         $getMsgId = $gDb->lastInsertId();
 
-        $sql = "INSERT INTO ". TBL_MESSAGES_CONTENT. " (msc_msg_id, msc_part_id, msc_usr_id, msc_message, msc_timestamp)
-            VALUES (".$getMsgId.", 1, ".$gCurrentUser->getValue('usr_id').", '".$postBodySQL."', CURRENT_TIMESTAMP)";
-
-        $gDb->query($sql);
-    }
-
-    // Delete CaptchaCode if send/save was correct
-    if (isset($_SESSION['captchacode']))
-    {
-        unset($_SESSION['captchacode']);
+        $sql = 'INSERT INTO '. TBL_MESSAGES_CONTENT. '
+                       (msc_msg_id, msc_part_id, msc_usr_id, msc_message, msc_timestamp)
+                VALUES (?, 1, ?, ?, CURRENT_TIMESTAMP) -- $getMsgId, $currUsrId, $postBodySQL';
+        $gDb->queryPrepared($sql, array($getMsgId, $currUsrId, $postBodySQL));
     }
 
     // after sending remove the actual Page from the NaviObject and remove also the send-page
@@ -512,7 +558,7 @@ if ($sendResult)
     $gNavigation->deleteLastUrl();
 
     // message if sending was OK
-    if($gNavigation->count() > 0)
+    if ($gNavigation->count() > 0)
     {
         $gMessage->setForwardUrl($gNavigation->getUrl(), 2000);
     }
@@ -521,23 +567,27 @@ if ($sendResult)
         $gMessage->setForwardUrl($gHomepage, 2000);
     }
 
-    if ($getMsgType !== 'PM')
+    if ($getMsgType === TableMessage::MESSAGE_TYPE_PM)
     {
-        $gMessage->show($gL10n->get('SYS_EMAIL_SEND'));
+        $gMessage->show($gL10n->get('MSG_PM_SEND', array($user->getValue('FIRST_NAME') . ' ' . $user->getValue('LAST_NAME'))));
+        // => EXIT
     }
     else
     {
-        $gMessage->show($gL10n->get('MSG_PM_SEND', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME')));
+        $gMessage->show($gL10n->get('SYS_EMAIL_SEND'));
+        // => EXIT
     }
 }
 else
 {
-    if ($getMsgType !== 'PM')
+    if ($getMsgType === TableMessage::MESSAGE_TYPE_PM)
     {
-        $gMessage->show($sendResult.'<br />'.$gL10n->get('SYS_EMAIL_NOT_SEND', $gL10n->get('SYS_RECIPIENT'), $sendResult));
+        $gMessage->show($sendResult . '<br />' . $gL10n->get('MSG_PM_NOT_SEND', array($user->getValue('FIRST_NAME') . ' ' . $user->getValue('LAST_NAME'), $sendResult)));
+        // => EXIT
     }
     else
     {
-        $gMessage->show($sendResult.'<br />'.$gL10n->get('MSG_PM_NOT_SEND', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME'), $sendResult));
+        $gMessage->show($sendResult . '<br />' . $gL10n->get('SYS_EMAIL_NOT_SEND', array($gL10n->get('SYS_RECIPIENT'), $sendResult)));
+        // => EXIT
     }
 }

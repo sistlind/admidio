@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Form for sending ecards
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Parameters:
@@ -14,61 +14,62 @@
  * usr_id:      (optional) Id of the user who should receive the ecard
  ***********************************************************************************************
  */
-require_once('../../system/common.php');
-require_once('ecard_function.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require_once(__DIR__ . '/ecard_function.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
-$getPhotoId = admFuncVariableIsValid($_GET, 'pho_id', 'numeric', array('requireValue' => true));
-$getUserId  = admFuncVariableIsValid($_GET, 'usr_id', 'numeric');
-$getPhotoNr = admFuncVariableIsValid($_GET, 'photo_nr', 'numeric', array('requireValue' => true));
-$showPage    = admFuncVariableIsValid($_GET, 'show_page', 'numeric', array('defaultValue' => 1));
+$getPhotoId = admFuncVariableIsValid($_GET, 'pho_id',    'int', array('requireValue' => true));
+$getUserId  = admFuncVariableIsValid($_GET, 'usr_id',    'int');
+$getPhotoNr = admFuncVariableIsValid($_GET, 'photo_nr',  'int', array('requireValue' => true));
+$showPage   = admFuncVariableIsValid($_GET, 'show_page', 'int', array('defaultValue' => 1));
 
 // Initialisierung lokaler Variablen
-$funcClass     = new FunctionClass($gL10n);
-$templates   = $funcClass->getFileNames(THEME_SERVER_PATH. '/ecard_templates/');
-$template    = THEME_SERVER_PATH. '/ecard_templates/';
-$headline    = $gL10n->get('ECA_GREETING_CARD_EDIT');
+$funcClass = new FunctionClass($gL10n);
+$templates = $funcClass->getFileNames(THEME_ADMIDIO_PATH. '/ecard_templates/');
+$template  = THEME_ADMIDIO_PATH. '/ecard_templates/';
+$headline  = $gL10n->get('ECA_GREETING_CARD_EDIT');
 
-// pruefen ob das Modul ueberhaupt aktiviert ist
-if ($gPreferences['enable_ecard_module'] != 1)
+// check if the module is enabled and disallow access if it's disabled
+if (!$gSettingsManager->getBool('enable_ecard_module'))
 {
-    // das Modul ist deaktiviert
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
 
 // URL auf Navigationstack ablegen
 $gNavigation->addUrl(CURRENT_URL, $headline);
 
 // Fotoveranstaltungs-Objekt erzeugen oder aus Session lesen
-if(isset($_SESSION['photo_album']) && $_SESSION['photo_album']->getValue('pho_id') == $getPhotoId)
+if(isset($_SESSION['photo_album']) && (int) $_SESSION['photo_album']->getValue('pho_id') === $getPhotoId)
 {
-    $photo_album =& $_SESSION['photo_album'];
-    $photo_album->setDatabase($gDb);
+    $photoAlbum =& $_SESSION['photo_album'];
 }
 else
 {
     // einlesen des Albums falls noch nicht in Session gespeichert
-    $photo_album = new TablePhotos($gDb);
+    $photoAlbum = new TablePhotos($gDb);
     if($getPhotoId > 0)
     {
-        $photo_album->readDataById($getPhotoId);
+        $photoAlbum->readDataById($getPhotoId);
     }
 
-    $_SESSION['photo_album'] = $photo_album;
+    $_SESSION['photo_album'] = $photoAlbum;
 }
 
 // pruefen, ob Album zur aktuellen Organisation gehoert
-if($getPhotoId > 0 && $photo_album->getValue('pho_org_id') != $gCurrentOrganization->getValue('org_id'))
+if($getPhotoId > 0 && (int) $photoAlbum->getValue('pho_org_id') !== (int) $gCurrentOrganization->getValue('org_id'))
 {
     $gMessage->show($gL10n->get('SYS_INVALID_PAGE_VIEW'));
+    // => EXIT
 }
 
-if ($gValidLogin && strlen($gCurrentUser->getValue('EMAIL')) === 0)
+if ($gValidLogin && $gCurrentUser->getValue('EMAIL') === '')
 {
     // der eingeloggte Benutzer hat in seinem Profil keine gueltige Mailadresse hinterlegt,
     // die als Absender genutzt werden kann...
-    $gMessage->show($gL10n->get('SYS_CURRENT_USER_NO_EMAIL', '<a href="'.$g_root_path.'/adm_program/modules/profile/profile.php">', '</a>'));
+    $gMessage->show($gL10n->get('SYS_CURRENT_USER_NO_EMAIL', array('<a href="'.ADMIDIO_URL.FOLDER_MODULES.'/profile/profile.php">', '</a>')));
+    // => EXIT
 }
 
 if ($getUserId > 0)
@@ -77,16 +78,17 @@ if ($getUserId > 0)
     $user = new User($gDb, $gProfileFields, $getUserId);
 
     // darf auf die User-Id zugegriffen werden
-    if((!$gCurrentUser->editUsers() && !isMember($user->getValue('usr_id')))
-    || strlen($user->getValue('usr_id')) === 0)
+    if((!$gCurrentUser->editUsers() && !isMember($user->getValue('usr_id'))) || strlen($user->getValue('usr_id')) === 0)
     {
         $gMessage->show($gL10n->get('SYS_USER_ID_NOT_FOUND'));
+        // => EXIT
     }
 
     // besitzt der User eine gueltige E-Mail-Adresse
     if (!strValidCharacters($user->getValue('EMAIL'), 'email'))
     {
-        $gMessage->show($gL10n->get('SYS_USER_NO_EMAIL', $user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME')));
+        $gMessage->show($gL10n->get('SYS_USER_NO_EMAIL', array($user->getValue('FIRST_NAME').' '.$user->getValue('LAST_NAME'))));
+        // => EXIT
     }
 }
 
@@ -100,7 +102,7 @@ if(isset($_SESSION['ecard_request']))
 }
 else
 {
-    $template   = $gPreferences['ecard_template'];
+    $template   = $gSettingsManager->getString('ecard_template');
     $recipients = null;
     $message    = '';
 }
@@ -109,23 +111,25 @@ else
 $page = new HtmlPage($headline);
 $page->enableModal();
 
-$page->addJavascriptFile($g_root_path.'/adm_program/libs/lightbox/ekko-lightbox.min.js');
+$page->addJavascriptFile(ADMIDIO_URL . FOLDER_LIBS_CLIENT . '/lightbox/ekko-lightbox.min.js');
 
 $page->addJavascript('
-    $(document).delegate("*[data-toggle=\"lightbox\"]", "click", function(event) { event.preventDefault(); $(this).ekkoLightbox(); });
+    $(document).delegate("*[data-toggle=\"lightbox\"]", "click", function(event) {
+        event.preventDefault();
+        $(this).ekkoLightbox();
+    });
 
-    $("#admidio_modal").on("show.bs.modal", function () {
+    $("#admidio_modal").on("show.bs.modal", function() {
         $(this).find(".modal-dialog").css({width: "800px"});
     });
 
     $("#btn_ecard_preview").click(function(event) {
         event.preventDefault();
         $("#ecard_form input[id=\'submit_action\']").val("preview");
-        $("#ecard_form textarea[name=\'ecard_message\']").text( CKEDITOR.instances.ecard_message.getData() );
+        $("#ecard_form textarea[name=\'ecard_message\']").text(CKEDITOR.instances.ecard_message.getData());
 
-        $.ajax({ // create an AJAX call...
+        $.post({ // create an AJAX call...
             data: $("#ecard_form").serialize(), // get the form data
-            type: "POST", // GET or POST
             url: "ecard_preview.php", // the file to call
             success: function(response) { // on success..
                 $(".modal-content").html(response);
@@ -134,105 +138,136 @@ $page->addJavascript('
         });
 
         return false;
-    }); ', true);
+    });',
+    true
+);
 
 // add back link to module menu
 $ecardMenu = $page->getMenu();
 $ecardMenu->addItem('menu_item_back', $gNavigation->getPreviousUrl(), $gL10n->get('SYS_BACK'), 'back.png');
 
-if($gCurrentUser->isWebmaster())
+if($gCurrentUser->isAdministrator())
 {
     // show link to system preferences of announcements
-    $ecardMenu->addItem('menu_item_preferences', $g_root_path.'/adm_program/modules/preferences/preferences.php?show_option=ecards',
-                                $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right');
+    $ecardMenu->addItem(
+        'menu_item_preferences', safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/preferences/preferences.php', array('show_option' => 'ecards')),
+        $gL10n->get('SYS_MODULE_PREFERENCES'), 'options.png', 'right'
+    );
 }
 
 // show form
 $form = new HtmlForm('ecard_form', 'ecard_send.php', $page);
-$form->addInput('submit_action', null, '', array('type' => 'hidden'));
-$form->addInput('photo_id', null, $getPhotoId, array('type' => 'hidden'));
-$form->addInput('photo_nr', null, $getPhotoNr, array('type' => 'hidden'));
+$form->addInput('submit_action', '', '', array('type' => 'hidden'));
+$form->addInput('photo_id', '', $getPhotoId, array('type' => 'hidden'));
+$form->addInput('photo_nr', '', $getPhotoNr, array('type' => 'hidden'));
 
 $form->openGroupBox('gb_layout', $gL10n->get('ECA_LAYOUT'));
-    $form->addCustomContent($gL10n->get('SYS_PHOTO'), '
-        <a data-toggle="lightbox" data-type="image" data-title="'.$gL10n->get('SYS_PREVIEW').'"
-            href="'.$g_root_path.'/adm_program/modules/photos/photo_show.php?pho_id='.$getPhotoId.'&amp;photo_nr='.$getPhotoNr.'&amp;max_width='.$gPreferences['photo_show_width'].'&amp;max_height='.$gPreferences['photo_show_height'].'"><img
-            src="'.$g_root_path.'/adm_program/modules/photos/photo_show.php?pho_id='.$getPhotoId.'&amp;photo_nr='.$getPhotoNr.'&amp;max_width='.$gPreferences['ecard_thumbs_scale'].'&amp;max_height='.$gPreferences['ecard_thumbs_scale'].'"
-            class="imageFrame" alt="'.$gL10n->get('ECA_VIEW_PICTURE_FULL_SIZED').'"  title="'.$gL10n->get('ECA_VIEW_PICTURE_FULL_SIZED').'" />
-        </a>');
-    $templates = admFuncGetDirectoryEntries(THEME_SERVER_PATH.'/ecard_templates');
-    foreach($templates as $key => $templateName)
-    {
-        $templates[$key] = ucfirst(preg_replace('/[_-]/', ' ', str_replace('.tpl', '', $templateName)));
-    }
-    $form->addSelectBox('ecard_template', $gL10n->get('ECA_TEMPLATE'), $templates, array('defaultValue' => $template, 'property' => FIELD_REQUIRED, 'showContextDependentFirstEntry' => false));
+$form->addCustomContent($gL10n->get('SYS_PHOTO'), '
+    <a data-toggle="lightbox" data-type="image" data-title="'.$gL10n->get('SYS_PREVIEW').'"
+        href="'.safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/photos/photo_show.php', array('pho_id' => $getPhotoId, 'photo_nr' => $getPhotoNr, 'max_width' => $gSettingsManager->getInt('photo_show_width'), 'max_height' => $gSettingsManager->getInt('photo_show_height'))).'"><img
+        src="'.safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/photos/photo_show.php', array('pho_id' => $getPhotoId, 'photo_nr' => $getPhotoNr, 'max_width' => $gSettingsManager->getInt('ecard_thumbs_scale'), 'max_height' => $gSettingsManager->getInt('ecard_thumbs_scale'))).'"
+        class="imageFrame" alt="'.$gL10n->get('ECA_VIEW_PICTURE_FULL_SIZED').'"  title="'.$gL10n->get('ECA_VIEW_PICTURE_FULL_SIZED').'" />
+    </a>');
+$templates = admFuncGetDirectoryEntries(THEME_ADMIDIO_PATH.'/ecard_templates');
+if (!is_array($templates))
+{
+    $gMessage->show($gL10n->get('ECA_TEMPLATE_FOLDER_OPEN'));
+    // => EXIT
+}
+foreach($templates as &$templateName)
+{
+    $templateName = ucfirst(preg_replace('/[_-]/', ' ', str_replace('.tpl', '', $templateName)));
+}
+unset($templateName);
+$form->addSelectBox(
+    'ecard_template', $gL10n->get('ECA_TEMPLATE'), $templates,
+    array('defaultValue' => $template, 'property' => HtmlForm::FIELD_REQUIRED, 'showContextDependentFirstEntry' => false)
+);
 $form->closeGroupBox();
 $form->openGroupBox('gb_contact_details', $gL10n->get('SYS_CONTACT_DETAILS'));
 
-    // create list with all possible recipients
+// create list with all possible recipients
+$list = array();
 
-    // list all roles where login users could send mails to
-    $arrayMailRoles = $gCurrentUser->getAllMailRoles();
+// list all roles where login users could send mails to
+$arrayMailRoles = $gCurrentUser->getAllMailRoles();
 
-    $sql = 'SELECT rol_id, rol_name
-              FROM '. TBL_ROLES. ', '. TBL_CATEGORIES. '
-             WHERE rol_id IN ('.implode(',', $arrayMailRoles).')
-               AND rol_cat_id = cat_id
-               AND cat_name_intern <> \'CONFIRMATION_OF_PARTICIPATION\'
-             ORDER BY rol_name ';
-    $statement = $gDb->query($sql);
+$sql = 'SELECT rol_id, rol_name
+          FROM '.TBL_ROLES.'
+    INNER JOIN '.TBL_CATEGORIES.'
+            ON cat_id = rol_cat_id
+         WHERE rol_id IN ('.replaceValuesArrWithQM($arrayMailRoles).')
+           AND cat_name_intern <> \'EVENTS\'
+      ORDER BY rol_name';
+$statement = $gDb->queryPrepared($sql, $arrayMailRoles);
 
-    while($row = $statement->fetch())
-    {
-        $list[] = array('groupID: '.$row['rol_id'], $row['rol_name'], $gL10n->get('SYS_ROLES'));
-    }
+while($row = $statement->fetch())
+{
+    $list[] = array('groupID: '.$row['rol_id'], $row['rol_name'], $gL10n->get('SYS_ROLES'));
+}
 
-    // select all users
-    $arrayRoles = array_merge($arrayMailRoles, $gCurrentUser->getAllVisibleRoles());
-    $arrayUniqueRoles = array_unique($arrayRoles);
+// select all users
+$arrayRoles = array_merge($arrayMailRoles, $gCurrentUser->getAllVisibleRoles());
+$arrayUniqueRoles = array_unique($arrayRoles);
 
-    $sql   = 'SELECT usr_id, first_name.usd_value as first_name, last_name.usd_value as last_name,
-                     email.usd_value as email
-                FROM '. TBL_MEMBERS. ', '. TBL_USERS. '
-                JOIN '. TBL_USER_DATA. ' as email
-                  ON email.usd_usr_id = usr_id
-                 AND LENGTH(email.usd_value) > 0
-                JOIN '.TBL_USER_FIELDS.' as field
-                  ON field.usf_id = email.usd_usf_id
-                 AND field.usf_type = \'EMAIL\'
-                LEFT JOIN '. TBL_USER_DATA. ' as last_name
-                  ON last_name.usd_usr_id = usr_id
-                 AND last_name.usd_usf_id = '. $gProfileFields->getProperty('LAST_NAME', 'usf_id'). '
-                LEFT JOIN '. TBL_USER_DATA. ' as first_name
-                  ON first_name.usd_usr_id = usr_id
-                 AND first_name.usd_usf_id = '. $gProfileFields->getProperty('FIRST_NAME', 'usf_id'). '
-               WHERE mem_usr_id  = usr_id
-                 AND mem_rol_id IN ('.implode(',', $arrayUniqueRoles).')
-                 AND mem_begin <= \''.DATE_NOW.'\'
-                 AND mem_end    > \''.DATE_NOW.'\'
-                 AND usr_valid   = 1
-            GROUP BY usr_id, first_name.usd_value, last_name.usd_value, email.usd_value
-            ORDER BY first_name, last_name';
-    $statement = $gDb->query($sql);
+$sql = 'SELECT usr_id, first_name.usd_value AS first_name, last_name.usd_value AS last_name, email.usd_value AS email
+          FROM '.TBL_MEMBERS.'
+    INNER JOIN '.TBL_USERS.'
+            ON usr_id = mem_usr_id
+    INNER JOIN '.TBL_USER_DATA.' AS email
+            ON email.usd_usr_id = usr_id
+           AND LENGTH(email.usd_value) > 0
+    INNER JOIN '.TBL_USER_FIELDS.' AS field
+            ON field.usf_id = email.usd_usf_id
+           AND field.usf_type = \'EMAIL\'
+     LEFT JOIN '.TBL_USER_DATA.' AS last_name
+            ON last_name.usd_usr_id = usr_id
+           AND last_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'LAST_NAME\', \'usf_id\')
+     LEFT JOIN '.TBL_USER_DATA.' AS first_name
+            ON first_name.usd_usr_id = usr_id
+           AND first_name.usd_usf_id = ? -- $gProfileFields->getProperty(\'FIRST_NAME\', \'usf_id\')
+         WHERE usr_valid  = 1
+           AND mem_begin <= ? -- DATE_NOW
+           AND mem_end    > ? -- DATE_NOW
+           AND mem_rol_id IN ('.implode(',', $arrayUniqueRoles).')
+      GROUP BY usr_id, first_name.usd_value, last_name.usd_value, email.usd_value
+      ORDER BY last_name, first_name';
+$queryParams = array(
+    $gProfileFields->getProperty('LAST_NAME', 'usf_id'),
+    $gProfileFields->getProperty('FIRST_NAME', 'usf_id'),
+    DATE_NOW,
+    DATE_NOW
+);
+$statement = $gDb->queryPrepared($sql, $queryParams);
 
-    while ($row = $statement->fetch())
-    {
-        $list[] = array($row['usr_id'], $row['first_name'].' '.$row['last_name']. ' ('.$row['email'].')', $gL10n->get('SYS_MEMBERS'));
-    }
+while ($row = $statement->fetch())
+{
+    $list[] = array($row['usr_id'], $row['last_name']. ', '.$row['first_name']. ' ('.$row['email'].')', $gL10n->get('SYS_MEMBERS'));
+}
 
-    $form->addSelectBox('ecard_recipients', $gL10n->get('SYS_TO'), $list, array('property'     => FIELD_REQUIRED,
-                                                                                'defaultValue' => $recipients,
-                                                                                'multiselect'  => true));
-    $form->addLine();
-    $form->addInput('name_from', $gL10n->get('MAI_YOUR_NAME'), $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME'), array('maxLength' => 50, 'property' => FIELD_DISABLED));
-    $form->addInput('mail_from', $gL10n->get('MAI_YOUR_EMAIL'), $gCurrentUser->getValue('EMAIL'), array('maxLength' => 50, 'property' => FIELD_DISABLED));
+$form->addSelectBox(
+    'ecard_recipients', $gL10n->get('SYS_TO'), $list,
+    array('property' => HtmlForm::FIELD_REQUIRED, 'defaultValue' => $recipients, 'multiselect' => true)
+);
+$form->addLine();
+$form->addInput(
+    'name_from', $gL10n->get('MAI_YOUR_NAME'), $gCurrentUser->getValue('FIRST_NAME'). ' '. $gCurrentUser->getValue('LAST_NAME'),
+    array('maxLength' => 50, 'property' => HtmlForm::FIELD_DISABLED)
+);
+$form->addInput(
+    'mail_from', $gL10n->get('MAI_YOUR_EMAIL'), $gCurrentUser->getValue('EMAIL'),
+    array('maxLength' => 50, 'property' => HtmlForm::FIELD_DISABLED)
+);
 $form->closeGroupBox();
 $form->openGroupBox('gb_message', $gL10n->get('SYS_MESSAGE'), 'admidio-panel-editor');
-    $form->addEditor('ecard_message', null, $message, array('property' => FIELD_REQUIRED, 'toolbar' => 'AdmidioGuestbook'));
+$form->addEditor(
+    'ecard_message', '', $message,
+    array('property' => HtmlForm::FIELD_REQUIRED, 'toolbar' => 'AdmidioGuestbook')
+);
 $form->closeGroupBox();
 $form->openButtonGroup();
-    $form->addButton('btn_ecard_preview', $gL10n->get('SYS_PREVIEW'), array('icon' => THEME_PATH. '/icons/eye.png'));
-    $form->addSubmitButton('btn_ecard_submit', $gL10n->get('SYS_SEND'), array('icon' => THEME_PATH. '/icons/email.png'));
+$form->addButton('btn_ecard_preview', $gL10n->get('SYS_PREVIEW'), array('icon' => THEME_URL. '/icons/eye.png'));
+$form->addSubmitButton('btn_ecard_submit', $gL10n->get('SYS_SEND'), array('icon' => THEME_URL. '/icons/email.png'));
 $form->closeButtonGroup();
 
 // add form to html page and show page

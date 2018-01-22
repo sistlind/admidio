@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Neuen User zuordnen - Funktionen
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -21,24 +21,26 @@
  *
  *****************************************************************************/
 
-require_once('../../system/common.php');
-require_once('../../system/login_valid.php');
+require_once(__DIR__ . '/../../system/common.php');
+require(__DIR__ . '/../../system/login_valid.php');
 
 // Initialize and check the parameters
-$getMode      = admFuncVariableIsValid($_GET, 'mode',        'numeric', array('requireValue' => true));
-$getNewUserId = admFuncVariableIsValid($_GET, 'new_user_id', 'numeric', array('requireValue' => true));
-$getUserId    = admFuncVariableIsValid($_GET, 'user_id',     'numeric');
+$getMode      = admFuncVariableIsValid($_GET, 'mode',        'int', array('requireValue' => true));
+$getNewUserId = admFuncVariableIsValid($_GET, 'new_user_id', 'int', array('requireValue' => true));
+$getUserId    = admFuncVariableIsValid($_GET, 'user_id',     'int');
 
-// nur Webmaster duerfen User bestaetigen, ansonsten Seite verlassen
+// only administrators could approve new users
 if(!$gCurrentUser->approveUsers())
 {
     $gMessage->show($gL10n->get('SYS_NO_RIGHTS'));
+    // => EXIT
 }
 
 // pruefen, ob Modul aufgerufen werden darf
-if($gPreferences['registration_mode'] == 0)
+if(!$gSettingsManager->getBool('registration_enable_module'))
 {
     $gMessage->show($gL10n->get('SYS_MODULE_DISABLED'));
+    // => EXIT
 }
 
 // create user objects
@@ -51,14 +53,14 @@ if($getUserId > 0)
 
 if($getMode === 1 || $getMode === 2)
 {
-    // User-Account einem existierenden Mitglied zuordnen
+    // add new registration to an existing user account
 
     // Daten kopieren, aber nur, wenn noch keine Logindaten existieren
     if($user->getValue('usr_login_name') === '' && $user->getValue('usr_password') === '')
     {
         $user->setValue('EMAIL', $registrationUser->getValue('EMAIL'));
         $user->setValue('usr_login_name', $registrationUser->getValue('usr_login_name'));
-        $user->setPassword($registrationUser->getValue('usr_password'));
+        $user->setPassword($registrationUser->getValue('usr_password'), false, false);
     }
 
     try
@@ -76,6 +78,7 @@ if($getMode === 1 || $getMode === 2)
         $user->save();
         $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
         $e->showHtml();
+        // => EXIT
     }
 }
 
@@ -83,35 +86,38 @@ if($getMode === 2)
 {
     // User existiert bereits, ist aber bisher noch kein Mitglied der aktuellen Orga,
     // deshalb erst einmal Rollen zuordnen und dann spaeter eine Mail schicken
-    $gNavigation->addUrl($g_root_path.'/adm_program/modules/registration/registration_function.php?mode=3&user_id='.$getUserId.'&new_user_id='.$getNewUserId);
-    header('Location: '.$g_root_path.'/adm_program/modules/profile/roles.php?usr_id='.$getUserId);
-    exit();
+    $gNavigation->addUrl(safeUrl(ADMIDIO_URL.FOLDER_MODULES.'/registration/registration_function.php', array('mode' => '3', 'user_id' => $getUserId, 'new_user_id' => $getNewUserId)));
+    admRedirect(safeUrl(ADMIDIO_URL . FOLDER_MODULES.'/profile/roles.php', array('usr_id' => $getUserId)));
+    // => EXIT
 }
 
 if($getMode === 1 || $getMode === 3)
 {
-    $gMessage->setForwardUrl($g_root_path.'/adm_program/modules/registration/registration.php');
+    $gMessage->setForwardUrl(ADMIDIO_URL.FOLDER_MODULES.'/registration/registration.php');
 
     // nur ausfuehren, wenn E-Mails auch unterstuetzt werden
-    if($gPreferences['enable_system_mails'] == 1)
+    if($gSettingsManager->getBool('enable_system_mails'))
     {
         try
         {
             // Mail an den User schicken, um die Anmeldung bwz. die Zuordnung zur neuen Orga zu bestaetigen
-            $sysmail = new SystemMail($gDb);
-            $sysmail->addRecipient($user->getValue('EMAIL'), $user->getValue('FIRST_NAME'). ' '. $user->getValue('LAST_NAME'));
-            $sysmail->sendSystemMail('SYSMAIL_REGISTRATION_USER', $user);
+            $systemMail = new SystemMail($gDb);
+            $systemMail->addRecipient($user->getValue('EMAIL'), $user->getValue('FIRST_NAME'). ' '. $user->getValue('LAST_NAME'));
+            $systemMail->sendSystemMail('SYSMAIL_REGISTRATION_USER', $user);
 
-            $gMessage->show($gL10n->get('NWU_ASSIGN_LOGIN_EMAIL', $user->getValue('EMAIL')));
+            $gMessage->show($gL10n->get('NWU_ASSIGN_LOGIN_EMAIL', array($user->getValue('EMAIL'))));
+            // => EXIT
         }
         catch(AdmException $e)
         {
             $e->showHtml();
+            // => EXIT
         }
     }
     else
     {
         $gMessage->show($gL10n->get('NWU_ASSIGN_LOGIN_SUCCESSFUL'));
+        // => EXIT
     }
 }
 elseif($getMode === 4)
@@ -124,6 +130,7 @@ elseif($getMode === 4)
     catch(AdmException $e)
     {
         $e->showText();
+        // => EXIT
     }
 
     // return successful delete for XMLHttpRequest
@@ -140,19 +147,21 @@ elseif($getMode === 5)
     {
         $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
         $e->showHtml();
+        // => EXIT
     }
 
     // if current user has the right to assign roles then show roles dialog
     // otherwise go to previous url (default roles are assigned automatically)
     if($gCurrentUser->manageRoles())
     {
-        header('Location: roles.php?new_user=3&usr_id='. $registrationUser->getValue('usr_id'));
-        exit();
+        admRedirect(safeUrl(ADMIDIO_URL . FOLDER_MODULES.'/profile/roles.php', array('new_user' => '3', 'usr_id' => $registrationUser->getValue('usr_id'))));
+        // => EXIT
     }
     else
     {
         $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
         $gMessage->show($gL10n->get('PRO_ASSIGN_REGISTRATION_SUCCESSFUL'));
+        // => EXIT
     }
 }
 elseif($getMode === 6)
@@ -168,10 +177,11 @@ elseif($getMode === 6)
     {
         $gMessage->setForwardUrl($gNavigation->getPreviousUrl());
         $e->showHtml();
+        // => EXIT
     }
 
     // Zugangsdaten neu verschicken
-    $gNavigation->addUrl($g_root_path.'/adm_program/modules/registration/registration.php');
-    header('Location: '.$g_root_path.'/adm_program/modules/members/members_function.php?mode=4&usr_id='.$getUserId);
-    exit();
+    $gNavigation->addUrl(ADMIDIO_URL.FOLDER_MODULES.'/registration/registration.php');
+    admRedirect(safeUrl(ADMIDIO_URL . FOLDER_MODULES.'/members/members_function.php', array('mode' => '4', 'usr_id' => $getUserId)));
+    // => EXIT
 }

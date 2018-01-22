@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Konfigurationsdatei fuer Admidio-Plugin Birthday
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -38,8 +38,6 @@ $plg_show_hinweis_keiner = 0;
 $plg_show_zeitraum = 5;
 // zeige zukünftige geburtstage
 $plg_show_future = 10;
-// verstecke hinweis "(nachtraeglich)", schliesslich wurde ja schon gratuliert
-$plg_show_nachtraeglich = 0;
 
 // Soll die E-Mail-Adresse fuer Besucher verlinkt sein ?
 // Bei registrierten Benutzern wird immer ein Link auf das Mailmodul gesetzt
@@ -57,8 +55,8 @@ $plg_link_target = '_self';
 $plg_rolle_sql = '';
 
 // Angabe in welcher Sortierfolge die Geburtstage dargestellt werden sollen
-// Aufsteigend bzw. absteigend "asc bzw. desc"
-$plg_sort_sql = 'desc';
+// Aufsteigend bzw. absteigend "ASC bzw. DESC"
+$plg_sort_sql = 'DESC';
 
 // Soll die Überschrift des Plugins angezeigt werden
 // 1 = (Default) Überschrift wird angezeigt

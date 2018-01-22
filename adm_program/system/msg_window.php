@@ -3,8 +3,8 @@
  ***********************************************************************************************
  * Popup window with information
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * message_id    - ID of language text, that should be shown
@@ -13,13 +13,13 @@
  * inline        - true : message should not be shown in separate window
  ***********************************************************************************************
  */
-require_once('common.php');
+require_once(__DIR__ . '/common.php');
 
 // Initialize and check the parameters
-$getMessageId    = admFuncVariableIsValid($_GET, 'message_id',    'string',  array('directOutput' => true, 'requireValue' => true));
-$getMessageTitle = admFuncVariableIsValid($_GET, 'message_title', 'string',  array('directOutput' => true, 'defaultValue' => 'SYS_NOTE'));
-$getMessageVar1  = admFuncVariableIsValid($_GET, 'message_var1',  'string',  array('directOutput' => true));
-$getInlineView   = admFuncVariableIsValid($_GET, 'inline',        'boolean', array('directOutput' => true));
+$getMessageId    = admFuncVariableIsValid($_GET, 'message_id',    'string', array('directOutput' => true, 'requireValue' => true));
+$getMessageTitle = admFuncVariableIsValid($_GET, 'message_title', 'string', array('directOutput' => true, 'defaultValue' => 'SYS_NOTE'));
+$getMessageVar1  = admFuncVariableIsValid($_GET, 'message_var1',  'string', array('directOutput' => true));
+$getInlineView   = admFuncVariableIsValid($_GET, 'inline',        'bool',   array('directOutput' => true));
 
 header('Content-type: text/html; charset=utf-8');
 
@@ -36,20 +36,7 @@ if($getInlineView)
 
 switch ($getMessageId)
 {
-    case 'CAT_CATEGORY_GLOBAL':
-        // show all organizations where this organization is mother or child organization
-        $organizations = '- '.$gCurrentOrganization->getValue('org_longname').',<br />- ';
-        $organizations .= implode(',<br />- ', $gCurrentOrganization->getOrganizationsInRelationship(true, true, true));
-        echo $gL10n->get(strtoupper($getMessageId), $organizations);
-        break;
-
-    case 'SYS_DATA_GLOBAL':
-        // show all organizations where this organization is mother or child organization
-        $organizations = '- '.$gCurrentOrganization->getValue('org_longname').',<br />- ';
-        $organizations .= implode(',<br />- ', $gCurrentOrganization->getOrganizationsInRelationship(true, true, true));
-        echo $gL10n->get(strtoupper($getMessageId), $organizations);
-        break;
-
+    // room help text
     case 'room_detail':
         if(is_numeric($getMessageVar1))
         {
@@ -78,7 +65,7 @@ switch ($getMessageId)
         echo $gProfileFields->getProperty($getMessageVar1, 'usf_description');
         break;
 
-    // Eigene Listen
+    // mylist condition description
     case 'mylist_condition':
         echo '
             <p>'.$gL10n->get('LST_MYLIST_CONDITION_DESC').'</p>
@@ -94,96 +81,96 @@ switch ($getMessageId)
                 <tbody>
                     <tr>
                         <td>'.$gL10n->get('SYS_LASTNAME').'</td>
-                        <td><b>'.$gL10n->get('LST_SEARCH_LASTNAME_EXAMPLE').'</b></td>
+                        <td><strong>'.$gL10n->get('LST_SEARCH_LASTNAME_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_LASTNAME_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_LASTNAME').'</td>
-                        <td><b>'.$gL10n->get('LST_SEARCH_LASTNAME_BEGINS_EXAMPLE').'</b></td>
+                        <td><strong>'.$gL10n->get('LST_SEARCH_LASTNAME_BEGINS_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_LASTNAME_BEGINS_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_BIRTHDAY').'</td>
-                        <td><b>&gt; '.$gL10n->get('LST_SEARCH_DATE_EXAMPLE').'</b></td>
+                        <td><strong>&gt; '.$gL10n->get('LST_SEARCH_DATE_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_DATE_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_BIRTHDAY').'</td>
-                        <td><b>&gt; '.$gL10n->get('LST_SEARCH_AGE_EXAMPLE').'</b></td>
+                        <td><strong>&gt; '.$gL10n->get('LST_SEARCH_AGE_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_AGE_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_GENDER').'</td>
-                        <td><b>'.$gL10n->get('SYS_MALE').'</b></td>
+                        <td><strong>'.$gL10n->get('SYS_MALE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_GENDER_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_LOCATION').'</td>
-                        <td><b>'.$gL10n->get('LST_SEARCH_LOCATION_EXAMPLE').'</b></td>
+                        <td><strong>'.$gL10n->get('LST_SEARCH_LOCATION_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_LOCATION_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_PHONE').'</td>
-                        <td><b>'.$gL10n->get('LST_SEARCH_TELEFON_EXAMPLE').'</b></td>
+                        <td><strong>'.$gL10n->get('LST_SEARCH_TELEFON_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_TELEFON_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('LST_SEARCH_YES_NO_FIELD').'</td>
-                        <td><b>'.$gL10n->get('SYS_YES').'</b></td>
+                        <td><strong>'.$gL10n->get('SYS_YES').'</strong></td>
                         <td>'.$gL10n->get('LST_SEARCH_YES_NO_FIELD_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_FIRSTNAME').'</td>
-                        <td><b>&lt;&gt; '.$gL10n->get('LST_EXCLUDE_EXAMPLE').'</b></td>
+                        <td><strong>&lt;&gt; '.$gL10n->get('LST_EXCLUDE_EXAMPLE').'</strong></td>
                         <td>'.$gL10n->get('LST_EXCLUDE_EXAMPLE_DESC').'</td>
                     </tr>
                     <tr>
-                        <td>'.$gL10n->get('SYS_ADDRESS').'</td>
-                        <td><b>'.$gL10n->get('SYS_EMPTY').'</b></td>
+                        <td>'.$gL10n->get('SYS_STREET').'</td>
+                        <td><strong>'.$gL10n->get('SYS_EMPTY').'</strong></td>
                         <td>'.$gL10n->get('LST_EMPTY_EXAMPLE_DESC').'</td>
                     </tr>
                     <tr>
-                        <td>'.$gL10n->get('SYS_ADDRESS').'</td>
-                        <td><b>'.$gL10n->get('SYS_NOT_EMPTY').'</b></td>
+                        <td>'.$gL10n->get('SYS_STREET').'</td>
+                        <td><strong>'.$gL10n->get('SYS_NOT_EMPTY').'</strong></td>
                         <td>'.$gL10n->get('LST_NOT_EMPTY_EXAMPLE_DESC').'</td>
                     </tr>
                     <tr>
                         <td>'.$gL10n->get('SYS_COUNTRY').'</td>
-                        <td><b>'.$gL10n->get('SYS_COUNTRY_EG').'</b></td>
+                        <td><strong>'.$gL10n->get('SYS_COUNTRY_EG').'</strong></td>
                         <td>'.$gL10n->get('LST_COUNTRY_ISO').'</td>
                     </tr>
                 </tbody>
             </table>';
         break;
 
-    // Profil
+    // Profile photo help text
     case 'profile_photo_up_help':
         echo '
             <h3>'.$gL10n->get('SYS_RESTRICTIONS').'</h3>
             <ul>
                 <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_1').'</li>
                 <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_2').'</li>
-                <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_3', round(admFuncProcessableImageSize()/1000000, 2)).'</li>
-                <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_4', round(admFuncMaxUploadSize()/pow(1024, 2), 2)).'</li>
+                <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_3', array(round(admFuncProcessableImageSize()/1000000, 2))).'</li>
+                <li>'.$gL10n->get('PRO_RESTRICTIONS_HELP_4', array(round(PhpIniUtils::getUploadMaxSize()/pow(1024, 2), 2))).'</li>
             </ul>';
         break;
 
     default:
-        // im Standardfall wird mit der ID der Text aus der Sprachdatei gelesen
-        // falls die Textvariable gefuellt ist, pruefen ob dies auch eine ID aus der Sprachdatei ist
-        $msg_var1 = '';
+        // In the standard case, the ID is used to read the text from the language file.
+        // If the text variable is filled, check whether this is an ID from the language file.
+        $msgVar1 = '';
         if($getMessageVar1 !== '')
         {
-            if(strpos($getMessageVar1, '_') === 3)
+            if(admIsTranslationStrId($getMessageVar1))
             {
-                $msg_var1 = $gL10n->get($getMessageVar1);
+                $msgVar1 = $gL10n->get($getMessageVar1);
             }
             else
             {
-                $msg_var1 = $getMessageVar1;
+                $msgVar1 = $getMessageVar1;
             }
         }
-        echo $gL10n->get(strtoupper($getMessageId), $msg_var1);
+        echo $gL10n->get(strtoupper($getMessageId), array($msgVar1));
         break;
 }
 

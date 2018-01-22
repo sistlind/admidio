@@ -3,14 +3,14 @@
  ***********************************************************************************************
  * Data conversion for version 2.4.2
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
 // alter ip columns for IPv6
-if($gDbType === 'mysql')
+if($gDbType === Database::PDO_ENGINE_MYSQL)
 {
     $sql = 'ALTER TABLE '.TBL_AUTO_LOGIN.' MODIFY COLUMN atl_ip_address varchar(39) NOT NULL';
     $gDb->query($sql, false);

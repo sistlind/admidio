@@ -2,8 +2,8 @@
  ***********************************************************************************************
  * Cascading-Style-Sheets file for Admidio
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  *
  * Here you can edit the look and feel of Admidio
@@ -75,9 +75,8 @@ h3 {
     h1, h3 {
         padding: 15px 5px;
         border: 1px solid #7d7d7d;
-        border-left: 0;
-        border-right: 0;
-        border-color: #7d7d7d;
+        border-right-width: 0;
+        border-left-width: 0;
         background-color: #96c4cb;
         background-repeat: repeat-x;
         background-image: -moz-linear-gradient(top, #ffffff 0%, #96c4cb 95%); background-image: -webkit-linear-gradient(top, #ffffff 0%, #96c4cb 95%); background-image: -ms-linear-gradient(top, #ffffff 0%, #96c4cb 95%);
@@ -117,12 +116,8 @@ h3 {
     text-align: left;
 }
 
-.alert {
-    margin-top: 15px;
-}
-
 .alert-small {
-    margin-top: 5px;
+    margin-top: 25px;
     padding: 5px;
 }
 
@@ -164,14 +159,20 @@ a.btn {
 /* Settings for all icons */
 /**************************/
 
-.admidio-icon-link img, .admidio-icon-info, .btn img {
+.admidio-icon-link img,
+.admidio-icon-info,
+.admidio-icon-help,
+.btn img {
     border: none;
     vertical-align: text-top;
     margin-left: 3px;
     height: 16px;
 }
 
-.navbar-link img, .btn img, .alert .glyphicon, .btn {
+.navbar-link img,
+.btn img,
+.alert .glyphicon,
+.btn {
     margin-right: 5px;
 }
 
@@ -437,7 +438,7 @@ input[data-provide="datepicker"], input[type="number"], input[type="time"] {
 
 /* Information block with user and timestamp who created and edited the data */
 
-.admidio-admidio-info-created-edited {
+.admidio-info-created-edited {
     font-size: 8pt;
     margin-top: 8px;
 }
@@ -534,3 +535,24 @@ input[data-provide="datepicker"], input[type="number"], input[type="time"] {
 .dt-bootstrap {
     margin-bottom: 20px;
 }
+
+/*******************************/
+/* Password Strength Indicator */
+/*******************************/
+
+#admidio-password-strength {
+    margin-top: 10px;
+}
+
+#admidio-password-strength-minimum {
+    position: absolute;
+    border: 9px solid transparent;
+    border-left-color: #555555;
+    border-right-width: 0;
+    margin-top: 1px;
+}
+
+#system_language {
+    margin-top: 7px;
+}
+

@@ -3,13 +3,14 @@
  ***********************************************************************************************
  * Klasse zum vereinfachten Umgang mit Dateiordnern
  *
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
 
-/******************************************************************************
+/**
+ * @class Folder
  * Mit dieser Klasse koennen Ordner leichter verwaltet werden. Das rekursive Verschieben,
  * Kopieren, Loeschen uvw. wird unterstuetzt.
  *
@@ -25,19 +26,19 @@
  * move($destinationFolder, $sourceFolder = '')
  *                       - verschiebt den kompletten Ordner mit allen Unterordnern
  *                         und Dateien in einen neuen Pfad
- *
- *****************************************************************************/
+ */
 class Folder
 {
-    protected $folderWithPath;
+    /**
+     * @var string
+     */
+    protected $folderWithPath = '';
 
     /**
      * @param string $folderWithPath
      */
     public function __construct($folderWithPath = '')
     {
-        $this->folderWithPath = '';
-
         if($folderWithPath !== '' && is_dir($folderWithPath))
         {
             $this->folderWithPath = $folderWithPath;
@@ -47,13 +48,16 @@ class Folder
     /**
      * Ordner mit zugehoerigem Pfad setzen
      * @param string $folderWithPath
+     * @return bool Returns true if given folder is an existing folder
      */
     public function setFolder($folderWithPath = '')
     {
         if($folderWithPath !== '' && is_dir($folderWithPath))
         {
             $this->folderWithPath = $folderWithPath;
+            return true;
         }
+        return false;
     }
 
     /**
@@ -67,37 +71,40 @@ class Folder
 
     /**
      * den Ordner der Klasse mit Schreibrechten erstellen
+     *
+     * [1] (!@mkdir($dirPath, 0777) && !is_dir($dirPath))
+     * This issue is difficult to reproduce, as any of concurrency-related issues. Appears when several
+     * processes attempting to create a directory which is not yet existing, but between is_dir() and mkdir()
+     * calls another process already managed to create a directory.
      * @param string $newFolder
      * @param bool   $writable
      * @return bool
      */
     public function createFolder($newFolder, $writable)
     {
-        $newPath = $this->folderWithPath. '/'. $newFolder;
-        $retCode = true;
+        $newPath = $this->folderWithPath.'/'.$newFolder;
+        $returnValue = true;
 
         // existiert der Ordner noch nicht, dann diesen anlegen
-        if(!file_exists($newPath))
+        if(!is_dir($newPath))
         {
             if($writable)
             {
-                $retCode = @mkdir($newPath, 0777);
+                $returnValue = !(!@mkdir($newPath, 0777) && !is_dir($newPath)); // [1] // do NOT simplify to (@mkdir($path, 0777) || is_dir($path))
             }
             else
             {
-                $retCode = @mkdir($newPath);
+                $returnValue = !(!@mkdir($newPath) && !is_dir($newPath)); // [1] // do NOT simplify to (@mkdir($path) || is_dir($path))
             }
         }
 
-        if($writable)
+        // set write permissions for all users everytime because mkdir does not set this on every system
+        if($writable && is_dir($newPath))
         {
-            // der Ordner existiert, aber die Schreibrechte noch nicht
-            if(!is_writable($newPath))
-            {
-                $retCode = @chmod($newPath, 0777);
-            }
+            // don't check return code because sometimes we get false also if the rights where set to 0777
+            @chmod($newPath, 0777);
         }
-        return $retCode;
+        return $returnValue;
     }
 
     /**
@@ -115,51 +122,52 @@ class Folder
             $sourceFolder = $this->folderWithPath;
         }
 
-        // erst einmal vom Zielpfad den letzten Ordner absplitten, damit dieser angelegt werden kann
-        $newFolder = substr($destinationFolder, strrpos($destinationFolder, '/') + 1);
-        $newPath   = substr($destinationFolder, 0, strrpos($destinationFolder, '/'));
-
-        // nun erst einmal den Zielordner erstellen
-        $this->setFolder($newPath);
-        $b_return = $this->createFolder($newFolder, true);
-
-        if($b_return)
-        {
-            $dh = @opendir($sourceFolder);
-            if($dh)
-            {
-                while (false !== ($filename = readdir($dh)))
-                {
-                    if($filename !== '.' && $filename !== '..')
-                    {
-                        $act_folder_entry = $sourceFolder.'/'.$filename;
-
-                        if(is_dir($act_folder_entry))
-                        {
-                            // nun Inhalt des entsprechenden Ordners loeschen
-                            $this->copy($destinationFolder.'/'.$filename, $act_folder_entry);
-                        }
-                        else
-                        {
-                            // die Datei loeschen
-                            if(file_exists($act_folder_entry))
-                            {
-                                if(!copy($act_folder_entry, $destinationFolder.'/'.$filename))
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                }
-                closedir($dh);
-            }
-        }
-        else
+        if (!is_dir($sourceFolder))
         {
             return false;
         }
 
+        // erst einmal vom Zielpfad den letzten Ordner absplitten, damit dieser angelegt werden kann
+        $newPath   = substr($destinationFolder, 0, strrpos($destinationFolder, '/'));
+        $newFolder = substr($destinationFolder, strrpos($destinationFolder, '/') + 1);
+
+        // nun erst einmal den Zielordner erstellen
+        $this->setFolder($newPath);
+        if(!$this->createFolder($newFolder, true))
+        {
+            return false;
+        }
+
+        $dirHandle = @opendir($sourceFolder);
+        if($dirHandle)
+        {
+            while (($entry = readdir($dirHandle)) !== false)
+            {
+                if($entry === '.' || $entry === '..')
+                {
+                    continue;
+                }
+
+                $currentFolderEntry = $sourceFolder.'/'.$entry;
+                $destinationEntry   = $destinationFolder.'/'.$entry;
+
+                if(is_dir($currentFolderEntry))
+                {
+                    // copy the content of the folder
+                    $this->copy($destinationEntry, $currentFolderEntry);
+                }
+
+                if(is_file($currentFolderEntry))
+                {
+                    // copy the file
+                    if(!copy($currentFolderEntry, $destinationEntry))
+                    {
+                        return false;
+                    }
+                }
+            }
+            closedir($dirHandle);
+        }
         return true;
     }
 
@@ -177,34 +185,39 @@ class Folder
             $folder = $this->folderWithPath;
         }
 
-        $dh = @opendir($folder);
-        if($dh)
+        if (!is_dir($folder))
         {
-            while (false !== ($filename = readdir($dh)))
-            {
-                if($filename !== '.' && $filename !== '..')
-                {
-                    $act_folder_entry = $folder.'/'.$filename;
+            return false;
+        }
 
-                    if(is_dir($act_folder_entry))
+        $dirHandle = @opendir($folder);
+        if($dirHandle)
+        {
+            while (($entry = readdir($dirHandle)) !== false)
+            {
+                if($entry === '.' || $entry === '..')
+                {
+                    continue;
+                }
+
+                $currentFolderEntry = $folder.'/'.$entry;
+
+                if(is_dir($currentFolderEntry))
+                {
+                    // deletes the content of the folder
+                    $this->delete($currentFolderEntry, false);
+                }
+
+                if(is_file($currentFolderEntry))
+                {
+                    // deletes the file
+                    if(!@unlink($currentFolderEntry))
                     {
-                        // deletes the content of the folder
-                        $this->delete($act_folder_entry, false);
-                    }
-                    else
-                    {
-                        // deletes the file
-                        if(file_exists($act_folder_entry))
-                        {
-                            if(!@unlink($act_folder_entry))
-                            {
-                                return false;
-                            }
-                        }
+                        return false;
                     }
                 }
             }
-            closedir($dh);
+            closedir($dirHandle);
         }
 
         if(!$onlyDeleteContent)
@@ -220,24 +233,34 @@ class Folder
 
     /**
      * verschiebt den kompletten Ordner mit allen Unterordnern und Dateien in einen neuen Pfad
-     * destinationFolder : das neue Zielverzeichnis
-     * sourceFolder      : der zu verschiebende Ordner, falls nicht gefuellt wird der Ordner aus der Klasse genommen
-     * @param string $destinationFolder
-     * @param string $sourceFolder
-     * @return bool
+     * @param string $destFolder   das neue Zielverzeichnis
+     * @param string $sourceFolder der zu verschiebende Ordner, falls nicht gefuellt wird der Ordner aus der Klasse genommen
+     * @return bool Returns true if the move works successfully
      */
-    public function move($destinationFolder, $sourceFolder = '')
+    public function move($destFolder, $sourceFolder = '')
     {
         if($sourceFolder === '')
         {
             $sourceFolder = $this->folderWithPath;
         }
 
-        // erst den kompletten Ordner kopieren und danach im erfolgsfall loeschen
-        if($this->copy($destinationFolder, $sourceFolder))
+        // First copy the full source folder to destination
+        if($this->copy($destFolder, $sourceFolder))
         {
+            // If copy was successful delete source folder
             return $this->delete($sourceFolder);
         }
         return false;
+    }
+
+    /**
+     * Attempts to rename oldname to newname, moving it between directories if necessary.
+     * If newname exists, it will be overwritten.
+     * @param string $newName The new name of the folder.
+     * @return bool Returns @b true on success or @b false on failure.
+     */
+    public function rename($newName)
+    {
+        return rename($this->folderWithPath, $newName);
     }
 }

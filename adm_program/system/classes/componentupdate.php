@@ -1,8 +1,8 @@
 <?php
 /**
  ***********************************************************************************************
- * @copyright 2004-2015 The Admidio Team
- * @see http://www.admidio.org/
+ * @copyright 2004-2017 The Admidio Team
+ * @see https://www.admidio.org/
  * @license https://www.gnu.org/licenses/gpl-2.0.html GNU General Public License v2.0 only
  ***********************************************************************************************
  */
@@ -22,90 +22,62 @@
  * @code // update the system module to the actual filesystem version
  * $componentUpdateHandle = new ComponentUpdate($gDb);
  * $componentUpdateHandle->readDataByColumns(array('com_type' => 'SYSTEM', 'com_name_intern' => 'CORE'));
- * $componentUpdateHandle->setTargetVersion(ADMIDIO_VERSION);
- * $componentUpdateHandle->update(); @endcode
+ * $componentUpdateHandle->update(ADMIDIO_VERSION); @endcode
  */
 class ComponentUpdate extends Component
 {
-    private $updateFinished;        ///< Flag that will store if the update process of this version was successfully finished
-    private $xmlObject;             ///< The SimpleXML object with all the update steps
-    private $currentVersionArray;   ///< This is the version the component has actually before update. Each array element contains one part of the version.
-    private $targetVersionArray;    ///< This is the version that is stored in the files of the component. Each array element contains one part of the version.
+    const UPDATE_STEP_STOP = 'stop';
+
+    /**
+     * Constructor that will create an object for component updating.
+     * @param Database $database Object of the class Database. This should be the default global object @b $gDb.
+     */
+    public function __construct(Database $database)
+    {
+        parent::__construct($database);
+
+        ComponentUpdateSteps::setDatabase($database);
+    }
+
+    /**
+     * Gets the version parts of a version string
+     * @param string $versionString A version string
+     * @return array<int,int> Returns an array with the version parts
+     */
+    private static function getVersionArrayFromVersion($versionString)
+    {
+        return array_map('intval', explode('.', $versionString));
+    }
 
     /**
      * Will open a XML file of a specific version that contains all the update steps that
      * must be passed to successfully update Admidio to this version
-     * @param  string|int $mainVersion Contains a string with the main version number e.g. 2 or 3 from 2.x or 3.x.
-     * @param  string|int $subVersion  Contains a string with the main version number e.g. 1 or 2 from x.1 or x.2.
-     * @return bool
+     * @param int $mainVersion  Contains a string with the main version number e.g. 2 or 3 from 2.x or 3.x.
+     * @param int $minorVersion Contains a string with the main version number e.g. 1 or 2 from x.1 or x.2.
+     * @throws \UnexpectedValueException
+     * @return \SimpleXMLElement
      */
-    private function createXmlObject($mainVersion, $subVersion)
+    private function getXmlObject($mainVersion, $minorVersion)
     {
+        global $gLogger;
+
         // update of Admidio core has another path for the xml files as plugins
-        if($this->getValue('com_type') === 'SYSTEM')
+        if ($this->getValue('com_type') === 'SYSTEM')
         {
-            $updateFile = SERVER_PATH.'/adm_program/installation/db_scripts/update_'.$mainVersion.'_'.$subVersion.'.xml';
+            $updateFile = ADMIDIO_PATH.'/adm_program/installation/db_scripts/update_'.$mainVersion.'_'.$minorVersion.'.xml';
 
-            if(file_exists($updateFile))
+            if (is_file($updateFile))
             {
-                $this->xmlObject = new SimpleXMLElement($updateFile, null, true);
-                return true;
+                return new \SimpleXMLElement($updateFile, 0, true);
             }
+
+            $message = 'XML-Update file not found!';
+            $gLogger->warning($message, array('filePath' => $updateFile));
+
+            throw new \UnexpectedValueException($message);
         }
-        return false;
-    }
 
-    /**
-     * Will execute the specific update step that is set through the parameter $xmlNode.
-     * If the step was successfully done the id will be stored in the component recordset
-     * so if the whole update crashs later we know that this step was successfully executed.
-     * When the node has an attribute @b database than this sql statement will only executed
-     * if the value of the attribute is equal to your current @b $gDbType .
-     * @param object $xmlNode A SimpleXML node of the current update step.
-     */
-    private function executeStep($xmlNode)
-    {
-        global $g_tbl_praefix, $gDbType;
-
-        $executeSql = true;
-
-        if(trim($xmlNode[0]) !== '')
-        {
-            // if the sql statement is only for a special database and you do
-            // not have this database then don't execute this statement
-            if(isset($xmlNode['database']) && $xmlNode['database'] !== $gDbType)
-            {
-                $executeSql = false;
-            }
-
-            // if a method of this class was set in the update step
-            // then call this function and don't execute a SQL statement
-            if(strpos($xmlNode[0], 'ComponentUpdate') !== false)
-            {
-                $executeSql = false;
-
-                // get the method name
-                $function = substr($xmlNode[0], strpos($xmlNode[0], '::')+2);
-                // now call the method
-                $this->{$function}();
-            }
-
-            if($executeSql)
-            {
-                // replace prefix with installation specific table prefix
-                $sql = str_replace('%PREFIX%', $g_tbl_praefix, $xmlNode[0]);
-
-                $this->db->query($sql);
-            }
-
-            // set the type if the id to integer because otherwise the system thinks it's not numeric !!!
-            $stepId = $xmlNode['id'];
-            settype($stepId, 'integer');
-
-            // save the successful executed update step in database
-            $this->setValue('com_update_step', $stepId);
-            $this->save();
-        }
+        throw new \UnexpectedValueException('No System update!');
     }
 
     /**
@@ -116,100 +88,186 @@ class ComponentUpdate extends Component
     public function getMaxUpdateStep()
     {
         $maxUpdateStep = 0;
-        $this->currentVersionArray = explode('.', $this->getValue('com_version'));
+        $currentVersionArray = self::getVersionArrayFromVersion($this->getValue('com_version'));
 
-        // open xml file for this version
-        if($this->createXmlObject($this->currentVersionArray[0], $this->currentVersionArray[1]))
+        try
         {
-            // go step by step through the SQL statements until the last one is found
-            foreach($this->xmlObject->children() as $updateStep)
-            {
-                if($updateStep[0] !== 'stop')
-                {
-                    $maxUpdateStep = $updateStep['id'];
-                }
-            }
+            // open xml file for this version
+            $xmlObject = $this->getXmlObject($currentVersionArray[0], $currentVersionArray[1]);
         }
-        return (int) $maxUpdateStep;
+        catch (\UnexpectedValueException $exception)
+        {
+            return 0;
+        }
+
+        // go step by step through the SQL statements until the last one is found
+        foreach ($xmlObject->children() as $updateStep)
+        {
+            if ((string) $updateStep === self::UPDATE_STEP_STOP)
+            {
+                break;
+            }
+
+            $maxUpdateStep = (int) $updateStep['id'];
+        }
+
+        return $maxUpdateStep;
     }
 
     /**
-     * Set the target version for the component after update.
-     * This information should be read from the files of the component.
-     * @param string $version Target version of the component after update
+     * Get method name and execute this method
+     * @param string $updateStepContent
      */
-    public function setTargetVersion($version)
+    private static function executeUpdateMethod($updateStepContent)
     {
-        $this->targetVersionArray = explode('.', $version);
+        // get the method name (remove "ComponentUpdateSteps::")
+        $methodName = substr($updateStepContent, 22);
+        // now call the method
+        ComponentUpdateSteps::{$methodName}();
+    }
+
+    /**
+     * Prepares and execute a sql statement
+     * @param string $updateSql
+     * @param bool   $showError
+     */
+    private function executeUpdateSql($updateSql, $showError)
+    {
+        global $g_tbl_praefix;
+
+        // replace prefix with installation specific table prefix
+        $sql = str_replace('%PREFIX%', $g_tbl_praefix, $updateSql);
+
+        $this->db->queryPrepared($sql, array(), $showError);
+    }
+
+    /**
+     * Will execute the specific update step that is set through the parameter $xmlNode.
+     * If the step was successfully done the id will be stored in the component recordset
+     * so if the whole update crashs later we know that this step was successfully executed.
+     * When the node has an attribute @b database than this sql statement will only executed
+     * if the value of the attribute is equal to your current @b $gDbType . If the node has
+     * an attribute @b error and this is set to @b ignore than an sql error will not stop
+     * the update script.
+     * @param \SimpleXMLElement $xmlNode A SimpleXML node of the current update step.
+     */
+    private function executeStep(\SimpleXMLElement $xmlNode)
+    {
+        global $gDbType, $gLogger;
+
+        // for backwards compatibility "postgresql"
+        $dbType = $gDbType;
+        if ($gDbType === 'postgresql')
+        {
+            $dbType = Database::PDO_ENGINE_PGSQL;
+        }
+
+        $updateStepContent = trim((string) $xmlNode);
+
+        // if a method of this class was set in the update step
+        // then call this function and don't execute a SQL statement
+        if (admStrStartsWith($updateStepContent, 'ComponentUpdateSteps::'))
+        {
+            self::executeUpdateMethod($updateStepContent);
+        }
+        // only execute if sql statement is for all databases or for the used database
+        elseif (!isset($xmlNode['database']) || (string) $xmlNode['database'] === $dbType)
+        {
+            $showError = true;
+            // if the attribute error was set to "ignore" then don't show errors that occurs on sql execution
+            if (isset($xmlNode['error']) && (string) $xmlNode['error'] === 'ignore')
+            {
+                $showError = false;
+            }
+
+            $gLogger->info('UPDATE: Execute update step Nr: ' . (int) $xmlNode['id']);
+
+            $this->executeUpdateSql($updateStepContent, $showError);
+        }
+        elseif ((string) $xmlNode['database'] !== $dbType)
+        {
+            $gLogger->info(
+                'UPDATE: Update step is for another database!',
+                array('database' => (string) $xmlNode['database'], 'step' => (int) $xmlNode['id'])
+            );
+        }
+        else
+        {
+            $gLogger->warning(
+                'UPDATE: Unexpected update step!',
+                array('content' => (string) $xmlNode, 'attributes' => (array) $xmlNode->attributes())
+            );
+        }
+
+        // save the successful executed update step in database
+        $this->setValue('com_update_step', (int) $xmlNode['id']);
+        $this->save();
     }
 
     /**
      * Do a loop through all versions start with the current version and end with the target version.
      * Within every subversion the method will search for an update xml file and execute all steps
      * in this file until the end of file is reached. If an error occurred then the update will be stopped.
-     * @return Return @b true if the update was successful.
+     * @param string $targetVersion The target version to update.
      */
-    public function update()
+    public function update($targetVersion)
     {
-        global $gDebug;
+        global $gLogger;
 
-        $this->updateFinished = false;
-        $this->currentVersionArray = explode('.', $this->getValue('com_version'));
-        $initialSubVersion = $this->currentVersionArray[1];
+        $currentVersionArray = self::getVersionArrayFromVersion($this->getValue('com_version'));
+        $targetVersionArray  = self::getVersionArrayFromVersion($targetVersion);
+        $initialMinorVersion = $currentVersionArray[1];
 
-        for($mainVersion = $this->currentVersionArray[0]; $mainVersion <= $this->targetVersionArray[0]; ++$mainVersion)
+        for ($mainVersion = $currentVersionArray[0]; $mainVersion <= $targetVersionArray[0]; ++$mainVersion)
         {
             // Set max subversion for iteration. If we are in the loop of the target main version
-            // then set target subversion to the max version
-            if($mainVersion == $this->targetVersionArray[0])
+            // then set target minor-version to the max version
+            $maxMinorVersion = 20;
+            if ($mainVersion === $targetVersionArray[0])
             {
-                $maxSubVersion = $this->targetVersionArray[1];
-            }
-            else
-            {
-                $maxSubVersion = 20;
+                $maxMinorVersion = $targetVersionArray[1];
             }
 
-            for($subVersion = $initialSubVersion; $subVersion <= $maxSubVersion; ++$subVersion)
+            for ($minorVersion = $initialMinorVersion; $minorVersion <= $maxMinorVersion; ++$minorVersion)
             {
                 // if version is not equal to current version then start update step with 0
-                if($mainVersion != $this->currentVersionArray[0] || $subVersion != $this->currentVersionArray[1])
+                if ($mainVersion !== $currentVersionArray[0] || $minorVersion !== $currentVersionArray[1])
                 {
                     $this->setValue('com_update_step', 0);
                     $this->save();
                 }
 
                 // output of the version number for better debugging
-                if($gDebug)
-                {
-                    error_log('Update to version '.$mainVersion.'.'.$subVersion);
-                }
+                $gLogger->notice('UPDATE: Start executing update steps to version '.$mainVersion.'.'.$minorVersion);
 
                 // open xml file for this version
-                if($this->createXmlObject($mainVersion, $subVersion))
+                try
                 {
+                    $xmlObject = $this->getXmlObject($mainVersion, $minorVersion);
+
                     // go step by step through the SQL statements and execute them
-                    foreach($this->xmlObject->children() as $updateStep)
+                    foreach ($xmlObject->children() as $updateStep)
                     {
-                        if($updateStep['id'] > $this->getValue('com_update_step'))
+                        if ((string) $updateStep === self::UPDATE_STEP_STOP)
+                        {
+                            break;
+                        }
+                        if ((int) $updateStep['id'] > (int) $this->getValue('com_update_step'))
                         {
                             $this->executeStep($updateStep);
                         }
-                        elseif($updateStep[0] === 'stop')
+                        else
                         {
-                            $this->updateFinished = true;
+                            $gLogger->info('UPDATE: Skip update step Nr: ' . (int) $updateStep['id']);
                         }
                     }
                 }
-
-                // check if an php update file exists and then execute the script
-                $phpUpdateFile = SERVER_PATH.'/adm_program/installation/db_scripts/upd_'.$mainVersion.'_'.$subVersion.'_0_conv.php';
-
-                if(file_exists($phpUpdateFile))
+                catch (\UnexpectedValueException $exception)
                 {
-                    require_once($phpUpdateFile);
-                    $flagNextVersion = true;
+                    // TODO
                 }
+
+                $gLogger->notice('UPDATE: Finish executing update steps to version '.$mainVersion.'.'.$minorVersion);
 
                 // save current version to system component
                 $this->setValue('com_version', ADMIDIO_VERSION);
@@ -217,58 +275,15 @@ class ComponentUpdate extends Component
                 $this->save();
 
                 // save current version to all modules
-                $sql = 'UPDATE '.TBL_COMPONENTS.' SET com_version = \''.ADMIDIO_VERSION.'\'
-                                                    , com_beta    = \''.ADMIDIO_VERSION_BETA.'\'
-                         WHERE com_type LIKE \'MODULE\' ';
-                $this->db->query($sql);
+                $sql = 'UPDATE '.TBL_COMPONENTS.'
+                           SET com_version = ? -- ADMIDIO_VERSION
+                             , com_beta    = ? -- ADMIDIO_VERSION_BETA
+                         WHERE com_type = \'MODULE\'';
+                $this->db->queryPrepared($sql, array(ADMIDIO_VERSION, ADMIDIO_VERSION_BETA));
             }
 
             // reset subversion because we want to start update for next main version with subversion 0
-            $initialSubVersion = 0;
+            $initialMinorVersion = 0;
         }
     }
-
-    /**
-     * This method deletes all roles that belongs to still deleted dates.
-     */
-    public function updateStepDeleteDateRoles()
-    {
-        $sql = 'select rol_id from '.TBL_CATEGORIES.', '.TBL_ROLES.'
-                 where cat_name_intern LIKE \'CONFIRMATION_OF_PARTICIPATION\'
-                   and rol_cat_id = cat_id
-                   and not exists (select 1 from '.TBL_DATES.' where dat_rol_id = rol_id)';
-        $rolesStatement = $this->db->query($sql);
-
-        while($row = $rolesStatement->fetch())
-        {
-            $role = new TableRoles($this->db, $row['rol_id']);
-            $role->delete();
-        }
-    }
-
-    /**
-     * This method set the default configuration for all organizations
-     */
-    public function updateStepSetDefaultConfiguration()
-    {
-        $sql = 'SELECT org_id FROM '.TBL_ORGANIZATIONS;
-        $organizationsStatement = $this->db->query($sql);
-        $organizationsArray     = $organizationsStatement->fetchAll();
-
-        foreach($organizationsArray as $organization)
-        {
-            $sql = 'SELECT lst_id FROM '. TBL_LISTS. '
-                     WHERE lst_org_id  = '. $organization['org_id'].'
-                       AND lst_default = 1 ';
-            $defaultListStatement = $this->db->query($sql);
-            $defaultListId = $defaultListStatement->fetch();
-
-            // save default list to preferences
-            $sql = 'UPDATE '. TBL_PREFERENCES. ' SET prf_value = \''.$defaultListId['lst_id'].'\'
-                     WHERE prf_org_id = '.$organization['org_id'].'
-                       AND prf_name   = \'lists_default_configuation\' ';
-            $this->db->query($sql);
-        }
-    }
-
 }
